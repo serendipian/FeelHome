@@ -1,6 +1,7 @@
 'use client';
 
 import { FinancialProvider } from '@/context/FinancialContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import RightPanel from '@/components/layout/RightPanel';
@@ -8,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
+    <ThemeProvider>
     <FinancialProvider>
       <div className="flex min-h-screen">
         <Sidebar />
@@ -21,5 +23,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </div>
       </div>
     </FinancialProvider>
+    </ThemeProvider>
   );
 }

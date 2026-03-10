@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 
 const navItems = [
   { href: '/summary', label: 'Summary', icon: GridIcon },
@@ -15,14 +16,20 @@ const navItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const { isDark } = useTheme();
 
   return (
     <aside
       className="fixed left-0 top-0 h-screen z-50 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
       style={{
         width: collapsed ? 72 : 240,
-        background: 'linear-gradient(180deg, rgba(10, 12, 16, 0.98) 0%, rgba(6, 7, 10, 0.99) 100%)',
-        borderRight: '1px solid rgba(255,255,255,0.04)',
+        background: isDark
+          ? 'linear-gradient(180deg, rgba(10, 12, 16, 0.98) 0%, rgba(6, 7, 10, 0.99) 100%)'
+          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 250, 252, 1) 100%)',
+        borderRight: isDark
+          ? '1px solid rgba(255,255,255,0.04)'
+          : '1px solid rgba(15,23,42,0.08)',
+        boxShadow: isDark ? 'none' : '2px 0 12px rgba(15,23,42,0.04)',
       }}
     >
       <div className="flex items-center gap-3 px-5 h-[72px]">
@@ -37,13 +44,17 @@ export default function Sidebar() {
         </div>
         {!collapsed && (
           <div className="flex flex-col">
-            <span className="text-[13px] font-bold text-white tracking-tight">Feel Home</span>
-            <span className="text-[10px] text-white/25 font-medium tracking-wider uppercase">Ecosystem</span>
+            <span className="text-[13px] font-bold tracking-tight" style={{ color: isDark ? '#fff' : '#1e293b' }}>Feel Home</span>
+            <span className="text-[10px] font-medium tracking-wider uppercase" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.3)' }}>Ecosystem</span>
           </div>
         )}
       </div>
 
-      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="mx-4 h-px" style={{
+        background: isDark
+          ? 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)'
+          : 'linear-gradient(to right, transparent, rgba(15,23,42,0.06), transparent)',
+      }} />
 
       <nav className="flex-1 py-5 px-3 flex flex-col gap-1">
         {navItems.map((item) => {
@@ -52,11 +63,12 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group ${
-                isActive
-                  ? 'text-white'
-                  : 'text-white/30 hover:text-white/60 hover:bg-white/[0.02]'
-              }`}
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 group"
+              style={{
+                color: isActive
+                  ? (isDark ? '#fff' : '#1e293b')
+                  : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.35)'),
+              }}
             >
               {isActive && (
                 <>
@@ -78,10 +90,15 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-3 pb-3">
-        <div className="mx-1 mb-3 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <div className="mx-1 mb-3 h-px" style={{
+          background: isDark
+            ? 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)'
+            : 'linear-gradient(to right, transparent, rgba(15,23,42,0.06), transparent)',
+        }} />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center h-9 rounded-xl text-white/20 hover:text-white/50 hover:bg-white/[0.02] transition-all duration-200"
+          className="w-full flex items-center justify-center h-9 rounded-xl transition-all duration-200 cursor-pointer"
+          style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.25)' }}
         >
           <svg
             className={`w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${collapsed ? 'rotate-180' : ''}`}

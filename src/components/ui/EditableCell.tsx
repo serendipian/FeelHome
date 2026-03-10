@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 interface EditableCellProps {
   value: number;
@@ -24,6 +25,7 @@ export default function EditableCell({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -60,8 +62,13 @@ export default function EditableCell({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={handleKeyDown}
-        className="w-full bg-white/[0.06] border border-[#d4a853]/40 rounded px-2 py-1 text-right font-mono text-[12px] text-white/90 outline-none focus:border-[#d4a853] transition-colors"
-        style={{ minWidth: 60 }}
+        className="w-full rounded px-2 py-1 text-right font-mono text-[12px] outline-none transition-colors"
+        style={{
+          minWidth: 60,
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.04)',
+          border: '1px solid rgba(212,168,83,0.4)',
+          color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(15,23,42,0.85)',
+        }}
       />
     );
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useTheme } from '@/context/ThemeContext';
 import { useFinancial, MarketKey } from '@/context/FinancialContext';
 import { brands, brandKeys } from '@/data/brands';
 import { BrandKey } from '@/types';
@@ -42,6 +43,7 @@ const marketKeys: MarketKey[] = ['casablanca', 'rabat', 'marrakech', 'autre'];
 
 export default function RightPanel() {
   const pathname = usePathname();
+  const { isDark } = useTheme();
   const {
     activeBrands,
     toggleBrand,
@@ -60,8 +62,10 @@ export default function RightPanel() {
     <div
       className="w-[340px] shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto"
       style={{
-        background: 'linear-gradient(180deg, rgba(6, 7, 10, 0.6) 0%, rgba(6, 7, 10, 0.9) 100%)',
-        borderLeft: '1px solid rgba(255,255,255,0.04)',
+        background: isDark
+          ? 'linear-gradient(180deg, rgba(6, 7, 10, 0.6) 0%, rgba(6, 7, 10, 0.9) 100%)'
+          : 'linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.95) 100%)',
+        borderLeft: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
       }}
     >
       {/* Brand Toggles */}
@@ -81,8 +85,8 @@ export default function RightPanel() {
                 style={{
                   background: active
                     ? `linear-gradient(135deg, ${brand.color}0a 0%, ${brand.color}04 100%)`
-                    : 'rgba(255,255,255,0.015)',
-                  border: `1px solid ${active ? `${brand.color}20` : 'rgba(255,255,255,0.03)'}`,
+                    : (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(15,23,42,0.015)'),
+                  border: `1px solid ${active ? `${brand.color}20` : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.05)')}`,
                   opacity: active ? 1 : 0.5,
                 }}
               >
@@ -113,8 +117,8 @@ export default function RightPanel() {
                 key={key}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-300"
                 style={{
-                  background: active ? `${color}08` : 'rgba(255,255,255,0.015)',
-                  border: `1px solid ${active ? `${color}18` : 'rgba(255,255,255,0.03)'}`,
+                  background: active ? `${color}08` : (isDark ? 'rgba(255,255,255,0.015)' : 'rgba(15,23,42,0.015)'),
+                  border: `1px solid ${active ? `${color}18` : (isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.05)')}`,
                   opacity: active ? 1 : 0.5,
                 }}
               >
@@ -161,6 +165,7 @@ function SummaryCharts({
   yearly: any[];
   monthly: any[];
 }) {
+  const { isDark } = useTheme();
   const chartData = yearly.map((y, i) => ({
     name: `Y${i + 1}`,
     Revenue: y.revenue,
@@ -195,9 +200,9 @@ function SummaryCharts({
         <div className="h-[150px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={2} barSize={14}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="Revenue" fill="#d4a853" radius={[3, 3, 0, 0]} />
               <Bar dataKey="Costs" fill="#f43f5e" radius={[3, 3, 0, 0]} />
@@ -241,7 +246,7 @@ function SummaryCharts({
       </SideChartCard>
 
       {/* Monthly KPIs */}
-      <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+      <div className="rounded-xl p-3 space-y-2" style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)' }}>
         <div className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-1">Monthly Y1</div>
         {[
           { label: 'Revenue', value: monthly[0].revenue, color: '#d4a853' },
@@ -276,6 +281,7 @@ function RevenueCharts({
   rentalRevenues: any[];
   activeMarkets: Record<MarketKey, boolean>;
 }) {
+  const { isDark } = useTheme();
   const chartData = (['y1', 'y2', 'y3'] as const).map((y, i) => ({
     name: `Y${i + 1}`,
     FH: revenueByBrand[y].feelHome * 12,
@@ -314,9 +320,9 @@ function RevenueCharts({
         <div className="h-[150px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barSize={28}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="FH" stackId="a" fill="#d4875a" />
               <Bar dataKey="MI" stackId="a" fill="#5b8ec9" />
@@ -331,8 +337,8 @@ function RevenueCharts({
         <div className="h-[120px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={marketData} barSize={22}>
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                 {marketData.map((entry, i) => (
@@ -353,6 +359,7 @@ function ExpenseCharts({
 }: {
   expensesByCategory: { y1: Record<string, number>; y2: Record<string, number>; y3: Record<string, number> };
 }) {
+  const { isDark } = useTheme();
   const catColors: Record<string, string> = { salaries: '#d4a853', fixed: '#5b8ec9', marketing: '#1d7ff3' };
   const catLabels: Record<string, string> = { salaries: 'Salaries', fixed: 'Fixed', marketing: 'Marketing' };
 
@@ -425,9 +432,9 @@ function ExpenseCharts({
                   <stop offset="100%" stopColor="#1d7ff3" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
               <Tooltip content={<ChartTooltip />} />
               <Area type="monotone" dataKey="Salaries" stackId="1" fill="url(#rpSalG)" stroke="#d4a853" strokeWidth={1.5} />
               <Area type="monotone" dataKey="Fixed" stackId="1" fill="url(#rpFixG)" stroke="#5b8ec9" strokeWidth={1.5} />
@@ -442,6 +449,7 @@ function ExpenseCharts({
 
 /* ── Investment Charts (relocated: cash balance) ───── */
 function InvestmentCharts({ simulation }: { simulation: any }) {
+  const { isDark } = useTheme();
   const { snapshots, breakEvenMonth, roi, finalCash } = simulation;
 
   const chartData = snapshots.map((s: any) => ({
@@ -469,23 +477,23 @@ function InvestmentCharts({ simulation }: { simulation: any }) {
                   <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }}
+                tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }}
                 axisLine={false}
                 tickLine={false}
                 interval={11}
               />
               <YAxis
-                tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }}
+                tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`}
                 width={35}
               />
               <Tooltip content={<ChartTooltip />} />
-              <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
+              <ReferenceLine y={0} stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.1)'} strokeDasharray="4 4" />
               {breakEvenMonth > 0 && (
                 <ReferenceLine x={`M${breakEvenMonth}`} stroke="#2dd4bf" strokeDasharray="6 4" strokeOpacity={0.4} />
               )}
@@ -503,7 +511,7 @@ function InvestmentCharts({ simulation }: { simulation: any }) {
       </SideChartCard>
 
       {/* KPI Summary */}
-      <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+      <div className="rounded-xl p-3 space-y-2" style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)' }}>
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-white/30">Break-even</span>
           <span className="text-[11px] font-mono font-bold text-[#2dd4bf]">
@@ -539,12 +547,13 @@ function SideChartCard({
   subtitle: string;
   children: React.ReactNode;
 }) {
+  const { isDark } = useTheme();
   return (
     <div
       className="rounded-xl p-3"
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.04)',
+        background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)',
+        border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
       }}
     >
       <div className="mb-2">

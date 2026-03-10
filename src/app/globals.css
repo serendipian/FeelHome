@@ -184,3 +184,120 @@ table {
   border-collapse: separate;
   border-spacing: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT MODE — Comprehensive overrides
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Base ── */
+html.light body {
+  background: #f5f6fa;
+  color: #1e293b;
+}
+
+html.light body::after {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(212, 168, 83, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%, rgba(45, 212, 191, 0.02) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(29, 127, 243, 0.015) 0%, transparent 60%);
+}
+
+html.light body::before {
+  opacity: 0;
+}
+
+/* ── Cards ── */
+html.light .card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.99) 100%);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.02) inset,
+    0 1px 3px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.03);
+}
+
+html.light .card:hover {
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.03) inset,
+    0 2px 6px rgba(15, 23, 42, 0.06),
+    0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+/* ── Scrollbar ── */
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.08);
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.16);
+}
+
+/* ── Range Input ── */
+html.light input[type='range'] {
+  background: rgba(15, 23, 42, 0.06);
+}
+html.light input[type='range']:hover {
+  background: rgba(15, 23, 42, 0.1);
+}
+html.light input[type='range']::-webkit-slider-thumb {
+  border: 2px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15), 0 0 0 4px rgba(15, 23, 42, 0.04);
+}
+
+/* ── Recharts ── */
+html.light .recharts-legend-item-text {
+  color: rgba(15, 23, 42, 0.5) !important;
+}
+html.light .recharts-cartesian-grid-horizontal line,
+html.light .recharts-cartesian-grid-vertical line {
+  stroke: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* ── Selection ── */
+html.light ::selection {
+  background: rgba(212, 168, 83, 0.3);
+  color: #1e293b;
+}
+
+/* ═══ Tailwind Text Color Overrides ═══ */
+html.light .text-white { color: rgb(15 23 42); }
+html.light .text-white\/90 { color: rgb(15 23 42 / 0.85); }
+html.light .text-white\/85 { color: rgb(15 23 42 / 0.8); }
+html.light .text-white\/80 { color: rgb(15 23 42 / 0.75); }
+html.light .text-white\/70 { color: rgb(15 23 42 / 0.65); }
+html.light .text-white\/60 { color: rgb(15 23 42 / 0.55); }
+html.light .text-white\/50 { color: rgb(15 23 42 / 0.5); }
+html.light .text-white\/45 { color: rgb(15 23 42 / 0.45); }
+html.light .text-white\/40 { color: rgb(15 23 42 / 0.4); }
+html.light .text-white\/35 { color: rgb(15 23 42 / 0.38); }
+html.light .text-white\/30 { color: rgb(15 23 42 / 0.35); }
+html.light .text-white\/25 { color: rgb(15 23 42 / 0.3); }
+html.light .text-white\/20 { color: rgb(15 23 42 / 0.22); }
+html.light .text-white\/15 { color: rgb(15 23 42 / 0.15); }
+html.light .text-white\/10 { color: rgb(15 23 42 / 0.1); }
+
+/* ═══ Tailwind Background Color Overrides ═══ */
+html.light .bg-white\/\[0\.015\] { background-color: rgb(15 23 42 / 0.015); }
+html.light .bg-white\/\[0\.02\] { background-color: rgb(15 23 42 / 0.02); }
+html.light .bg-white\/\[0\.03\] { background-color: rgb(15 23 42 / 0.025); }
+html.light .bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.03); }
+html.light .bg-white\/\[0\.06\] { background-color: rgb(15 23 42 / 0.05); }
+
+/* ═══ Tailwind Border Color Overrides ═══ */
+html.light .border-white\/\[0\.02\] { border-color: rgb(15 23 42 / 0.05); }
+html.light .border-white\/\[0\.03\] { border-color: rgb(15 23 42 / 0.06); }
+html.light .border-white\/\[0\.04\] { border-color: rgb(15 23 42 / 0.07); }
+html.light .border-white\/\[0\.06\] { border-color: rgb(15 23 42 / 0.09); }
+
+/* ═══ Tailwind Hover State Overrides ═══ */
+html.light .hover\:bg-white\/\[0\.02\]:hover { background-color: rgb(15 23 42 / 0.025); }
+html.light .hover\:bg-white\/\[0\.015\]:hover { background-color: rgb(15 23 42 / 0.02); }
+html.light .hover\:text-white\/50:hover { color: rgb(15 23 42 / 0.5); }
+html.light .hover\:text-white\/60:hover { color: rgb(15 23 42 / 0.6); }
+
+/* ═══ Tailwind Gradient Via Overrides ═══ */
+html.light .via-white\/\[0\.06\] { --tw-gradient-via: rgb(15 23 42 / 0.04); }
+
+/* ═══ Tailwind Ring / Separator Overrides ═══ */
+html.light .bg-white\/10 { background-color: rgb(15 23 42 / 0.08); }
+html.light .bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.03); }

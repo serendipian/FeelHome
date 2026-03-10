@@ -118,7 +118,7 @@ export default function TeamView() {
 
   return (
     <div className="animate-fadeIn max-w-5xl mx-auto pb-8">
-      {/* Inline keyframes for connector animation */}
+      {/* Inline keyframes */}
       <style>{`
         @keyframes connectorPulse {
           0%, 100% { opacity: 0.3; box-shadow: 0 0 6px 2px rgba(212,168,83,0.15); }
@@ -136,14 +136,14 @@ export default function TeamView() {
           from { transform: scale(0); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
-        @keyframes cardExpand {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
         @keyframes borderShimmer {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
+        }
+        @keyframes drawLine {
+          from { stroke-dashoffset: 200; }
+          to { stroke-dashoffset: 0; }
         }
       `}</style>
 
@@ -153,128 +153,46 @@ export default function TeamView() {
         <p className="text-[12px] text-white/30 mt-1">Click on any role to expand responsibilities</p>
       </div>
 
-      {/* ─── Director Hero Card ─── */}
+      {/* ━━━ LEVEL 1 — Director ━━━ */}
       <DirectorCard member={director} expanded={expanded === director.id} onToggle={() => toggle(director.id)} />
 
-      {/* ─── Animated Connector ─── */}
-      <div className="flex justify-center relative" style={{ height: 72 }}>
-        {/* Vertical line */}
-        <div
-          className="absolute left-1/2 top-0 w-px origin-top"
-          style={{
-            height: 48,
-            background: 'linear-gradient(to bottom, rgba(212,168,83,0.5), rgba(255,255,255,0.08))',
-            animation: 'lineGrow 0.6s ease-out forwards',
-            transform: 'translateX(-0.5px)',
-          }}
-        />
-        {/* Glowing dot at junction */}
-        <div
-          className="absolute left-1/2 rounded-full"
-          style={{
-            top: 44,
-            width: 8,
-            height: 8,
-            background: '#d4a853',
-            transform: 'translateX(-4px)',
-            animation: 'connectorPulse 2.5s ease-in-out infinite, dotAppear 0.4s ease-out 0.5s both',
-          }}
-        />
-        {/* Horizontal branch */}
-        <div
-          className="absolute"
-          style={{
-            top: 47,
-            left: '25%',
-            right: '25%',
-            height: 1,
-            background: 'linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0.12), rgba(255,255,255,0.12), rgba(255,255,255,0.04))',
-            animation: 'branchGrow 0.5s ease-out 0.6s both',
-            transformOrigin: 'center',
-          }}
-        />
-        {/* Left drop line */}
-        <div
-          className="absolute origin-top"
-          style={{
-            top: 48,
-            left: '25%',
-            width: 1,
-            height: 24,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
-            animation: 'lineGrow 0.4s ease-out 1s both',
-          }}
-        />
-        {/* Right drop line */}
-        <div
-          className="absolute origin-top"
-          style={{
-            top: 48,
-            right: '25%',
-            width: 1,
-            height: 24,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
-            animation: 'lineGrow 0.4s ease-out 1s both',
-          }}
-        />
-        {/* Left dot */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: 44,
-            left: '25%',
-            width: 6,
-            height: 6,
-            background: 'rgba(255,255,255,0.2)',
-            transform: 'translateX(-3px)',
-            animation: 'dotAppear 0.3s ease-out 1.1s both',
-          }}
-        />
-        {/* Right dot */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: 44,
-            right: '25%',
-            width: 6,
-            height: 6,
-            background: 'rgba(255,255,255,0.2)',
-            transform: 'translateX(3px)',
-            animation: 'dotAppear 0.3s ease-out 1.1s both',
-          }}
-        />
-      </div>
+      {/* ━━━ Connector: Director → Backoffice ━━━ */}
+      <ConnectorFork />
 
-      {/* ─── Two Columns ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Backoffice Column */}
-        <div className="space-y-4">
-          <ColumnHeader
-            title="Backoffice"
-            subtitle="Digital & Sourcing"
-            color="#8b5cf6"
-            icon={<IconGear />}
-          />
-          {backoffice.map((m) => (
-            <MemberCard key={m.id} member={m} expanded={expanded === m.id} onToggle={() => toggle(m.id)} />
-          ))}
+      {/* ━━━ LEVEL 2 — Backoffice ━━━ */}
+      <div className="mb-1">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)', color: 'rgba(139,92,246,0.6)' }}>
+            <IconGear />
+          </div>
+          <span className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-semibold">Backoffice</span>
+          <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(139,92,246,0.15), transparent)' }} />
         </div>
-
-        {/* Frontoffice Column */}
-        <div className="space-y-4">
-          <ColumnHeader
-            title="Frontoffice"
-            subtitle="Field Agents"
-            color="#2dd4bf"
-            icon={<IconTarget />}
-          />
-          {frontoffice.map((m) => (
-            <MemberCard key={m.id} member={m} expanded={expanded === m.id} onToggle={() => toggle(m.id)} />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MemberCard member={backoffice[0]} expanded={expanded === backoffice[0].id} onToggle={() => toggle(backoffice[0].id)} />
+          <MemberCard member={backoffice[1]} expanded={expanded === backoffice[1].id} onToggle={() => toggle(backoffice[1].id)} />
         </div>
       </div>
 
-      {/* ─── Summary Bar ─── */}
+      {/* ━━━ Connector: Backoffice → Agents (cross-connected mesh) ━━━ */}
+      <ConnectorMesh />
+
+      {/* ━━━ LEVEL 3 — Field Agents ━━━ */}
+      <div>
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(45,212,191,0.1)', color: 'rgba(45,212,191,0.6)' }}>
+            <IconTarget />
+          </div>
+          <span className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-semibold">Field Agents</span>
+          <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(45,212,191,0.15), transparent)' }} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MemberCard member={frontoffice[0]} expanded={expanded === frontoffice[0].id} onToggle={() => toggle(frontoffice[0].id)} />
+          <MemberCard member={frontoffice[1]} expanded={expanded === frontoffice[1].id} onToggle={() => toggle(frontoffice[1].id)} />
+        </div>
+      </div>
+
+      {/* ━━━ Summary Bar ━━━ */}
       <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total Headcount', value: '5', color: '#ffffff' },
@@ -300,6 +218,121 @@ export default function TeamView() {
             <span className="text-2xl font-bold text-white/80 font-mono">{kpi.value}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Connector: Director → Backoffice (fork into 2) ─────────────────────
+
+function ConnectorFork() {
+  return (
+    <div className="flex justify-center relative" style={{ height: 64 }}>
+      {/* Vertical stem from Director */}
+      <div
+        className="absolute left-1/2 top-0 w-px origin-top"
+        style={{
+          height: 36,
+          background: 'linear-gradient(to bottom, rgba(212,168,83,0.5), rgba(255,255,255,0.1))',
+          animation: 'lineGrow 0.5s ease-out forwards',
+          transform: 'translateX(-0.5px)',
+        }}
+      />
+      {/* Glowing junction dot */}
+      <div
+        className="absolute left-1/2 rounded-full"
+        style={{
+          top: 32,
+          width: 8,
+          height: 8,
+          background: '#d4a853',
+          transform: 'translateX(-4px)',
+          animation: 'connectorPulse 2.5s ease-in-out infinite, dotAppear 0.4s ease-out 0.4s both',
+        }}
+      />
+      {/* Horizontal branch */}
+      <div
+        className="absolute"
+        style={{
+          top: 35,
+          left: '25%',
+          right: '25%',
+          height: 1,
+          background: 'linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0.12), rgba(255,255,255,0.12), rgba(255,255,255,0.04))',
+          animation: 'branchGrow 0.5s ease-out 0.5s both',
+          transformOrigin: 'center',
+        }}
+      />
+      {/* Left drop */}
+      <div
+        className="absolute origin-top"
+        style={{ top: 36, left: '25%', width: 1, height: 28,
+          background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
+          animation: 'lineGrow 0.3s ease-out 0.9s both',
+        }}
+      />
+      {/* Right drop */}
+      <div
+        className="absolute origin-top"
+        style={{ top: 36, right: '25%', width: 1, height: 28,
+          background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
+          animation: 'lineGrow 0.3s ease-out 0.9s both',
+        }}
+      />
+      {/* End dots */}
+      <div className="absolute rounded-full" style={{ top: 32, left: '25%', width: 5, height: 5, background: 'rgba(139,92,246,0.4)', transform: 'translateX(-2.5px)', animation: 'dotAppear 0.3s ease-out 1s both' }} />
+      <div className="absolute rounded-full" style={{ top: 32, right: '25%', width: 5, height: 5, background: 'rgba(6,182,212,0.4)', transform: 'translateX(2.5px)', animation: 'dotAppear 0.3s ease-out 1s both' }} />
+    </div>
+  );
+}
+
+// ── Connector: Backoffice → Agents (cross mesh — each BO connects to both agents) ──
+
+function ConnectorMesh() {
+  return (
+    <div className="relative w-full" style={{ height: 64 }}>
+      <svg
+        className="absolute inset-0 w-full h-full"
+        viewBox="0 0 800 64"
+        preserveAspectRatio="none"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Left-to-Left (DM → Casa): straight down-left */}
+        <line
+          x1="200" y1="0" x2="200" y2="64"
+          stroke="rgba(139,92,246,0.2)" strokeWidth="1"
+          strokeDasharray="200" style={{ animation: 'drawLine 0.8s ease-out 0.2s both' }}
+        />
+        {/* Right-to-Right (PH → Rabat): straight down-right */}
+        <line
+          x1="600" y1="0" x2="600" y2="64"
+          stroke="rgba(6,182,212,0.2)" strokeWidth="1"
+          strokeDasharray="200" style={{ animation: 'drawLine 0.8s ease-out 0.2s both' }}
+        />
+        {/* Left-to-Right cross (DM → Rabat) */}
+        <line
+          x1="200" y1="0" x2="600" y2="64"
+          stroke="rgba(139,92,246,0.1)" strokeWidth="1"
+          strokeDasharray="200" style={{ animation: 'drawLine 1s ease-out 0.5s both' }}
+        />
+        {/* Right-to-Left cross (PH → Casa) */}
+        <line
+          x1="600" y1="0" x2="200" y2="64"
+          stroke="rgba(6,182,212,0.1)" strokeWidth="1"
+          strokeDasharray="200" style={{ animation: 'drawLine 1s ease-out 0.5s both' }}
+        />
+        {/* Center junction glow dot */}
+        <circle cx="400" cy="32" r="3" fill="rgba(255,255,255,0.15)" style={{ animation: 'dotAppear 0.4s ease-out 0.8s both' }} />
+      </svg>
+      {/* "Communicates" label at center */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span
+          className="text-[9px] text-white/15 uppercase tracking-[0.2em] px-3 py-1 rounded-full"
+          style={{ background: 'rgba(6,7,10,0.8)', border: '1px solid rgba(255,255,255,0.04)' }}
+        >
+          reports to
+        </span>
       </div>
     </div>
   );
@@ -426,31 +459,6 @@ function DirectorCard({
   );
 }
 
-// ── Column Header ───────────────────────────────────────────────────────
-
-function ColumnHeader({ title, subtitle, color, icon }: { title: string; subtitle: string; color: string; icon: React.ReactNode }) {
-  return (
-    <div
-      className="rounded-xl px-5 py-3.5 flex items-center gap-3 mb-2"
-      style={{
-        background: `linear-gradient(135deg, ${color}08 0%, ${color}03 100%)`,
-        border: `1px solid ${color}15`,
-        backdropFilter: 'blur(12px)',
-      }}
-    >
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center"
-        style={{ background: `${color}12`, color: `${color}99` }}
-      >
-        {icon}
-      </div>
-      <div>
-        <h3 className="text-[13px] font-bold text-white/80 tracking-tight">{title}</h3>
-        <p className="text-[10px] text-white/25 uppercase tracking-[0.15em]">{subtitle}</p>
-      </div>
-    </div>
-  );
-}
 
 // ── Member Card ─────────────────────────────────────────────────────────
 

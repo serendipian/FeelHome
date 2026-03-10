@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
@@ -30,6 +31,7 @@ function YearTag({ year, color }: { year: number; color: string }) {
 
 export default function ExpensesView() {
   const { activeBrands, expenseItems, updateExpenseItem, yearly } = useFinancial();
+  const [salariesExpanded, setSalariesExpanded] = useState(false);
 
   const activeItems = expenseItems
     .map((item, idx) => ({ item, idx }))
@@ -41,12 +43,22 @@ export default function ExpensesView() {
     marketing: activeItems.filter(({ item }) => item.category === 'marketing'),
   };
 
+  // Split salaries: show up to "Agent Marrakech #1", collapse the rest
+  const salaryCollapseIndex = grouped.salaries.findIndex(({ item }) => item.label === 'Agent Marrakech #1');
+  const salaryVisibleCount = salaryCollapseIndex >= 0 ? salaryCollapseIndex + 1 : grouped.salaries.length;
+  const salaryCollapsedCount = grouped.salaries.length - salaryVisibleCount;
+
   return (
     <div className="space-y-8 animate-fadeIn">
       {(['salaries', 'fixed', 'marketing'] as const).map((cat) => {
-        const items = grouped[cat];
-        if (items.length === 0) return null;
+        const allItems = grouped[cat];
+        if (allItems.length === 0) return null;
         const config = categoryConfig[cat];
+
+        const isSalaries = cat === 'salaries';
+        const items = isSalaries && !salariesExpanded
+          ? allItems.slice(0, salaryVisibleCount)
+          : allItems;
 
         return (
           <div key={cat} className="space-y-3">
@@ -54,14 +66,13 @@ export default function ExpensesView() {
             <div className="flex gap-3 items-end">
               <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center"
                   style={{ background: `${config.color}15`, border: `1px solid ${config.color}25` }}
                 >
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
                 </div>
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{config.label}</span>
-                  <p className="text-[11px] text-white/30 mt-0.5">{config.subtitle}</p>
                 </div>
               </div>
               <div className="w-1/2 flex gap-3">
@@ -107,6 +118,20 @@ export default function ExpensesView() {
                         </td>
                       </tr>
                     ))}
+                    {isSalaries && salaryCollapsedCount > 0 && (
+                      <tr>
+                        <td colSpan={3} className="px-4 py-2">
+                          <button
+                            onClick={() => setSalariesExpanded(!salariesExpanded)}
+                            className="text-[11px] text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                          >
+                            {salariesExpanded
+                              ? '▲ Collapse future hires'
+                              : `▼ Show ${salaryCollapsedCount} more future hires…`}
+                          </button>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -142,10 +167,22 @@ export default function ExpensesView() {
                             </td>
                           </tr>
                         ))}
+                        {isSalaries && salaryCollapsedCount > 0 && (
+                          <tr>
+                            <td className="px-3 py-2">
+                              <button
+                                onClick={() => setSalariesExpanded(!salariesExpanded)}
+                                className="text-[11px] text-white/30 hover:text-white/50 transition-colors w-full text-center cursor-pointer"
+                              >
+                                {salariesExpanded ? '▲' : '▼'}
+                              </button>
+                            </td>
+                          </tr>
+                        )}
                         {/* Subtotal row */}
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
-                            {formatNumber(items.reduce((s, { item }) => s + item[y], 0))}
+                            {formatNumber(allItems.reduce((s, { item }) => s + item[y], 0))}
                           </td>
                         </tr>
                       </tbody>
