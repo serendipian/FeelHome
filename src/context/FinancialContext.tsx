@@ -14,7 +14,7 @@ import {
   recalcRentalItem,
   recalcMediaItem,
 } from '@/lib/calculations';
-import { loadFromSupabase, saveToSupabase } from '@/lib/supabase';
+import { loadFromSupabase, saveToSupabase, migrateSupabaseData } from '@/lib/supabase';
 
 export type MarketKey = 'casablanca' | 'rabat' | 'marrakech' | 'autre';
 
@@ -52,63 +52,42 @@ interface FinancialState {
 
 const FinancialContext = createContext<FinancialState | null>(null);
 
-const STORAGE_KEY = 'feelhome-financial';
-
-function loadState<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const raw = localStorage.getItem(`${STORAGE_KEY}-${key}`);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch { return fallback; }
-}
-
-function saveState(key: string, value: unknown) {
-  try { localStorage.setItem(`${STORAGE_KEY}-${key}`, JSON.stringify(value)); } catch {}
-}
-
 // Debounced save to Supabase (500ms delay to batch rapid edits)
 const supabaseTimers: Record<string, ReturnType<typeof setTimeout>> = {};
-function saveStateWithSync(key: string, value: unknown) {
-  saveState(key, value);
+function debouncedSave(key: string, value: unknown) {
   clearTimeout(supabaseTimers[key]);
   supabaseTimers[key] = setTimeout(() => { saveToSupabase(key, value); }, 500);
 }
 
 export function FinancialProvider({ children }: { children: React.ReactNode }) {
-  const [activeBrands, setActiveBrands] = useState<Record<BrandKey, boolean>>(() =>
-    loadState('activeBrands', { feelHome: true, mInvest: true, expats: true })
+  const [activeBrands, setActiveBrands] = useState<Record<BrandKey, boolean>>(
+    { feelHome: true, mInvest: true, expats: true }
   );
 
-  const [saleRevenues, setSaleRevenues] = useState<SaleRevenueItem[]>(() =>
-    loadState('saleRevenues', defaultSaleRevenues)
-  );
-  const [rentalRevenues, setRentalRevenues] = useState<RentalRevenueItem[]>(() =>
-    loadState('rentalRevenues', defaultRentalRevenues)
-  );
-  const [mediaRevenues, setMediaRevenues] = useState<MediaRevenueItem[]>(() =>
-    loadState('mediaRevenues', defaultMediaRevenues)
-  );
-  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>(() =>
-    loadState('expenseItems', defaultExpenses)
-  );
+  const [saleRevenues, setSaleRevenues] = useState<SaleRevenueItem[]>(defaultSaleRevenues);
+  const [rentalRevenues, setRentalRevenues] = useState<RentalRevenueItem[]>(defaultRentalRevenues);
+  const [mediaRevenues, setMediaRevenues] = useState<MediaRevenueItem[]>(defaultMediaRevenues);
+  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>(defaultExpenses);
 
-  const [activeMarkets, setActiveMarkets] = useState<Record<MarketKey, boolean>>(() =>
-    loadState('activeMarkets', { casablanca: true, rabat: true, marrakech: true, autre: true })
+  const [activeMarkets, setActiveMarkets] = useState<Record<MarketKey, boolean>>(
+    { casablanca: true, rabat: true, marrakech: true, autre: true }
   );
 
   const toggleMarket = (market: MarketKey) => {
     setActiveMarkets((prev) => ({ ...prev, [market]: !prev[market] }));
   };
 
-  const [investment, setInvestment] = useState(() => loadState('investment', 500000));
-  const [growthBoost, setGrowthBoost] = useState(() => loadState('growthBoost', 0));
+  const [investment, setInvestment] = useState(500000);
+  const [growthBoost, setGrowthBoost] = useState(0);
 
-  // Load from Supabase on mount (overrides localStorage if cloud data exists)
+  // Load from Supabase on mount
   const hydrated = useRef(false);
   useEffect(() => {
     if (hydrated.current) return;
     hydrated.current = true;
     (async () => {
+      // Run migration first (clears stale data if version changed)
+      await migrateSupabaseData();
       const [ab, am, sr, rr, mr, ei, inv, gb] = await Promise.all([
         loadFromSupabase<Record<BrandKey, boolean>>('activeBrands', activeBrands),
         loadFromSupabase<Record<MarketKey, boolean>>('activeMarkets', activeMarkets),
@@ -131,15 +110,20 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist to localStorage + Supabase
-  useEffect(() => { saveStateWithSync('activeBrands', activeBrands); }, [activeBrands]);
-  useEffect(() => { saveStateWithSync('activeMarkets', activeMarkets); }, [activeMarkets]);
-  useEffect(() => { saveStateWithSync('saleRevenues', saleRevenues); }, [saleRevenues]);
-  useEffect(() => { saveStateWithSync('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
-  useEffect(() => { saveStateWithSync('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
-  useEffect(() => { saveStateWithSync('expenseItems', expenseItems); }, [expenseItems]);
-  useEffect(() => { saveStateWithSync('investment', investment); }, [investment]);
-  useEffect(() => { saveStateWithSync('growthBoost', growthBoost); }, [growthBoost]);
+  // Persist to Supabase (debounced)
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) return; // skip initial render — defaults don't need saving
+    debouncedSave('activeBrands', activeBrands);
+  }, [activeBrands]);
+  useEffect(() => { if (mounted.current) debouncedSave('activeMarkets', activeMarkets); }, [activeMarkets]);
+  useEffect(() => { if (mounted.current) debouncedSave('saleRevenues', saleRevenues); }, [saleRevenues]);
+  useEffect(() => { if (mounted.current) debouncedSave('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
+  useEffect(() => { if (mounted.current) debouncedSave('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
+  useEffect(() => { if (mounted.current) debouncedSave('expenseItems', expenseItems); }, [expenseItems]);
+  useEffect(() => { if (mounted.current) debouncedSave('investment', investment); }, [investment]);
+  useEffect(() => { if (mounted.current) debouncedSave('growthBoost', growthBoost); }, [growthBoost]);
+  useEffect(() => { mounted.current = true; }, []);
 
   const toggleBrand = (brand: BrandKey) => {
     setActiveBrands((prev) => ({ ...prev, [brand]: !prev[brand] }));

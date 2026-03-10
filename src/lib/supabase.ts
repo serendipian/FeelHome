@@ -12,7 +12,7 @@ export async function loadFromSupabase<T>(key: string, fallback: T): Promise<T> 
       .select('data')
       .eq('id', key)
       .single();
-    if (error || !data) return fallback;
+    if (error || !data || data.data === null) return fallback;
     return data.data as T;
   } catch {
     return fallback;
@@ -24,5 +24,19 @@ export async function saveToSupabase(key: string, value: unknown): Promise<void>
     await supabase
       .from('app_state')
       .upsert({ id: key, data: value, updated_at: new Date().toISOString() });
+  } catch {}
+}
+
+// Bump this to force a one-time reset of cached Supabase data (e.g. after reordering defaults)
+const DATA_VERSION = 2;
+
+export async function migrateSupabaseData(): Promise<void> {
+  try {
+    const stored = await loadFromSupabase<number>('dataVersion', 0);
+    if (stored >= DATA_VERSION) return;
+    // Clear stale data keys so defaults are used
+    const keysToReset = ['saleRevenues', 'rentalRevenues', 'mediaRevenues', 'expenseItems', 'simdata'];
+    await Promise.all(keysToReset.map(k => saveToSupabase(k, null)));
+    await saveToSupabase('dataVersion', DATA_VERSION);
   } catch {}
 }

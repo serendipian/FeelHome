@@ -45,26 +45,21 @@ export default function InvestmentView() {
   // Find index where collapsible salaries start
   const collapseFromIdx = expenseItems.findIndex(e => e.label === COLLAPSE_FROM_LABEL);
 
-  // Local simulation state — independent per-month, initialized from Y1 or localStorage
-  const [sim, setSim] = useState<SimData>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const raw = localStorage.getItem('feelhome-simdata');
-        if (raw) return JSON.parse(raw);
-      } catch {}
-    }
-    return {
-      rentalConvs: rentalRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
-      saleConvs: saleRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
-      mediaConvs: mediaRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
-      expenses: expenseItems.map(item => Array(MONTHS).fill(item.y1)),
-    };
-  });
+  // Local simulation state — independent per-month, initialized from defaults
+  const defaultSim = useMemo(() => ({
+    rentalConvs: rentalRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+    saleConvs: saleRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+    mediaConvs: mediaRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+    expenses: expenseItems.map(item => Array(MONTHS).fill(item.y1)),
+  }), [rentalRevenues, saleRevenues, mediaRevenues, expenseItems]);
 
-  // Sync sim data to localStorage + Supabase
+  const [sim, setSim] = useState<SimData>(defaultSim);
+
+  // Persist sim data to Supabase (debounced)
+  const simMounted = useRef(false);
   const simTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
-    try { localStorage.setItem('feelhome-simdata', JSON.stringify(sim)); } catch {}
+    if (!simMounted.current) return;
     clearTimeout(simTimer.current);
     simTimer.current = setTimeout(() => { saveToSupabase('simdata', sim); }, 500);
   }, [sim]);
@@ -74,7 +69,10 @@ export default function InvestmentView() {
   useEffect(() => {
     if (simHydrated.current) return;
     simHydrated.current = true;
-    loadFromSupabase<SimData>('simdata', sim).then((data) => setSim(data));
+    loadFromSupabase<SimData>('simdata', defaultSim).then((data) => {
+      setSim(data);
+      simMounted.current = true;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -551,10 +549,16 @@ function WalletIcon() {
 function SimCard({ title, tableMonths, children }: { title: string; tableMonths: number[]; children: React.ReactNode }) {
   return (
     <div className="card overflow-hidden">
-      <table className="w-full text-[12px]">
+      <table className="w-full text-[12px] table-fixed">
+        <colgroup>
+          <col className="w-[180px]" />
+          {tableMonths.map((m) => (
+            <col key={m} style={{ width: `${(100 - 20) / tableMonths.length}%` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-            <th className="px-5 py-3 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider w-[180px]">{title}</th>
+            <th className="px-5 py-3 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider">{title}</th>
             {tableMonths.map((m) => (
               <th key={m} className="px-3 py-3 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider">
                 Month {m}
