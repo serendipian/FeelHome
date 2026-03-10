@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest feel-home-temp --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
+      "Bash(cp -r feel-home-temp/* .)",
+      "Bash(cp feel-home-temp/.gitignore .)",
+      "Bash(cp feel-home-temp/.eslintrc.json .)",
+      "Bash(cp -r feel-home-temp/.next .)",
+      "Bash(rm -rf feel-home-temp)",
+      "Bash(npm install recharts)",
+      "Bash(npx next build)",
+      "Bash(rm -rf node_modules)",
+      "Bash(npm install)"
+    ]
+  }
+}
