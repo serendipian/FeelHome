@@ -42,6 +42,99 @@ export default function RevenuesView() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Feel Home */}
+      {activeBrands.feelHome && (() => {
+        return (
+          <div className="space-y-3">
+            {/* Brand Header with year tags */}
+            <div className="flex gap-3 items-end">
+              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+                <BrandAvatar brand={brands.feelHome} size={24} />
+                <div>
+                  <span className="text-[14px] font-semibold text-white/90">{brands.feelHome.name}</span>
+                </div>
+              </div>
+              <div className="w-1/2 flex gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex-1 text-center">
+                    <YearTag year={n} color="#d4875a" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4 cards */}
+            <div className="flex gap-3 items-stretch">
+              <div className="card overflow-hidden w-1/2">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rent/Mo</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Commission</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentalRevenues.map((item, idx) => {
+                      const active = isMarketActive(item.label);
+                      return (
+                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={formatNumber} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v} mo`} step={0.1} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
+                      </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="w-1/2 flex gap-3">
+                {(['y1', 'y2', 'y3'] as const).map((y) => (
+                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rentalRevenues.map((item, idx) => {
+                          const active = isMarketActive(item.label);
+                          return (
+                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                            <td className="px-3 py-2.5 text-center font-mono text-white/40">
+                              <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                            </td>
+                            <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
+                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                            </td>
+                          </tr>
+                          );
+                        })}
+                        <tr className="border-t border-white/[0.06]">
+                          <td className="px-3 py-3" />
+                          <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#d4875a] whitespace-nowrap">
+                            {formatNumber(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* M Invest */}
       {activeBrands.mInvest && (() => {
         return (
@@ -49,10 +142,9 @@ export default function RevenuesView() {
             {/* Brand Header with year tags aligned above year cards */}
             <div className="flex gap-3 items-end">
               <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
-                <BrandAvatar brand={brands.mInvest} size={36} />
+                <BrandAvatar brand={brands.mInvest} size={24} />
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{brands.mInvest.name}</span>
-                  <p className="text-[11px] text-white/30 mt-0.5">Property Sales — MRE Market</p>
                 </div>
               </div>
               <div className="w-1/2 flex gap-3">
@@ -142,100 +234,6 @@ export default function RevenuesView() {
         );
       })()}
 
-      {/* Feel Home */}
-      {activeBrands.feelHome && (() => {
-        return (
-          <div className="space-y-3">
-            {/* Brand Header with year tags */}
-            <div className="flex gap-3 items-end">
-              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
-                <BrandAvatar brand={brands.feelHome} size={36} />
-                <div>
-                  <span className="text-[14px] font-semibold text-white/90">{brands.feelHome.name}</span>
-                  <p className="text-[11px] text-white/30 mt-0.5">Long-term Rentals — Expatriates</p>
-                </div>
-              </div>
-              <div className="w-1/2 flex gap-3">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="flex-1 text-center">
-                    <YearTag year={n} color="#d4875a" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 4 cards */}
-            <div className="flex gap-3 items-stretch">
-              <div className="card overflow-hidden w-1/2">
-                <table className="w-full text-[12px]">
-                  <thead>
-                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rent/Mo</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Commission</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rentalRevenues.map((item, idx) => {
-                      const active = isMarketActive(item.label);
-                      return (
-                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
-                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
-                          <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={formatNumber} />
-                        </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
-                          <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v} mo`} step={0.1} />
-                        </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="w-1/2 flex gap-3">
-                {(['y1', 'y2', 'y3'] as const).map((y) => (
-                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
-                    <table className="w-full text-[12px]">
-                      <thead>
-                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Conv.</th>
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rentalRevenues.map((item, idx) => {
-                          const active = isMarketActive(item.label);
-                          return (
-                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
-                            <td className="px-3 py-2.5 text-center font-mono text-white/40">
-                              <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
-                            </td>
-                            <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
-                            </td>
-                          </tr>
-                          );
-                        })}
-                        <tr className="border-t border-white/[0.06]">
-                          <td className="px-3 py-3" />
-                          <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#d4875a] whitespace-nowrap">
-                            {formatNumber(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
       {/* Expats.ma */}
       {activeBrands.expats && (() => {
         return (
@@ -243,10 +241,9 @@ export default function RevenuesView() {
             {/* Brand Header with year tags */}
             <div className="flex gap-3 items-end">
               <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
-                <BrandAvatar brand={brands.expats} size={36} />
+                <BrandAvatar brand={brands.expats} size={24} />
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{brands.expats.name}</span>
-                  <p className="text-[11px] text-white/30 mt-0.5">Media Platform — Ads, Memberships, Events</p>
                 </div>
               </div>
               <div className="w-1/2 flex gap-3">
