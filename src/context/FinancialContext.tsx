@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { BrandKey, ExpenseItem, YearlyFinancials, MonthlySnapshot, SaleRevenueItem, RentalRevenueItem, MediaRevenueItem } from '@/types';
 import { defaultSaleRevenues, defaultRentalRevenues, defaultMediaRevenues } from '@/data/revenues';
 import { defaultExpenses } from '@/data/expenses';
@@ -14,6 +14,7 @@ import {
   recalcRentalItem,
   recalcMediaItem,
 } from '@/lib/calculations';
+import { loadFromSupabase, saveToSupabase } from '@/lib/supabase';
 
 export type MarketKey = 'casablanca' | 'rabat' | 'marrakech' | 'autre';
 
@@ -65,6 +66,14 @@ function saveState(key: string, value: unknown) {
   try { localStorage.setItem(`${STORAGE_KEY}-${key}`, JSON.stringify(value)); } catch {}
 }
 
+// Debounced save to Supabase (500ms delay to batch rapid edits)
+const supabaseTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+function saveStateWithSync(key: string, value: unknown) {
+  saveState(key, value);
+  clearTimeout(supabaseTimers[key]);
+  supabaseTimers[key] = setTimeout(() => { saveToSupabase(key, value); }, 500);
+}
+
 export function FinancialProvider({ children }: { children: React.ReactNode }) {
   const [activeBrands, setActiveBrands] = useState<Record<BrandKey, boolean>>(() =>
     loadState('activeBrands', { feelHome: true, mInvest: true, expats: true })
@@ -94,15 +103,43 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   const [investment, setInvestment] = useState(() => loadState('investment', 500000));
   const [growthBoost, setGrowthBoost] = useState(() => loadState('growthBoost', 0));
 
-  // Persist all editable state to localStorage
-  useEffect(() => { saveState('activeBrands', activeBrands); }, [activeBrands]);
-  useEffect(() => { saveState('activeMarkets', activeMarkets); }, [activeMarkets]);
-  useEffect(() => { saveState('saleRevenues', saleRevenues); }, [saleRevenues]);
-  useEffect(() => { saveState('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
-  useEffect(() => { saveState('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
-  useEffect(() => { saveState('expenseItems', expenseItems); }, [expenseItems]);
-  useEffect(() => { saveState('investment', investment); }, [investment]);
-  useEffect(() => { saveState('growthBoost', growthBoost); }, [growthBoost]);
+  // Load from Supabase on mount (overrides localStorage if cloud data exists)
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (hydrated.current) return;
+    hydrated.current = true;
+    (async () => {
+      const [ab, am, sr, rr, mr, ei, inv, gb] = await Promise.all([
+        loadFromSupabase<Record<BrandKey, boolean>>('activeBrands', activeBrands),
+        loadFromSupabase<Record<MarketKey, boolean>>('activeMarkets', activeMarkets),
+        loadFromSupabase<SaleRevenueItem[]>('saleRevenues', saleRevenues),
+        loadFromSupabase<RentalRevenueItem[]>('rentalRevenues', rentalRevenues),
+        loadFromSupabase<MediaRevenueItem[]>('mediaRevenues', mediaRevenues),
+        loadFromSupabase<ExpenseItem[]>('expenseItems', expenseItems),
+        loadFromSupabase<number>('investment', investment),
+        loadFromSupabase<number>('growthBoost', growthBoost),
+      ]);
+      setActiveBrands(ab);
+      setActiveMarkets(am);
+      setSaleRevenues(sr);
+      setRentalRevenues(rr);
+      setMediaRevenues(mr);
+      setExpenseItems(ei);
+      setInvestment(inv);
+      setGrowthBoost(gb);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist to localStorage + Supabase
+  useEffect(() => { saveStateWithSync('activeBrands', activeBrands); }, [activeBrands]);
+  useEffect(() => { saveStateWithSync('activeMarkets', activeMarkets); }, [activeMarkets]);
+  useEffect(() => { saveStateWithSync('saleRevenues', saleRevenues); }, [saleRevenues]);
+  useEffect(() => { saveStateWithSync('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
+  useEffect(() => { saveStateWithSync('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
+  useEffect(() => { saveStateWithSync('expenseItems', expenseItems); }, [expenseItems]);
+  useEffect(() => { saveStateWithSync('investment', investment); }, [investment]);
+  useEffect(() => { saveStateWithSync('growthBoost', growthBoost); }, [growthBoost]);
 
   const toggleBrand = (brand: BrandKey) => {
     setActiveBrands((prev) => ({ ...prev, [brand]: !prev[brand] }));

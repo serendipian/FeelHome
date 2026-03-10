@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatMAD, formatNumber, formatPercent } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
+import { loadFromSupabase, saveToSupabase } from '@/lib/supabase';
 import { MonthlySnapshot } from '@/types';
 import KPICard from '@/components/ui/KPICard';
 import EditableCell from '@/components/ui/EditableCell';
@@ -60,9 +61,22 @@ export default function InvestmentView() {
     };
   });
 
+  // Sync sim data to localStorage + Supabase
+  const simTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     try { localStorage.setItem('feelhome-simdata', JSON.stringify(sim)); } catch {}
+    clearTimeout(simTimer.current);
+    simTimer.current = setTimeout(() => { saveToSupabase('simdata', sim); }, 500);
   }, [sim]);
+
+  // Load sim data from Supabase on mount
+  const simHydrated = useRef(false);
+  useEffect(() => {
+    if (simHydrated.current) return;
+    simHydrated.current = true;
+    loadFromSupabase<SimData>('simdata', sim).then((data) => setSim(data));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateSimRental = (itemIdx: number, monthIdx: number, conv: number) => {
     setSim(prev => {
