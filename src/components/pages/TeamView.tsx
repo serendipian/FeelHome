@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { useFinancial } from '@/context/FinancialContext';
 
 // ── Data ────────────────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ interface TeamMember {
   startMonth: number; // M1, M2, ...
   languages: string[];
   schedule: { days: string; hours: string; status: 'Full-time' | 'Part-time' };
-  compensation: { salary: number; commission?: string; cnss: number; totalCost: number };
+  expenseLabel: string;
   responsibilities: Responsibility[];
   skills: string[];
   kpis: { label: string; target: string }[];
@@ -41,7 +42,7 @@ const director: TeamMember = {
   startMonth: 1,
   languages: ['FR', 'EN', 'AR'],
   schedule: { days: 'Mon – Sat', hours: '9h – 19h', status: 'Full-time' },
-  compensation: { salary: 25000, cnss: 6500, totalCost: 31500 },
+  expenseLabel: 'General Manager (Operations + HR)',
   responsibilities: [
     { icon: <IconPeople />, label: 'HR Management' },
     { icon: <IconGear />, label: 'Operations' },
@@ -72,8 +73,8 @@ const backoffice: TeamMember[] = [
     startMonth: 1,
     languages: ['FR', 'EN'],
     schedule: { days: 'Mon – Fri', hours: '9h – 18h', status: 'Full-time' },
-    compensation: { salary: 8000, cnss: 2080, totalCost: 10080 },
-    responsibilities: [
+    expenseLabel: 'Digital Coordinator - Community Manager',
+      responsibilities: [
       { icon: <IconInbox />, label: 'Incoming requests' },
       { icon: <IconGlobe />, label: 'Listing publishing' },
       { icon: <IconMegaphone />, label: 'Social media mgmt' },
@@ -101,8 +102,8 @@ const backoffice: TeamMember[] = [
     startMonth: 1,
     languages: ['FR', 'AR', 'Darija'],
     schedule: { days: 'Mon – Sat', hours: '9h – 18h', status: 'Full-time' },
-    compensation: { salary: 6000, cnss: 1560, totalCost: 7560 },
-    responsibilities: [
+    expenseLabel: 'Property Hunter - Customer Service',
+      responsibilities: [
       { icon: <IconSearch />, label: 'Property sourcing' },
       { icon: <IconPhone />, label: 'Owner outreach' },
       { icon: <IconInbox />, label: 'Inbound calls & msgs' },
@@ -130,8 +131,8 @@ const backoffice: TeamMember[] = [
     startMonth: 2,
     languages: ['FR', 'EN'],
     schedule: { days: 'Mon – Fri', hours: '9h – 18h', status: 'Full-time' },
-    compensation: { salary: 6000, cnss: 0, totalCost: 6000 },
-    responsibilities: [
+    expenseLabel: 'Marketing Manager (Branding + Partnerships)',
+      responsibilities: [
       { icon: <IconMegaphone />, label: 'Social media strategy' },
       { icon: <IconCamera />, label: 'Photo & video content' },
       { icon: <IconCalendar />, label: 'Editorial planning' },
@@ -162,7 +163,7 @@ const frontoffice: TeamMember[] = [
     startMonth: 1,
     languages: ['FR', 'EN', 'Darija'],
     schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
-    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    expenseLabel: 'Agent Casablanca #1',
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -191,7 +192,7 @@ const frontoffice: TeamMember[] = [
     startMonth: 3,
     languages: ['FR', 'EN', 'AR'],
     schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
-    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    expenseLabel: 'Agent Marrakech #1',
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -220,7 +221,7 @@ const frontoffice: TeamMember[] = [
     startMonth: 4,
     languages: ['FR', 'AR', 'Darija'],
     schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
-    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    expenseLabel: 'Agent Rabat #1',
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -249,7 +250,7 @@ const frontoffice: TeamMember[] = [
     startMonth: 5,
     languages: ['FR', 'EN', 'AR'],
     schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
-    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    expenseLabel: 'Agent Tangier #1',
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -289,10 +290,30 @@ function formatMADShort(n: number) {
 
 // ── Main Component ──────────────────────────────────────────────────────
 
+type CommissionType = 'All Revenues' | 'Linked Deals';
+
+interface CommissionConfig {
+  rate: number; // percentage, e.g. 10
+  type: CommissionType;
+}
+
 export default function TeamView() {
   const allIds = [director.id, ...backoffice.map(m => m.id), ...frontoffice.map(m => m.id)];
   const [expanded, setExpanded] = useState<Set<string>>(new Set(allIds));
   const { isDark } = useTheme();
+
+  // Commission state per member
+  const [commissions, setCommissions] = useState<Record<string, CommissionConfig>>(() => {
+    const init: Record<string, CommissionConfig> = {};
+    [director, ...backoffice, ...frontoffice].forEach(m => {
+      init[m.id] = { rate: 10, type: 'All Revenues' };
+    });
+    return init;
+  });
+  const updateCommissionRate = (id: string, rate: number) =>
+    setCommissions(prev => ({ ...prev, [id]: { ...prev[id], rate } }));
+  const updateCommissionType = (id: string, type: CommissionType) =>
+    setCommissions(prev => ({ ...prev, [id]: { ...prev[id], type } }));
   const toggle = (id: string) => setExpanded(prev => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
@@ -314,11 +335,11 @@ export default function TeamView() {
         <SectionLabel label="Management" />
         <div className="flex-1 flex items-start">
           <div className="w-1/3 min-w-0">
-            <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
+            <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} commission={commissions[director.id]} onCommissionRateChange={(r) => updateCommissionRate(director.id, r)} onCommissionTypeChange={(t) => updateCommissionType(director.id, t)} />
           </div>
           <HorizontalConnector isDark={isDark} />
           <div className="w-1/3 min-w-0">
-            <MemberCard member={backoffice[2]} expanded={expanded.has(backoffice[2].id)} onToggle={() => toggle(backoffice[2].id)} />
+            <MemberCard member={backoffice[2]} expanded={expanded.has(backoffice[2].id)} onToggle={() => toggle(backoffice[2].id)} commission={commissions[backoffice[2].id]} onCommissionRateChange={(r) => updateCommissionRate(backoffice[2].id, r)} onCommissionTypeChange={(t) => updateCommissionType(backoffice[2].id, t)} />
           </div>
         </div>
       </div>
@@ -339,11 +360,11 @@ export default function TeamView() {
         <SectionLabel label="Backoffice" />
         <div className="flex-1 flex items-start">
           <div className="flex-1 min-w-0">
-            <MemberCard member={backoffice[0]} expanded={expanded.has(backoffice[0].id)} onToggle={() => toggle(backoffice[0].id)} />
+            <MemberCard member={backoffice[0]} expanded={expanded.has(backoffice[0].id)} onToggle={() => toggle(backoffice[0].id)} commission={commissions[backoffice[0].id]} onCommissionRateChange={(r) => updateCommissionRate(backoffice[0].id, r)} onCommissionTypeChange={(t) => updateCommissionType(backoffice[0].id, t)} />
           </div>
           <HorizontalConnector isDark={isDark} />
           <div className="flex-1 min-w-0">
-            <MemberCard member={backoffice[1]} expanded={expanded.has(backoffice[1].id)} onToggle={() => toggle(backoffice[1].id)} />
+            <MemberCard member={backoffice[1]} expanded={expanded.has(backoffice[1].id)} onToggle={() => toggle(backoffice[1].id)} commission={commissions[backoffice[1].id]} onCommissionRateChange={(r) => updateCommissionRate(backoffice[1].id, r)} onCommissionTypeChange={(t) => updateCommissionType(backoffice[1].id, t)} />
           </div>
         </div>
       </div>
@@ -368,7 +389,7 @@ export default function TeamView() {
         <SectionLabel label="Field Agents" />
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
           {frontoffice.map((member) => (
-            <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} />
+            <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} commission={commissions[member.id]} onCommissionRateChange={(r) => updateCommissionRate(member.id, r)} onCommissionTypeChange={(t) => updateCommissionType(member.id, t)} />
           ))}
         </div>
       </div>
@@ -493,10 +514,16 @@ function DirectorCard({
   member,
   expanded,
   onToggle,
+  commission,
+  onCommissionRateChange,
+  onCommissionTypeChange,
 }: {
   member: TeamMember;
   expanded: boolean;
   onToggle: () => void;
+  commission: CommissionConfig;
+  onCommissionRateChange: (rate: number) => void;
+  onCommissionTypeChange: (type: CommissionType) => void;
 }) {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -556,19 +583,16 @@ function DirectorCard({
 
           {/* Title area */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h3 className={`text-[17px] font-bold tracking-tight ${textPrimary}`}>{member.title}</h3>
+            <h3 className={`text-[17px] font-bold tracking-tight ${textPrimary}`}>{member.title}</h3>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <ContractBadge contract={member.contract} />
               <span
-                className="text-[10px] font-semibold uppercase tracking-[0.15em] px-2.5 py-1 rounded-md"
+                className="text-[9px] font-semibold uppercase tracking-[0.12em] px-2 py-0.5 rounded-md"
                 style={{ color: '#d4a853', background: 'rgba(212,168,83,0.1)', border: '1px solid rgba(212,168,83,0.15)' }}
               >
-                {member.subtitle}
+                Partner
               </span>
-              <ContractBadge contract={member.contract} />
             </div>
-            {member.tagline && (
-              <p className={`text-[12px] font-light tracking-wide mt-1.5 ${textTertiary}`}>{member.tagline}</p>
-            )}
           </div>
 
           {/* Flags + city */}
@@ -599,7 +623,7 @@ function DirectorCard({
                 ))}
               </div>
               {/* Tab content */}
-              <TabContent member={member} tab={activeTab} color={member.color} />
+              <TabContent member={member} tab={activeTab} color={member.color} commission={commission} onCommissionRateChange={onCommissionRateChange} onCommissionTypeChange={onCommissionTypeChange} />
             </div>
           </div>
         </ExpandableSection>
@@ -615,10 +639,16 @@ function MemberCard({
   member,
   expanded,
   onToggle,
+  commission,
+  onCommissionRateChange,
+  onCommissionTypeChange,
 }: {
   member: TeamMember;
   expanded: boolean;
   onToggle: () => void;
+  commission: CommissionConfig;
+  onCommissionRateChange: (rate: number) => void;
+  onCommissionTypeChange: (type: CommissionType) => void;
 }) {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -674,12 +704,6 @@ function MemberCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h4 className={`text-[13px] font-semibold tracking-tight ${textPrimary}`}>{member.title}</h4>
-            {member.subtitle && (
-              <>
-                <span className={isDark ? 'text-white/10' : 'text-slate-200'}>·</span>
-                <span className={`text-[11px] font-light ${textTertiary}`}>{member.subtitle}</span>
-              </>
-            )}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <ContractBadge contract={member.contract} />
@@ -713,7 +737,7 @@ function MemberCard({
                 </button>
               ))}
             </div>
-            <TabContent member={member} tab={activeTab} color={member.color} />
+            <TabContent member={member} tab={activeTab} color={member.color} commission={commission} onCommissionRateChange={onCommissionRateChange} onCommissionTypeChange={onCommissionTypeChange} />
           </div>
         </div>
       </ExpandableSection>
@@ -723,8 +747,14 @@ function MemberCard({
 
 // ── Tab Content ─────────────────────────────────────────────────────────
 
-function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; color: string }) {
+function TabContent({ member, tab, color, commission, onCommissionRateChange, onCommissionTypeChange }: {
+  member: TeamMember; tab: TabKey; color: string;
+  commission: CommissionConfig;
+  onCommissionRateChange: (rate: number) => void;
+  onCommissionTypeChange: (type: CommissionType) => void;
+}) {
   const { isDark } = useTheme();
+  const { expenseItems } = useFinancial();
   const textPrimary = isDark ? 'text-white/80' : 'text-slate-700';
   const textSecondary = isDark ? 'text-white/50' : 'text-slate-500';
   const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
@@ -778,32 +808,78 @@ function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; c
   }
 
   if (tab === 'compensation') {
+    const expense = expenseItems.find(e => e.label === member.expenseLabel);
+    const totalCost = expense?.y1 ?? 0;
+    const isCDI = member.contract === 'CDI';
+    const baseSalary = isCDI ? Math.round(totalCost / 1.26) : totalCost;
+    const cnss = isCDI ? totalCost - baseSalary : 0;
+
     const rows = [
-      { label: 'Base Salary', value: formatMADShort(member.compensation.salary), highlight: false },
-      ...(member.compensation.commission ? [{ label: 'Commission', value: member.compensation.commission, highlight: true }] : []),
-      { label: 'CNSS + AMO (~26%)', value: formatMADShort(member.compensation.cnss), highlight: false },
-      { label: 'Total Cost / Month', value: formatMADShort(member.compensation.totalCost), highlight: true },
-      { label: 'Total Cost / Year', value: formatMADShort(member.compensation.totalCost * 12), highlight: false },
+      { label: 'Base Salary', value: formatMADShort(baseSalary), highlight: false },
+      ...(isCDI ? [{ label: 'CNSS + AMO (~26%)', value: formatMADShort(cnss), highlight: false }] : []),
+      { label: 'Total Cost / Month', value: formatMADShort(totalCost), highlight: true },
     ];
     return (
       <div className="space-y-1.5">
         {rows.map((row) => (
           <div
             key={row.label}
-            className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.highlight ? '' : ''}`}
+            className={`flex items-center justify-between rounded-lg px-3 py-2`}
             style={{
               background: row.highlight ? `${color}08` : pillBg,
               border: row.highlight ? `1px solid ${color}20` : pillBorder,
             }}
           >
             <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{row.label}</span>
-            <span className={`text-[11px] font-bold font-mono ${row.highlight ? '' : ''} ${textPrimary}`}
+            <span className={`text-[11px] font-bold font-mono ${textPrimary}`}
               style={row.highlight ? { color: `${color}cc` } : {}}
             >
               {row.value}
             </span>
           </div>
         ))}
+
+        {/* Commission Rate — editable */}
+        <div
+          className="flex items-center justify-between rounded-lg px-3 py-2"
+          style={{ background: `${color}08`, border: `1px solid ${color}20` }}
+        >
+          <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>Commission Rate</span>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={commission.rate}
+              onChange={(e) => onCommissionRateChange(Math.max(0, Math.min(100, Number(e.target.value))))}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-12 text-right text-[11px] font-bold font-mono bg-transparent border-b outline-none ${
+                isDark ? 'border-white/10 text-white/80 focus:border-white/30' : 'border-slate-200 text-slate-700 focus:border-slate-400'
+              }`}
+              style={{ color: `${color}cc` }}
+            />
+            <span className="text-[11px] font-bold font-mono" style={{ color: `${color}cc` }}>%</span>
+          </div>
+        </div>
+
+        {/* Commission Type — dropdown */}
+        <div
+          className="flex items-center justify-between rounded-lg px-3 py-2"
+          style={{ background: pillBg, border: pillBorder }}
+        >
+          <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>Commission Type</span>
+          <select
+            value={commission.type}
+            onChange={(e) => onCommissionTypeChange(e.target.value as CommissionType)}
+            onClick={(e) => e.stopPropagation()}
+            className={`text-[11px] font-semibold bg-transparent outline-none cursor-pointer ${
+              isDark ? 'text-white/70' : 'text-slate-600'
+            }`}
+          >
+            <option value="All Revenues">All Revenues</option>
+            <option value="Linked Deals">Linked Deals</option>
+          </select>
+        </div>
       </div>
     );
   }
