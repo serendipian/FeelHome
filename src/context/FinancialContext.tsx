@@ -135,12 +135,16 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
       scenarioRef.current = scenario;
       setActiveScenarioRaw(scenario);
 
+      const fallbackSales = scenario === 'realistic' ? defaultSaleRevenues : zeroConvSales();
+      const fallbackRentals = scenario === 'realistic' ? defaultRentalRevenues : zeroConvRentals();
+      const fallbackMedia = scenario === 'realistic' ? defaultMediaRevenues : zeroConvMedia();
+
       const [ab, am, sr, rr, mr, ei, inv, cr] = await Promise.all([
         loadFromSupabase<Record<BrandKey, boolean>>('activeBrands', activeBrands),
         loadFromSupabase<Record<MarketKey, boolean>>('activeMarkets', activeMarkets),
-        loadScenarioValue<SaleRevenueItem[]>('saleRevenues', scenario, defaultSaleRevenues),
-        loadScenarioValue<RentalRevenueItem[]>('rentalRevenues', scenario, defaultRentalRevenues),
-        loadScenarioValue<MediaRevenueItem[]>('mediaRevenues', scenario, defaultMediaRevenues),
+        loadScenarioValue<SaleRevenueItem[]>('saleRevenues', scenario, fallbackSales),
+        loadScenarioValue<RentalRevenueItem[]>('rentalRevenues', scenario, fallbackRentals),
+        loadScenarioValue<MediaRevenueItem[]>('mediaRevenues', scenario, fallbackMedia),
         loadScenarioValue<ExpenseItem[]>('expenseItems', scenario, defaultExpenses),
         loadFromSupabase<number>('investment', investment),
         loadFromSupabase<number>('commissionRate', commissionRate),

@@ -57,8 +57,9 @@ export default function InvestmentView() {
   // Save sim data as label-keyed map (order-independent)
   type LabeledSimData = Record<string, { type: string; months: number[] }>;
 
-  function simToLabeled(s: SimData): LabeledSimData {
+  function simToLabeled(s: SimData, scenario: string): LabeledSimData {
     const out: LabeledSimData = {};
+    out['_meta'] = { type: 'meta', months: [], _scenario: scenario } as LabeledSimData[string];
     defaultRentalRevenues.forEach((item, i) => { out[`rental:${item.label}`] = { type: 'rental', months: s.rentalConvs[i] || Array(MONTHS).fill(0) }; });
     defaultSaleRevenues.forEach((item, i) => { out[`sale:${item.label}`] = { type: 'sale', months: s.saleConvs[i] || Array(MONTHS).fill(0) }; });
     defaultMediaRevenues.forEach((item, i) => { out[`media:${item.label}`] = { type: 'media', months: s.mediaConvs[i] || Array(MONTHS).fill(0) }; });
@@ -82,7 +83,7 @@ export default function InvestmentView() {
   useEffect(() => {
     if (!simMounted.current) return;
     clearTimeout(simTimer.current);
-    simTimer.current = setTimeout(() => { saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim)); }, 500);
+    simTimer.current = setTimeout(() => { saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim, simScenarioRef.current)); }, 500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sim]);
 
@@ -105,8 +106,17 @@ export default function InvestmentView() {
       if (data === null && scenario === 'realistic') {
         data = await loadFromSupabase<LabeledSimData | SimData>('simdata', {});
       }
+
+      // Reject data with mismatched scenario tag (prevents cross-scenario contamination)
+      if (data && typeof data === 'object' && '_meta' in data) {
+        const meta = (data as LabeledSimData)['_meta'] as { _scenario?: string };
+        if (meta?._scenario && meta._scenario !== scenario) {
+          data = null; // stale cross-scenario data, ignore it
+        }
+      }
+
       if (data && 'rentalConvs' in data) {
-        setSim(fallback);
+        setSim(fallback); // old format, use fallback
       } else if (data && Object.keys(data).length > 0) {
         setSim(labeledToSim(data as LabeledSimData, fallback));
       } else {
@@ -127,7 +137,7 @@ export default function InvestmentView() {
     // Scenario changed — save current sim data to old scenario, load new
     if (simScenarioRef.current !== activeScenario) {
       if (simMounted.current) {
-        saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim));
+        saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim, simScenarioRef.current));
       }
       loadSimForScenario(activeScenario);
     }

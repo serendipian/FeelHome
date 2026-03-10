@@ -211,8 +211,7 @@ export default function TeamView() {
   });
 
   return (
-    <div className="space-y-8 animate-fadeIn">
-      {/* Inline keyframes */}
+    <div className="animate-fadeIn">
       <style>{`
         @keyframes borderShimmer {
           0% { background-position: 0% 50%; }
@@ -221,40 +220,58 @@ export default function TeamView() {
         }
       `}</style>
 
-      {/* ━━━ LEVEL 1 — Director ━━━ */}
-      <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
-
-      {/* ━━━ Connector: Director → Backoffice ━━━ */}
-      <ConnectorFork />
-
-      {/* ━━━ LEVEL 2 — Backoffice ━━━ */}
-      <div className="mb-1">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)', color: 'rgba(139,92,246,0.6)' }}>
-            <IconGear />
-          </div>
-          <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Backoffice</span>
-          <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(139,92,246,0.15), transparent)' }} />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MemberCard member={backoffice[0]} expanded={expanded.has(backoffice[0].id)} onToggle={() => toggle(backoffice[0].id)} />
-          <MemberCard member={backoffice[1]} expanded={expanded.has(backoffice[1].id)} onToggle={() => toggle(backoffice[1].id)} />
+      {/* ━━━ Director ━━━ */}
+      <div className="flex">
+        <div className="w-8 shrink-0 mr-3" />
+        <div className="flex-1">
+          <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
         </div>
       </div>
 
-      {/* ━━━ Connector: Backoffice → Agents (cross-connected mesh) ━━━ */}
-      <ConnectorMesh />
-
-      {/* ━━━ LEVEL 3 — Field Agents ━━━ */}
-      <div>
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(45,212,191,0.1)', color: 'rgba(45,212,191,0.6)' }}>
-            <IconTarget />
-          </div>
-          <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Field Agents</span>
-          <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(45,212,191,0.15), transparent)' }} />
+      {/* ━━━ Connector: Director → Backoffice ━━━ */}
+      <div className="flex">
+        <div className="w-8 shrink-0 mr-3" />
+        <div className="flex-1 relative" style={{ height: 48 }}>
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
+            <FlowLine id="d-dm" x1={500} y1={0} x2={240} y2={48} isDark={isDark} dur={3.2} delay={0} />
+            <FlowLine id="d-ph" x1={500} y1={0} x2={760} y2={48} isDark={isDark} dur={3.5} delay={0.8} />
+          </svg>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      </div>
+
+      {/* ━━━ Backoffice ━━━ */}
+      <div className="flex">
+        <SectionLabel label="Backoffice" />
+        <div className="flex-1 flex items-start">
+          <div className="flex-1 min-w-0">
+            <MemberCard member={backoffice[0]} expanded={expanded.has(backoffice[0].id)} onToggle={() => toggle(backoffice[0].id)} />
+          </div>
+          <HorizontalConnector isDark={isDark} />
+          <div className="flex-1 min-w-0">
+            <MemberCard member={backoffice[1]} expanded={expanded.has(backoffice[1].id)} onToggle={() => toggle(backoffice[1].id)} />
+          </div>
+        </div>
+      </div>
+
+      {/* ━━━ Connector: Backoffice → Agents ━━━ */}
+      <div className="flex">
+        <div className="w-8 shrink-0 mr-3" />
+        <div className="flex-1 relative" style={{ height: 48 }}>
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
+            {[165, 500, 835].map((ax, i) => (
+              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={240} y1={0} x2={ax} y2={48} isDark={isDark} dur={3 + i * 0.4} delay={i * 0.5} />
+            ))}
+            {[165, 500, 835].map((ax, i) => (
+              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={760} y1={0} x2={ax} y2={48} isDark={isDark} dur={3.2 + i * 0.3} delay={0.3 + i * 0.4} />
+            ))}
+          </svg>
+        </div>
+      </div>
+
+      {/* ━━━ Field Agents ━━━ */}
+      <div className="flex">
+        <SectionLabel label="Field Agents" />
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {frontoffice.map((member) => (
             <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} />
           ))}
@@ -292,19 +309,39 @@ export default function TeamView() {
   );
 }
 
-// ── Animated flow line helper ────────────────────────────────────────────
+// ── Section Label (vertical, left side) ─────────────────────────────────
+
+function SectionLabel({ label }: { label: string }) {
+  const { isDark } = useTheme();
+  return (
+    <div className="w-8 shrink-0 flex items-center justify-center mr-3">
+      <span
+        className={`text-[9px] uppercase tracking-[0.2em] font-semibold whitespace-nowrap ${isDark ? 'text-white/20' : 'text-slate-300'}`}
+        style={{ writingMode: 'vertical-lr', transform: 'rotate(180deg)' }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── Electric signal flow line ───────────────────────────────────────────
 
 function FlowLine({
-  x1, y1, x2, y2, color, dotColor, dur, delay = 0,
+  id, x1, y1, x2, y2, isDark, dur, delay = 0,
 }: {
-  x1: number; y1: number; x2: number; y2: number;
-  color: string; dotColor: string; dur: number; delay?: number;
+  id: string; x1: number; y1: number; x2: number; y2: number;
+  isDark: boolean; dur: number; delay?: number;
 }) {
   const pathD = `M${x1},${y1} L${x2},${y2}`;
+  const baseStroke = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)';
+
   return (
     <g>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="1" />
-      <circle r="3" fill={dotColor} opacity="0.9">
+      {/* Base wire */}
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseStroke} strokeWidth="1" />
+      {/* Animated electric signal */}
+      <g>
         <animateMotion
           path={pathD}
           dur={`${dur}s`}
@@ -313,66 +350,43 @@ function FlowLine({
           keyTimes="0;0.5;1"
           calcMode="spline"
           keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+          rotate="auto"
           begin={`${delay}s`}
         />
-        <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} repeatCount="indefinite" begin={`${delay}s`} />
-      </circle>
+        {/* Outer glow */}
+        <line x1="-12" y1="0" x2="12" y2="0" stroke="rgba(212,168,83,0.15)" strokeWidth="8" strokeLinecap="round" />
+        {/* Mid glow */}
+        <line x1="-8" y1="0" x2="8" y2="0" stroke="rgba(212,168,83,0.4)" strokeWidth="3" strokeLinecap="round" />
+        {/* Core signal */}
+        <line x1="-5" y1="0" x2="5" y2="0" stroke="rgba(212,168,83,0.95)" strokeWidth="1.5" strokeLinecap="round" />
+      </g>
     </g>
   );
 }
 
-// ── Connector: Director ↔ Backoffice (3 lines) ─────────────────────────
-// Director center (500, 0) → DM (250, 80), PH (750, 80), plus DM ↔ PH
+// ── Horizontal connector between DM and PH ─────────────────────────────
 
-function ConnectorFork() {
-  const { isDark } = useTheme();
-  const lineAlpha = isDark ? 0.1 : 0.08;
-  const gold = `rgba(212,168,83,${lineAlpha})`;
-  const purple = `rgba(139,92,246,${lineAlpha})`;
-  const cyan = `rgba(6,182,212,${lineAlpha})`;
-  const dotGold = 'rgba(212,168,83,0.7)';
-  const dotPurple = 'rgba(139,92,246,0.6)';
-  const dotCyan = 'rgba(6,182,212,0.6)';
-
+function HorizontalConnector({ isDark }: { isDark: boolean }) {
+  const baseStroke = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)';
   return (
-    <div className="relative w-full" style={{ height: 72 }}>
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 72" preserveAspectRatio="none" fill="none">
-        {/* Director → DM */}
-        <FlowLine x1={500} y1={0} x2={250} y2={72} color={gold} dotColor={dotGold} dur={3.2} delay={0} />
-        {/* Director → PH */}
-        <FlowLine x1={500} y1={0} x2={750} y2={72} color={gold} dotColor={dotGold} dur={3.5} delay={0.8} />
-        {/* DM ↔ PH */}
-        <FlowLine x1={250} y1={72} x2={750} y2={72} color={isDark ? `rgba(255,255,255,${lineAlpha})` : `rgba(15,23,42,${lineAlpha})`} dotColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.25)'} dur={4} delay={1.5} />
-      </svg>
-    </div>
-  );
-}
-
-// ── Connector: Backoffice ↔ Agents (6 lines) ───────────────────────────
-// DM (250, 0) and PH (750, 0) each connect to 3 agents at (167, 72), (500, 72), (833, 72)
-
-function ConnectorMesh() {
-  const { isDark } = useTheme();
-  const lineAlpha = isDark ? 0.08 : 0.06;
-  const purple = `rgba(139,92,246,${lineAlpha})`;
-  const cyan = `rgba(6,182,212,${lineAlpha})`;
-  const dotPurple = 'rgba(139,92,246,0.5)';
-  const dotCyan = 'rgba(6,182,212,0.5)';
-
-  // Agent X positions in a 3-col grid
-  const agentX = [167, 500, 833];
-
-  return (
-    <div className="relative w-full" style={{ height: 72 }}>
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 72" preserveAspectRatio="none" fill="none">
-        {/* DM (250) → 3 agents */}
-        {agentX.map((ax, i) => (
-          <FlowLine key={`dm-${i}`} x1={250} y1={0} x2={ax} y2={72} color={purple} dotColor={dotPurple} dur={3 + i * 0.4} delay={i * 0.6} />
-        ))}
-        {/* PH (750) → 3 agents */}
-        {agentX.map((ax, i) => (
-          <FlowLine key={`ph-${i}`} x1={750} y1={0} x2={ax} y2={72} color={cyan} dotColor={dotCyan} dur={3.2 + i * 0.3} delay={0.3 + i * 0.5} />
-        ))}
+    <div className="w-12 shrink-0 self-stretch flex items-center justify-center">
+      <svg className="w-full" style={{ height: 4, overflow: 'visible' }} viewBox="0 0 100 4" preserveAspectRatio="none" fill="none">
+        <line x1="0" y1="2" x2="100" y2="2" stroke={baseStroke} strokeWidth="1" />
+        <g>
+          <animateMotion
+            path="M0,2 L100,2"
+            dur="3.5s"
+            repeatCount="indefinite"
+            keyPoints="0;1;0"
+            keyTimes="0;0.5;1"
+            calcMode="spline"
+            keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+            rotate="auto"
+          />
+          <line x1="-6" y1="0" x2="6" y2="0" stroke="rgba(212,168,83,0.15)" strokeWidth="6" strokeLinecap="round" />
+          <line x1="-4" y1="0" x2="4" y2="0" stroke="rgba(212,168,83,0.4)" strokeWidth="3" strokeLinecap="round" />
+          <line x1="-3" y1="0" x2="3" y2="0" stroke="rgba(212,168,83,0.95)" strokeWidth="1.5" strokeLinecap="round" />
+        </g>
       </svg>
     </div>
   );
