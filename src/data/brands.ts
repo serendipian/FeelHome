@@ -23,7 +23,7 @@ export const brands: Record<string, Brand> = {
     name: 'Expats.ma',
     shortName: 'EX',
     description: 'Media Platform',
-    color: '#7c6bf4',
+    color: '#1d7ff3',
     logo: 'https://media.licdn.com/dms/image/v2/D4E0BAQF_FPzVxm3tMw/company-logo_100_100/company-logo_100_100/0/1733782692982/top_web3_jobs_logo?e=1774483200&v=beta&t=WaF_fN2IdzylPxHBjhzDaWhwzZqQMTNzw54-HndHup8',
     initials: 'EX',
   },

@@ -1,236 +1,310 @@
 'use client';
 
-import { useState } from 'react';
+import React from 'react';
 import { useFinancial } from '@/context/FinancialContext';
-import { formatMAD, formatNumber } from '@/lib/formatters';
-import { saleRevenues, rentalRevenues, mediaRevenues } from '@/data/revenues';
+import { formatNumber } from '@/lib/formatters';
 import { brands } from '@/data/brands';
-import SectionTitle from '@/components/ui/SectionTitle';
 import BrandAvatar from '@/components/ui/BrandAvatar';
 import TotalBar from '@/components/ui/TotalBar';
-import ChartTooltip from '@/components/ui/ChartTooltip';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import EditableCell from '@/components/ui/EditableCell';
 
-export default function RevenuesView() {
-  const { activeBrands, revenueByBrand, yearly } = useFinancial();
-
-  const chartData = (['y1', 'y2', 'y3'] as const).map((y, i) => ({
-    name: `Year ${i + 1}`,
-    'Feel Home': revenueByBrand[y].feelHome * 12,
-    'M Invest': revenueByBrand[y].mInvest * 12,
-    'Expats.ma': revenueByBrand[y].expats * 12,
-  }));
-
+function YearTag({ year, color }: { year: number; color: string }) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
   return (
-    <div className="space-y-8 animate-fadeIn">
-      <SectionTitle title="Revenue Breakdown" />
-
-      {/* Stacked Bar Chart */}
-      <div className="card p-6">
-        <h3 className="text-sm font-medium text-white/50 mb-4">Revenue by Brand — Annual</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
-              <XAxis dataKey="name" tick={{ fill: '#ffffff50', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#ffffff50', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} />
-              <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="Feel Home" stackId="a" fill="#d4875a" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="M Invest" stackId="a" fill="#5b8ec9" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="Expats.ma" stackId="a" fill="#7c6bf4" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* M Invest Card */}
-      {activeBrands.mInvest && (
-        <RevenueCard
-          brand={brands.mInvest}
-          subtitle="Property Sales — MRE Market"
-          totals={[
-            saleRevenues.reduce((s, r) => s + r.y1.total, 0),
-            saleRevenues.reduce((s, r) => s + r.y2.total, 0),
-            saleRevenues.reduce((s, r) => s + r.y3.total, 0),
-          ]}
-        >
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/5">
-                {['City', 'Price/m²', 'Area', 'Avg Price', 'Comm.', 'Rev/Conv', 'Y1 Conv', 'Y1 Total', 'Y2 Conv', 'Y2 Total', 'Y3 Conv', 'Y3 Total'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-xs font-medium text-white/40 text-right first:text-left">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {saleRevenues.map((item) => (
-                <tr key={item.label} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
-                  <td className="px-3 py-2 text-white/70">{item.label}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{formatNumber(item.priceM2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{item.area} m²</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{formatNumber(item.avgPrice)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{item.commRateLabel}</td>
-                  <td className="px-3 py-2 text-right font-mono text-[#5b8ec9]">{formatNumber(item.revPerConv)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y1.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y1.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y2.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y2.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y3.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y3.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </RevenueCard>
-      )}
-
-      {/* Feel Home Card */}
-      {activeBrands.feelHome && (
-        <RevenueCard
-          brand={brands.feelHome}
-          subtitle="Long-term Rentals — Expatriates"
-          totals={[
-            rentalRevenues.reduce((s, r) => s + r.y1.total, 0),
-            rentalRevenues.reduce((s, r) => s + r.y2.total, 0),
-            rentalRevenues.reduce((s, r) => s + r.y3.total, 0),
-          ]}
-        >
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/5">
-                {['City', 'Rent/Mo', 'Commission', 'Rev/Conv', 'Y1 Conv', 'Y1 Total', 'Y2 Conv', 'Y2 Total', 'Y3 Conv', 'Y3 Total'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-xs font-medium text-white/40 text-right first:text-left">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rentalRevenues.map((item) => (
-                <tr key={item.label} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
-                  <td className="px-3 py-2 text-white/70">{item.label}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{formatNumber(item.rent)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/60">{item.commFactorLabel}</td>
-                  <td className="px-3 py-2 text-right font-mono text-[#d4875a]">{formatNumber(item.revPerConv)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y1.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y1.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y2.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y2.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y3.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y3.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </RevenueCard>
-      )}
-
-      {/* Expats.ma Card */}
-      {activeBrands.expats && (
-        <RevenueCard
-          brand={brands.expats}
-          subtitle="Media Platform — Ads, Memberships, Events"
-          totals={[
-            mediaRevenues.reduce((s, r) => s + r.y1.total, 0),
-            mediaRevenues.reduce((s, r) => s + r.y2.total, 0),
-            mediaRevenues.reduce((s, r) => s + r.y3.total, 0),
-          ]}
-        >
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/5">
-                {['Source', 'Unit Price', 'Y1 Conv', 'Y1 Total', 'Y2 Conv', 'Y2 Total', 'Y3 Conv', 'Y3 Total'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-xs font-medium text-white/40 text-right first:text-left">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {mediaRevenues.map((item) => (
-                <tr key={item.label} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
-                  <td className="px-3 py-2 text-white/70">{item.label}</td>
-                  <td className="px-3 py-2 text-right font-mono text-[#7c6bf4]">{formatNumber(item.unitPrice)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y1.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y1.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y2.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y2.total)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/50">{item.y3.conv}</td>
-                  <td className="px-3 py-2 text-right font-mono text-white/80">{formatNumber(item.y3.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </RevenueCard>
-      )}
-
-      {/* Total Revenue Bar */}
-      <TotalBar
-        label="Total Monthly Revenue"
-        values={[
-          yearly[0].revenue / 12,
-          yearly[1].revenue / 12,
-          yearly[2].revenue / 12,
-        ]}
-        color="#d4a853"
-      />
-    </div>
+    <span
+      className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+      style={{ color, background: `rgba(${r},${g},${b},0.1)`, border: `1px solid rgba(${r},${g},${b},0.2)` }}
+    >
+      Year {year}
+    </span>
   );
 }
 
-function RevenueCard({
-  brand,
-  subtitle,
-  totals,
-  children,
-}: {
-  brand: (typeof brands)[string];
-  subtitle: string;
-  totals: number[];
-  children: React.ReactNode;
-}) {
-  const [expanded, setExpanded] = useState(true);
+export default function RevenuesView() {
+  const {
+    activeBrands,
+    yearly,
+    saleRevenues,
+    rentalRevenues,
+    mediaRevenues,
+    updateSaleItem,
+    updateRentalItem,
+    updateMediaItem,
+  } = useFinancial();
 
   return (
-    <div className="card overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <BrandAvatar brand={brand} size={32} />
-          <div className="text-left">
-            <span className="text-sm font-semibold text-white/90">{brand.name}</span>
-            <p className="text-[11px] text-white/40">{subtitle}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          {totals.map((t, i) => (
-            <div key={i} className="text-right">
-              <p className="text-[10px] text-white/30">Y{i + 1}/mo</p>
-              <p className="font-mono text-sm font-semibold" style={{ color: brand.color }}>
-                {formatMAD(t)}
-              </p>
+    <div className="space-y-8 animate-fadeIn">
+      {/* M Invest */}
+      {activeBrands.mInvest && (() => {
+        return (
+          <div className="space-y-3">
+            {/* Brand Header with year tags aligned above year cards */}
+            <div className="flex gap-3 items-end">
+              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+                <BrandAvatar brand={brands.mInvest} size={36} />
+                <div>
+                  <span className="text-[14px] font-semibold text-white/90">{brands.mInvest.name}</span>
+                  <p className="text-[11px] text-white/30 mt-0.5">Property Sales — MRE Market</p>
+                </div>
+              </div>
+              <div className="w-1/2 flex gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex-1 text-center">
+                    <YearTag year={n} color="#5b8ec9" />
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-          <svg
-            className={`w-4 h-4 text-white/30 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </button>
-      {expanded && <div className="border-t border-white/5">{children}</div>}
+
+            {/* 4 cards */}
+            <div className="flex gap-3 items-stretch">
+              <div className="card overflow-hidden w-1/2">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Price/m²</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Area</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Price</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Comm.</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {saleRevenues.map((item, idx) => (
+                      <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.priceM2} onSave={(v) => updateSaleItem(idx, 'priceM2', v)} format={formatNumber} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.area} onSave={(v) => updateSaleItem(idx, 'area', v)} format={(v) => `${v}m²`} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/25 whitespace-nowrap">{formatNumber(item.avgPrice)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.commRate} onSave={(v) => updateSaleItem(idx, 'commRate', v)} isPercent format={(v) => `${(v * 100).toFixed(1)}%`} step={0.1} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#5b8ec9] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="w-1/2 flex gap-3">
+                {(['y1', 'y2', 'y3'] as const).map((y) => (
+                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {saleRevenues.map((item, idx) => (
+                          <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                            <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                              <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-mono text-white/70 font-medium whitespace-nowrap">
+                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-t border-white/[0.06]">
+                          <td className="px-3 py-3" />
+                          <td className="px-3 py-3 text-right font-mono text-[13px] font-bold text-[#5b8ec9] whitespace-nowrap">
+                            {formatNumber(saleRevenues.reduce((s, r) => s + r[y].total, 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Feel Home */}
+      {activeBrands.feelHome && (() => {
+        return (
+          <div className="space-y-3">
+            {/* Brand Header with year tags */}
+            <div className="flex gap-3 items-end">
+              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+                <BrandAvatar brand={brands.feelHome} size={36} />
+                <div>
+                  <span className="text-[14px] font-semibold text-white/90">{brands.feelHome.name}</span>
+                  <p className="text-[11px] text-white/30 mt-0.5">Long-term Rentals — Expatriates</p>
+                </div>
+              </div>
+              <div className="w-1/2 flex gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex-1 text-center">
+                    <YearTag year={n} color="#d4875a" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4 cards */}
+            <div className="flex gap-3 items-stretch">
+              <div className="card overflow-hidden w-1/2">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rent/Mo</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Commission</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentalRevenues.map((item, idx) => (
+                      <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={formatNumber} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                          <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v} mo`} step={0.1} />
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="w-1/2 flex gap-3">
+                {(['y1', 'y2', 'y3'] as const).map((y) => (
+                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rentalRevenues.map((item, idx) => (
+                          <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                            <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                              <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-mono text-white/70 font-medium whitespace-nowrap">
+                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-t border-white/[0.06]">
+                          <td className="px-3 py-3" />
+                          <td className="px-3 py-3 text-right font-mono text-[13px] font-bold text-[#d4875a] whitespace-nowrap">
+                            {formatNumber(rentalRevenues.reduce((s, r) => s + r[y].total, 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Expats.ma */}
+      {activeBrands.expats && (() => {
+        return (
+          <div className="space-y-3">
+            {/* Brand Header with year tags */}
+            <div className="flex gap-3 items-end">
+              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+                <BrandAvatar brand={brands.expats} size={36} />
+                <div>
+                  <span className="text-[14px] font-semibold text-white/90">{brands.expats.name}</span>
+                  <p className="text-[11px] text-white/30 mt-0.5">Media Platform — Ads, Memberships, Events</p>
+                </div>
+              </div>
+              <div className="w-1/2 flex gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex-1 text-center">
+                    <YearTag year={n} color="#1d7ff3" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4 cards */}
+            <div className="flex gap-3 items-stretch">
+              <div className="card overflow-hidden w-1/2">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Source</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Unit Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mediaRevenues.map((item, idx) => (
+                      <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#1d7ff3] font-semibold">
+                          <EditableCell value={item.unitPrice} onSave={(v) => updateMediaItem(idx, 'unitPrice', v)} format={formatNumber} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="w-1/2 flex gap-3">
+                {(['y1', 'y2', 'y3'] as const).map((y) => (
+                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mediaRevenues.map((item, idx) => (
+                          <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                            <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                              <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-mono text-white/70 font-medium whitespace-nowrap">
+                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="border-t border-white/[0.06]">
+                          <td className="px-3 py-3" />
+                          <td className="px-3 py-3 text-right font-mono text-[13px] font-bold text-[#1d7ff3] whitespace-nowrap">
+                            {formatNumber(mediaRevenues.reduce((s, r) => s + r[y].total, 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      <TotalBar
+        label="Total Monthly Revenue"
+        values={[yearly[0].revenue / 12, yearly[1].revenue / 12, yearly[2].revenue / 12]}
+        color="#d4a853"
+      />
     </div>
   );
 }

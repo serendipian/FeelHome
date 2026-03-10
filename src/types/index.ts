@@ -45,6 +45,7 @@ export interface MediaRevenueItem {
 export interface ExpenseItem {
   label: string;
   category: 'salaries' | 'fixed' | 'marketing';
+  variableCost: number;
   y1: number;
   y2: number;
   y3: number;

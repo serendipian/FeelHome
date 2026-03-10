@@ -11,10 +11,14 @@ export default function MiniBar({
 }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
-    <div className="w-16 h-1.5 rounded-full bg-white/5 overflow-hidden">
+    <div className="w-20 h-[5px] rounded-full bg-white/[0.04] overflow-hidden">
       <div
-        className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${pct}%`, backgroundColor: color }}
+        className="h-full rounded-full transition-all duration-1000 ease-out"
+        style={{
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${color}60, ${color})`,
+          boxShadow: `0 0 8px ${color}30`,
+        }}
       />
     </div>
   );

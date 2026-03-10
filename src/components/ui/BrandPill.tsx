@@ -7,11 +7,11 @@ export default function BrandPill({ brandKey }: { brandKey: BrandKey }) {
   const brand = brands[brandKey];
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide"
+      className="inline-flex items-center px-2 py-[2px] rounded-md text-[9px] font-bold tracking-wider uppercase"
       style={{
-        backgroundColor: `${brand.color}20`,
-        color: brand.color,
-        border: `1px solid ${brand.color}40`,
+        backgroundColor: `${brand.color}12`,
+        color: `${brand.color}cc`,
+        border: `1px solid ${brand.color}20`,
       }}
     >
       {brand.shortName}

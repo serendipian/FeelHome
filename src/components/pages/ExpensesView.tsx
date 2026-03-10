@@ -1,202 +1,168 @@
 'use client';
 
 import { useFinancial } from '@/context/FinancialContext';
-import { formatMAD, formatNumber } from '@/lib/formatters';
-import { expenses } from '@/data/expenses';
+import { formatNumber } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
+import { ExpenseItem } from '@/types';
 import BrandPill from '@/components/ui/BrandPill';
-import MiniBar from '@/components/ui/MiniBar';
-import SectionTitle from '@/components/ui/SectionTitle';
 import TotalBar from '@/components/ui/TotalBar';
-import ChartTooltip from '@/components/ui/ChartTooltip';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import EditableCell from '@/components/ui/EditableCell';
 
-const categoryColors: Record<string, string> = {
-  salaries: '#d4a853',
-  fixed: '#5b8ec9',
-  marketing: '#7c6bf4',
+const categoryConfig: Record<string, { label: string; color: string; subtitle: string }> = {
+  salaries: { label: 'Salaries', color: '#f43f5e', subtitle: 'Team & Agents' },
+  fixed: { label: 'Fixed Costs', color: '#5b8ec9', subtitle: 'Office, Tools & Operations' },
+  marketing: { label: 'Marketing', color: '#1d7ff3', subtitle: 'Acquisition & Branding' },
 };
 
-const categoryLabels: Record<string, string> = {
-  salaries: 'Salaries',
-  fixed: 'Fixed Costs',
-  marketing: 'Marketing',
-};
+function YearTag({ year, color }: { year: number; color: string }) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return (
+    <span
+      className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+      style={{ color, background: `rgba(${r},${g},${b},0.1)`, border: `1px solid rgba(${r},${g},${b},0.2)` }}
+    >
+      Year {year}
+    </span>
+  );
+}
 
 export default function ExpensesView() {
-  const { activeBrands, expensesByCategory, yearly } = useFinancial();
+  const { activeBrands, expenseItems, updateExpenseItem, yearly } = useFinancial();
 
-  // Donut chart data (Year 3)
-  const donutData = Object.entries(expensesByCategory.y3)
-    .filter(([, v]) => v > 0)
-    .map(([key, value]) => ({
-      name: categoryLabels[key],
-      value: value * 12,
-      color: categoryColors[key],
-    }));
+  const activeItems = expenseItems
+    .map((item, idx) => ({ item, idx }))
+    .filter(({ item }) => isExpenseActive(item, activeBrands));
 
-  // Area chart data
-  const areaData = (['y1', 'y2', 'y3'] as const).map((y, i) => ({
-    name: `Year ${i + 1}`,
-    Salaries: expensesByCategory[y].salaries * 12,
-    'Fixed Costs': expensesByCategory[y].fixed * 12,
-    Marketing: expensesByCategory[y].marketing * 12,
-  }));
-
-  // Active expenses
-  const activeExpenses = expenses.filter((e) => isExpenseActive(e, activeBrands));
-  const maxExpense = Math.max(...activeExpenses.map((e) => e.y3), 1);
-
-  // Group by category
   const grouped = {
-    salaries: activeExpenses.filter((e) => e.category === 'salaries'),
-    fixed: activeExpenses.filter((e) => e.category === 'fixed'),
-    marketing: activeExpenses.filter((e) => e.category === 'marketing'),
+    salaries: activeItems.filter(({ item }) => item.category === 'salaries'),
+    fixed: activeItems.filter(({ item }) => item.category === 'fixed'),
+    marketing: activeItems.filter(({ item }) => item.category === 'marketing'),
   };
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      <SectionTitle title="Expense Detail" color="#f43f5e" />
+      {(['salaries', 'fixed', 'marketing'] as const).map((cat) => {
+        const items = grouped[cat];
+        if (items.length === 0) return null;
+        const config = categoryConfig[cat];
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Donut */}
-        <div className="card p-6">
-          <h3 className="text-sm font-medium text-white/50 mb-4">Expense Split — Year 3</h3>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
-                  paddingAngle={3}
-                  dataKey="value"
+        return (
+          <div key={cat} className="space-y-3">
+            {/* Category Header with year tags */}
+            <div className="flex gap-3 items-end">
+              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: `${config.color}15`, border: `1px solid ${config.color}25` }}
                 >
-                  {donutData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<ChartTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
+                </div>
+                <div>
+                  <span className="text-[14px] font-semibold text-white/90">{config.label}</span>
+                  <p className="text-[11px] text-white/30 mt-0.5">{config.subtitle}</p>
+                </div>
+              </div>
+              <div className="w-1/2 flex gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex-1 text-center">
+                    <YearTag year={n} color={config.color} />
+                  </div>
+                ))}
+              </div>
+            </div>
 
-        {/* Area */}
-        <div className="card p-6">
-          <h3 className="text-sm font-medium text-white/50 mb-4">Expense Growth — 3 Years</h3>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={areaData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
-                <XAxis dataKey="name" tick={{ fill: '#ffffff50', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#ffffff50', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} />
-                <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="Salaries" stackId="1" fill="#d4a85330" stroke="#d4a853" />
-                <Area type="monotone" dataKey="Fixed Costs" stackId="1" fill="#5b8ec930" stroke="#5b8ec9" />
-                <Area type="monotone" dataKey="Marketing" stackId="1" fill="#7c6bf430" stroke="#7c6bf4" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+            {/* Cards row */}
+            <div className="flex gap-3 items-stretch">
+              {/* Left card: expense label, brands, variable cost */}
+              <div className="card overflow-hidden w-1/2">
+                <table className="w-full text-[12px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                      <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Expense</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Brands</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Var. Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map(({ item, idx }) => (
+                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex gap-1 flex-wrap">
+                            {item.brands.map((b) => (
+                              <BrandPill key={b} brandKey={b} />
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/30">
+                          <EditableCell
+                            value={item.variableCost}
+                            onSave={(v) => updateExpenseItem(idx, 'variableCost', v)}
+                            isPercent
+                            format={(v) => `${(v * 100).toFixed(0)}%`}
+                            step={1}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-      {/* Expense Table */}
-      <div className="card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/5">
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Expense</th>
-              <th className="text-left px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Brands</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Year 1</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Year 2</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider">Year 3</th>
-              <th className="text-right px-6 py-3 text-xs font-medium text-white/40 uppercase tracking-wider w-20"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(grouped).map(([cat, items]) =>
-              items.length > 0 ? (
-                <CategoryGroup key={cat} category={cat} items={items} maxExpense={maxExpense} />
-              ) : null
-            )}
-          </tbody>
-        </table>
-      </div>
+              {/* Right: 3 year cards */}
+              <div className="w-1/2 flex gap-3">
+                {(['y1', 'y2', 'y3'] as const).map((y) => (
+                  <div key={y} className="card overflow-hidden flex-1 min-w-0">
+                    <table className="w-full text-[12px]">
+                      <thead>
+                        <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {items.map(({ item, idx }) => (
+                          <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                            <td className="px-3 py-2.5 text-right font-mono text-white/50">
+                              {item[y] > 0 ? (
+                                <EditableCell
+                                  value={item[y]}
+                                  onSave={(v) => updateExpenseItem(idx, y, v)}
+                                  format={formatNumber}
+                                />
+                              ) : (
+                                <EditableCell
+                                  value={item[y]}
+                                  onSave={(v) => updateExpenseItem(idx, y, v)}
+                                  format={(v) => v === 0 ? '—' : formatNumber(v)}
+                                  className="text-white/15"
+                                />
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {/* Subtotal row */}
+                        <tr className="border-t border-white/[0.06]">
+                          <td className="px-3 py-3 text-right font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
+                            {formatNumber(items.reduce((s, { item }) => s + item[y], 0))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       <TotalBar
         label="Total Monthly Expenses"
-        values={[
-          yearly[0].expenses / 12,
-          yearly[1].expenses / 12,
-          yearly[2].expenses / 12,
-        ]}
+        values={[yearly[0].expenses / 12, yearly[1].expenses / 12, yearly[2].expenses / 12]}
         color="#f43f5e"
       />
     </div>
-  );
-}
-
-function CategoryGroup({
-  category,
-  items,
-  maxExpense,
-}: {
-  category: string;
-  items: typeof expenses;
-  maxExpense: number;
-}) {
-  return (
-    <>
-      <tr>
-        <td
-          colSpan={6}
-          className="px-6 py-2 text-xs font-semibold uppercase tracking-wider"
-          style={{ color: categoryColors[category] }}
-        >
-          {categoryLabels[category]}
-        </td>
-      </tr>
-      {items.map((exp) => (
-        <tr key={exp.label} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-          <td className="px-6 py-2.5 text-white/70">{exp.label}</td>
-          <td className="px-6 py-2.5">
-            <div className="flex gap-1">
-              {exp.brands.map((b) => (
-                <BrandPill key={b} brandKey={b} />
-              ))}
-            </div>
-          </td>
-          <td className="px-6 py-2.5 text-right font-mono text-white/60">
-            {exp.y1 > 0 ? formatNumber(exp.y1) : '—'}
-          </td>
-          <td className="px-6 py-2.5 text-right font-mono text-white/60">
-            {exp.y2 > 0 ? formatNumber(exp.y2) : '—'}
-          </td>
-          <td className="px-6 py-2.5 text-right font-mono text-white/60">
-            {exp.y3 > 0 ? formatNumber(exp.y3) : '—'}
-          </td>
-          <td className="px-6 py-2.5 text-right">
-            <MiniBar value={exp.y3} max={maxExpense} color={categoryColors[exp.category]} />
-          </td>
-        </tr>
-      ))}
-    </>
   );
 }
