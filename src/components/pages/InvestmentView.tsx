@@ -5,6 +5,8 @@ import { useFinancial } from '@/context/FinancialContext';
 import { formatMAD, formatNumber, formatPercent } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
 import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
+import { defaultSaleRevenues, defaultRentalRevenues, defaultMediaRevenues } from '@/data/revenues';
+import { defaultExpenses } from '@/data/expenses';
 import { MonthlySnapshot } from '@/types';
 import KPICard from '@/components/ui/KPICard';
 import EditableCell from '@/components/ui/EditableCell';
@@ -55,13 +57,35 @@ export default function InvestmentView() {
 
   const [sim, setSim] = useState<SimData>(defaultSim);
 
-  // Persist sim data to Supabase (debounced)
+  // Save sim data as label-keyed map (order-independent)
+  type LabeledSimData = Record<string, { type: string; months: number[] }>;
+
+  function simToLabeled(s: SimData): LabeledSimData {
+    const out: LabeledSimData = {};
+    defaultRentalRevenues.forEach((item, i) => { out[`rental:${item.label}`] = { type: 'rental', months: s.rentalConvs[i] || Array(MONTHS).fill(0) }; });
+    defaultSaleRevenues.forEach((item, i) => { out[`sale:${item.label}`] = { type: 'sale', months: s.saleConvs[i] || Array(MONTHS).fill(0) }; });
+    defaultMediaRevenues.forEach((item, i) => { out[`media:${item.label}`] = { type: 'media', months: s.mediaConvs[i] || Array(MONTHS).fill(0) }; });
+    defaultExpenses.forEach((item, i) => { out[`exp:${item.label}`] = { type: 'exp', months: s.expenses[i] || Array(MONTHS).fill(0) }; });
+    return out;
+  }
+
+  function labeledToSim(labeled: LabeledSimData, fallback: SimData): SimData {
+    return {
+      rentalConvs: defaultRentalRevenues.map((item, i) => labeled[`rental:${item.label}`]?.months || fallback.rentalConvs[i] || Array(MONTHS).fill(0)),
+      saleConvs: defaultSaleRevenues.map((item, i) => labeled[`sale:${item.label}`]?.months || fallback.saleConvs[i] || Array(MONTHS).fill(0)),
+      mediaConvs: defaultMediaRevenues.map((item, i) => labeled[`media:${item.label}`]?.months || fallback.mediaConvs[i] || Array(MONTHS).fill(0)),
+      expenses: defaultExpenses.map((item, i) => labeled[`exp:${item.label}`]?.months || fallback.expenses[i] || Array(MONTHS).fill(0)),
+    };
+  }
+
+  // Persist sim data to Supabase (debounced, label-keyed)
   const simMounted = useRef(false);
   const simTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (!simMounted.current) return;
     clearTimeout(simTimer.current);
-    simTimer.current = setTimeout(() => { saveToSupabase('simdata', sim); }, 500);
+    simTimer.current = setTimeout(() => { saveToSupabase('simdata', simToLabeled(sim)); }, 500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sim]);
 
   // Load sim data from Supabase on mount
@@ -70,8 +94,15 @@ export default function InvestmentView() {
     if (simHydrated.current) return;
     simHydrated.current = true;
     ensureMigrated().then(() =>
-      loadFromSupabase<SimData>('simdata', defaultSim).then((data) => {
-        setSim(data);
+      loadFromSupabase<LabeledSimData | SimData>('simdata', {}).then((data) => {
+        // Handle both old format (indexed arrays) and new format (label-keyed map)
+        if (data && 'rentalConvs' in data) {
+          // Old format — ignore it (indices may be wrong), use defaults
+          setSim(defaultSim);
+        } else if (data && Object.keys(data).length > 0) {
+          // New label-keyed format
+          setSim(labeledToSim(data as LabeledSimData, defaultSim));
+        }
         simMounted.current = true;
       })
     );

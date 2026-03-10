@@ -52,6 +52,13 @@ interface FinancialState {
 
 const FinancialContext = createContext<FinancialState | null>(null);
 
+// Reorder loaded array to match the code-defined default order (by label).
+// Preserves user-edited values but enforces the order from defaults.
+function reorderByLabel<T extends { label: string }>(loaded: T[], defaults: T[]): T[] {
+  const byLabel = new Map(loaded.map(item => [item.label, item]));
+  return defaults.map(d => byLabel.get(d.label) ?? d);
+}
+
 // Debounced save to Supabase (500ms delay to batch rapid edits)
 const supabaseTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 function debouncedSave(key: string, value: unknown) {
@@ -100,10 +107,10 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
       ]);
       setActiveBrands(ab);
       setActiveMarkets(am);
-      setSaleRevenues(sr);
-      setRentalRevenues(rr);
-      setMediaRevenues(mr);
-      setExpenseItems(ei);
+      setSaleRevenues(reorderByLabel(sr, defaultSaleRevenues));
+      setRentalRevenues(reorderByLabel(rr, defaultRentalRevenues));
+      setMediaRevenues(reorderByLabel(mr, defaultMediaRevenues));
+      setExpenseItems(reorderByLabel(ei, defaultExpenses));
       setInvestment(inv);
       setGrowthBoost(gb);
       // Enable saving only AFTER hydration is fully applied
