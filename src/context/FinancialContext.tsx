@@ -17,6 +17,7 @@ import {
 import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
 
 export type MarketKey = 'casablanca' | 'rabat' | 'marrakech' | 'autre';
+export type ScenarioKey = 'pessimistic' | 'realistic' | 'optimistic';
 
 interface FinancialState {
   activeBrands: Record<BrandKey, boolean>;
@@ -40,23 +41,42 @@ interface FinancialState {
   // Investment simulation
   investment: number;
   setInvestment: (v: number) => void;
-  growthBoost: number;
-  setGrowthBoost: (v: number) => void;
+  commissionRate: number;
+  setCommissionRate: (v: number) => void;
   simulation: {
     snapshots: MonthlySnapshot[];
     breakEvenMonth: number;
     roi: number;
     finalCash: number;
   };
+  // Scenarios
+  activeScenario: ScenarioKey;
+  setActiveScenario: (s: ScenarioKey) => void;
 }
 
 const FinancialContext = createContext<FinancialState | null>(null);
 
 // Reorder loaded array to match the code-defined default order (by label).
-// Preserves user-edited values but enforces the order from defaults.
 function reorderByLabel<T extends { label: string }>(loaded: T[], defaults: T[]): T[] {
   const byLabel = new Map(loaded.map(item => [item.label, item]));
   return defaults.map(d => byLabel.get(d.label) ?? d);
+}
+
+// Zero-conversion defaults for new scenarios
+function zeroConvSales(): SaleRevenueItem[] {
+  return defaultSaleRevenues.map(item => recalcSaleItem({
+    ...item, y1: { ...item.y1, conv: 0 }, y2: { ...item.y2, conv: 0 }, y3: { ...item.y3, conv: 0 },
+  }));
+}
+function zeroConvRentals(): RentalRevenueItem[] {
+  return defaultRentalRevenues.map(item => recalcRentalItem({
+    ...item, y1: { ...item.y1, conv: 0 }, y2: { ...item.y2, conv: 0 }, y3: { ...item.y3, conv: 0 },
+  }));
+}
+function zeroConvMedia(): MediaRevenueItem[] {
+  return defaultMediaRevenues.map(item => recalcMediaItem({
+    ...item, y1: { ...item.y1, conv: 0 }, y2: { ...item.y2, conv: 0 }, y3: { ...item.y3, conv: 0 },
+  }));
 }
 
 // Debounced save to Supabase (500ms delay to batch rapid edits)
@@ -64,6 +84,17 @@ const supabaseTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 function debouncedSave(key: string, value: unknown) {
   clearTimeout(supabaseTimers[key]);
   supabaseTimers[key] = setTimeout(() => { saveToSupabase(key, value); }, 500);
+}
+
+// Load scenario data with fallback: try prefixed key, then legacy unprefixed (for realistic only)
+async function loadScenarioValue<T>(key: string, scenario: ScenarioKey, fallback: T): Promise<T> {
+  const prefixed = await loadFromSupabase<T | null>(`${key}_${scenario}`, null);
+  if (prefixed !== null) return prefixed;
+  // For realistic, fall back to legacy unprefixed key (migration path)
+  if (scenario === 'realistic') {
+    return loadFromSupabase<T>(key, fallback);
+  }
+  return fallback;
 }
 
 export function FinancialProvider({ children }: { children: React.ReactNode }) {
@@ -85,7 +116,11 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   };
 
   const [investment, setInvestment] = useState(500000);
-  const [growthBoost, setGrowthBoost] = useState(0);
+  const [commissionRate, setCommissionRate] = useState(0.25);
+  const [activeScenario, setActiveScenarioRaw] = useState<ScenarioKey>('realistic');
+
+  // Track current scenario in a ref so save effects always use the latest value
+  const scenarioRef = useRef<ScenarioKey>('realistic');
 
   // Load from Supabase on mount, then enable persistence
   const readyToSave = useRef(false);
@@ -95,15 +130,20 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
     didHydrate.current = true;
     (async () => {
       await ensureMigrated();
-      const [ab, am, sr, rr, mr, ei, inv, gb] = await Promise.all([
+      // Load scenario first
+      const scenario = await loadFromSupabase<ScenarioKey>('activeScenario', 'realistic');
+      scenarioRef.current = scenario;
+      setActiveScenarioRaw(scenario);
+
+      const [ab, am, sr, rr, mr, ei, inv, cr] = await Promise.all([
         loadFromSupabase<Record<BrandKey, boolean>>('activeBrands', activeBrands),
         loadFromSupabase<Record<MarketKey, boolean>>('activeMarkets', activeMarkets),
-        loadFromSupabase<SaleRevenueItem[]>('saleRevenues', saleRevenues),
-        loadFromSupabase<RentalRevenueItem[]>('rentalRevenues', rentalRevenues),
-        loadFromSupabase<MediaRevenueItem[]>('mediaRevenues', mediaRevenues),
-        loadFromSupabase<ExpenseItem[]>('expenseItems', expenseItems),
+        loadScenarioValue<SaleRevenueItem[]>('saleRevenues', scenario, defaultSaleRevenues),
+        loadScenarioValue<RentalRevenueItem[]>('rentalRevenues', scenario, defaultRentalRevenues),
+        loadScenarioValue<MediaRevenueItem[]>('mediaRevenues', scenario, defaultMediaRevenues),
+        loadScenarioValue<ExpenseItem[]>('expenseItems', scenario, defaultExpenses),
         loadFromSupabase<number>('investment', investment),
-        loadFromSupabase<number>('growthBoost', growthBoost),
+        loadFromSupabase<number>('commissionRate', commissionRate),
       ]);
       setActiveBrands(ab);
       setActiveMarkets(am);
@@ -112,23 +152,64 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
       setMediaRevenues(reorderByLabel(mr, defaultMediaRevenues));
       setExpenseItems(reorderByLabel(ei, defaultExpenses));
       setInvestment(inv);
-      setGrowthBoost(gb);
-      // Enable saving only AFTER hydration is fully applied
-      // Use setTimeout to skip the render triggered by the setters above
+      setCommissionRate(cr);
       setTimeout(() => { readyToSave.current = true; }, 0);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist to Supabase (debounced) — only after hydration completes
+  // Persist to Supabase (debounced) — scenario-aware for revenue/expense data
   useEffect(() => { if (readyToSave.current) debouncedSave('activeBrands', activeBrands); }, [activeBrands]);
   useEffect(() => { if (readyToSave.current) debouncedSave('activeMarkets', activeMarkets); }, [activeMarkets]);
-  useEffect(() => { if (readyToSave.current) debouncedSave('saleRevenues', saleRevenues); }, [saleRevenues]);
-  useEffect(() => { if (readyToSave.current) debouncedSave('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
-  useEffect(() => { if (readyToSave.current) debouncedSave('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
-  useEffect(() => { if (readyToSave.current) debouncedSave('expenseItems', expenseItems); }, [expenseItems]);
+  useEffect(() => { if (readyToSave.current) debouncedSave(`saleRevenues_${scenarioRef.current}`, saleRevenues); }, [saleRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave(`rentalRevenues_${scenarioRef.current}`, rentalRevenues); }, [rentalRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave(`mediaRevenues_${scenarioRef.current}`, mediaRevenues); }, [mediaRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave(`expenseItems_${scenarioRef.current}`, expenseItems); }, [expenseItems]);
   useEffect(() => { if (readyToSave.current) debouncedSave('investment', investment); }, [investment]);
-  useEffect(() => { if (readyToSave.current) debouncedSave('growthBoost', growthBoost); }, [growthBoost]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('commissionRate', commissionRate); }, [commissionRate]);
+
+  // Scenario switch handler
+  const setActiveScenario = useCallback(async (newScenario: ScenarioKey) => {
+    if (newScenario === scenarioRef.current) return;
+    const prevScenario = scenarioRef.current;
+    readyToSave.current = false;
+
+    // Save current data to current scenario keys (immediate, not debounced)
+    await Promise.all([
+      saveToSupabase(`saleRevenues_${prevScenario}`, saleRevenues),
+      saveToSupabase(`rentalRevenues_${prevScenario}`, rentalRevenues),
+      saveToSupabase(`mediaRevenues_${prevScenario}`, mediaRevenues),
+      saveToSupabase(`expenseItems_${prevScenario}`, expenseItems),
+    ]);
+
+    // Switch scenario
+    scenarioRef.current = newScenario;
+    setActiveScenarioRaw(newScenario);
+    saveToSupabase('activeScenario', newScenario);
+
+    // Load new scenario data (zeroed defaults for pessimistic/optimistic if no saved data)
+    const zeroSales = zeroConvSales();
+    const zeroRentals = zeroConvRentals();
+    const zeroMedia = zeroConvMedia();
+
+    const fallbackSales = newScenario === 'realistic' ? defaultSaleRevenues : zeroSales;
+    const fallbackRentals = newScenario === 'realistic' ? defaultRentalRevenues : zeroRentals;
+    const fallbackMedia = newScenario === 'realistic' ? defaultMediaRevenues : zeroMedia;
+
+    const [sr, rr, mr, ei] = await Promise.all([
+      loadScenarioValue<SaleRevenueItem[]>('saleRevenues', newScenario, fallbackSales),
+      loadScenarioValue<RentalRevenueItem[]>('rentalRevenues', newScenario, fallbackRentals),
+      loadScenarioValue<MediaRevenueItem[]>('mediaRevenues', newScenario, fallbackMedia),
+      loadScenarioValue<ExpenseItem[]>('expenseItems', newScenario, defaultExpenses),
+    ]);
+
+    setSaleRevenues(reorderByLabel(sr, defaultSaleRevenues));
+    setRentalRevenues(reorderByLabel(rr, defaultRentalRevenues));
+    setMediaRevenues(reorderByLabel(mr, defaultMediaRevenues));
+    setExpenseItems(reorderByLabel(ei, defaultExpenses));
+
+    setTimeout(() => { readyToSave.current = true; }, 0);
+  }, [saleRevenues, rentalRevenues, mediaRevenues, expenseItems]);
 
   const toggleBrand = (brand: BrandKey) => {
     setActiveBrands((prev) => ({ ...prev, [brand]: !prev[brand] }));
@@ -192,14 +273,14 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   const yearly = useMemo(
     () =>
       (['y1', 'y2', 'y3'] as const).map((y) =>
-        calcYearlyFinancials(activeBrands, y, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets)
+        calcYearlyFinancials(activeBrands, y, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets, commissionRate)
       ) as [YearlyFinancials, YearlyFinancials, YearlyFinancials],
-    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, commissionRate]
   );
 
   const monthly = useMemo(
-    () => calcMonthlyFinancials(activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets),
-    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    () => calcMonthlyFinancials(activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets, commissionRate),
+    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, commissionRate]
   );
 
   const revenueByBrand = useMemo(
@@ -221,8 +302,8 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   );
 
   const simulation = useMemo(
-    () => calcInvestmentSimulation(activeBrands, investment, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets),
-    [activeBrands, activeMarkets, investment, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    () => calcInvestmentSimulation(activeBrands, investment, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets, commissionRate),
+    [activeBrands, activeMarkets, investment, commissionRate, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
   );
 
   return (
@@ -246,9 +327,11 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
         updateExpenseItem,
         investment,
         setInvestment,
-        growthBoost,
-        setGrowthBoost,
+        commissionRate,
+        setCommissionRate,
         simulation,
+        activeScenario,
+        setActiveScenario,
       }}
     >
       {children}

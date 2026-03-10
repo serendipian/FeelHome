@@ -97,10 +97,11 @@ export function calcYearlyFinancials(
   rentals: RentalRevenueItem[],
   media: MediaRevenueItem[],
   expenseItems: ExpenseItem[],
-  activeMarkets?: MarketFlags
+  activeMarkets?: MarketFlags,
+  commissionRate = 0.25
 ): YearlyFinancials {
   const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets);
-  const commissions = revenue * 0.25;
+  const commissions = revenue * commissionRate;
   const expensesTotal = calcExpenses(activeBrands, year, expenseItems);
   const profit = revenue - commissions - expensesTotal;
   return { revenue: revenue * 12, commissions: commissions * 12, expenses: expensesTotal * 12, profit: profit * 12 };
@@ -112,11 +113,12 @@ export function calcMonthlyFinancials(
   rentals: RentalRevenueItem[],
   media: MediaRevenueItem[],
   expenseItems: ExpenseItem[],
-  activeMarkets?: MarketFlags
+  activeMarkets?: MarketFlags,
+  commissionRate = 0.25
 ) {
   return (['y1', 'y2', 'y3'] as const).map((year) => {
     const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets);
-    const commissions = revenue * 0.25;
+    const commissions = revenue * commissionRate;
     const expensesTotal = calcExpenses(activeBrands, year, expenseItems);
     const profit = revenue - commissions - expensesTotal;
     return { revenue, commissions, expenses: expensesTotal, profit };
@@ -126,12 +128,12 @@ export function calcMonthlyFinancials(
 export function calcInvestmentSimulation(
   activeBrands: Record<BrandKey, boolean>,
   investment: number,
-  growthBoost: number,
   sales: SaleRevenueItem[],
   rentals: RentalRevenueItem[],
   media: MediaRevenueItem[],
   expenseItems: ExpenseItem[],
-  activeMarkets?: MarketFlags
+  activeMarkets?: MarketFlags,
+  commissionRate = 0.25
 ): { snapshots: MonthlySnapshot[]; breakEvenMonth: number; roi: number; finalCash: number } {
   const snapshots: MonthlySnapshot[] = [];
   let cumulative = 0;
@@ -141,16 +143,12 @@ export function calcInvestmentSimulation(
     const yearIndex = month <= 12 ? 0 : month <= 24 ? 1 : 2;
     const year = (['y1', 'y2', 'y3'] as const)[yearIndex];
 
-    const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets) * (1 + growthBoost);
+    const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets);
     const revByBrand = calcRevenueByBrand(activeBrands, year, sales, rentals, media, activeMarkets);
-    const boost = 1 + growthBoost;
-    revByBrand.feelHome *= boost;
-    revByBrand.mInvest *= boost;
-    revByBrand.expats *= boost;
 
     const commByBrand = {
-      feelHome: revByBrand.feelHome * 0.25,
-      mInvest: revByBrand.mInvest * 0.25,
+      feelHome: revByBrand.feelHome * commissionRate,
+      mInvest: revByBrand.mInvest * commissionRate,
       expats: 0,
     };
     const commissions = commByBrand.feelHome + commByBrand.mInvest;

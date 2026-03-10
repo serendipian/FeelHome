@@ -2,12 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
-import { useFinancial, MarketKey } from '@/context/FinancialContext';
+import { useFinancial, MarketKey, ScenarioKey } from '@/context/FinancialContext';
 import { brands, brandKeys } from '@/data/brands';
 import { BrandKey } from '@/types';
 import BrandAvatar from '@/components/ui/BrandAvatar';
 import Toggle from '@/components/ui/Toggle';
-import { formatCompact, formatMAD } from '@/lib/formatters';
+import { formatCompact, formatMAD, formatNumber } from '@/lib/formatters';
+import EditableCell from '@/components/ui/EditableCell';
 import ChartTooltip from '@/components/ui/ChartTooltip';
 import {
   PieChart,
@@ -41,6 +42,12 @@ const marketColors: Record<MarketKey, string> = {
 
 const marketKeys: MarketKey[] = ['casablanca', 'rabat', 'marrakech', 'autre'];
 
+const scenarioConfig: { key: ScenarioKey; label: string; color: string }[] = [
+  { key: 'pessimistic', label: 'Pessimistic', color: '#f43f5e' },
+  { key: 'realistic', label: 'Realistic', color: '#d4a853' },
+  { key: 'optimistic', label: 'Optimistic', color: '#2dd4bf' },
+];
+
 export default function RightPanel() {
   const pathname = usePathname();
   const { isDark } = useTheme();
@@ -56,6 +63,12 @@ export default function RightPanel() {
     expensesByCategory,
     saleRevenues,
     rentalRevenues,
+    investment,
+    setInvestment,
+    commissionRate,
+    setCommissionRate,
+    activeScenario,
+    setActiveScenario,
   } = useFinancial();
 
   return (
@@ -68,6 +81,44 @@ export default function RightPanel() {
         borderLeft: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
       }}
     >
+      {/* Scenario Selector */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1 h-1 rounded-full bg-[#d4a853]/60" />
+          <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Scenario</span>
+        </div>
+        <div
+          className="flex rounded-xl overflow-hidden"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)',
+            border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
+          }}
+        >
+          {scenarioConfig.map((s) => {
+            const active = activeScenario === s.key;
+            return (
+              <button
+                key={s.key}
+                onClick={() => setActiveScenario(s.key)}
+                className="flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-all duration-300 relative"
+                style={{
+                  color: active ? s.color : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.3)'),
+                  background: active ? `${s.color}12` : 'transparent',
+                }}
+              >
+                {active && (
+                  <div
+                    className="absolute bottom-0 left-[20%] right-[20%] h-[2px] rounded-full"
+                    style={{ background: s.color }}
+                  />
+                )}
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Brand Toggles */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -135,6 +186,50 @@ export default function RightPanel() {
           })}
         </div>
       </div>
+
+      {/* Hypotheses — only on simulation page */}
+      {pathname === '/investment' && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-1 rounded-full bg-[#d4a853]/60" />
+            <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Hypotheses</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)',
+                border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
+              }}
+            >
+              <span className="text-[11px] font-medium text-white/50">Initial Investment</span>
+              <div className="font-mono text-[12px] font-bold text-[#d4a853]">
+                <EditableCell
+                  value={investment}
+                  onSave={setInvestment}
+                  format={(v) => `${formatNumber(Math.round(v))} MAD`}
+                />
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)',
+                border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
+              }}
+            >
+              <span className="text-[11px] font-medium text-white/50">Team Commission</span>
+              <div className="font-mono text-[12px] font-bold text-[#f59e0b]">
+                <EditableCell
+                  value={commissionRate * 100}
+                  onSave={(v) => setCommissionRate(v / 100)}
+                  format={(v) => `${Math.round(v)}%`}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Separator */}
       <div className="h-px bg-white/[0.04]" />
@@ -447,63 +542,95 @@ function ExpenseCharts({
   );
 }
 
-/* ── Investment Charts (relocated: cash balance) ───── */
+/* ── Investment Charts (waterfall + cumulative P&L + KPIs) ── */
 function InvestmentCharts({ simulation }: { simulation: any }) {
   const { isDark } = useTheme();
   const { snapshots, breakEvenMonth, roi, finalCash } = simulation;
 
-  const chartData = snapshots.map((s: any) => ({
+  // Use first 6 months for waterfall & cumulative P&L
+  const first6 = snapshots.slice(0, 6);
+  const totalRev = first6.reduce((s: number, snap: any) => s + snap.revenue, 0);
+  const totalExp = first6.reduce((s: number, snap: any) => s + snap.expenses, 0);
+  const totalComm = first6.reduce((s: number, snap: any) => s + snap.commissions, 0);
+  const inv = first6[0]?.balance - first6[0]?.cumulative || 0; // investment amount
+  const remaining = inv + totalRev - totalExp - totalComm;
+
+  // Waterfall: base (invisible) + bar (visible), stacked so bar sits on top of base
+  const wfSteps = [
+    { name: 'Invest.', running: inv, color: '#d4a853' },
+    { name: 'Expenses', running: inv - totalExp, color: '#f43f5e' },
+    { name: 'Comm.', running: inv - totalExp - totalComm, color: '#f59e0b' },
+    { name: 'Revenue', running: remaining, color: '#2dd4bf' },
+    { name: 'Cash', running: remaining, color: remaining >= 0 ? '#2dd4bf' : '#f43f5e' },
+  ];
+
+  const wfData = wfSteps.map((step, i) => {
+    const isTotal = i === 0 || i === wfSteps.length - 1;
+    const prevRunning = i > 0 ? wfSteps[i - 1].running : 0;
+    const base = isTotal ? 0 : Math.min(prevRunning, step.running);
+    const bar = isTotal ? Math.abs(step.running) : Math.abs(step.running - prevRunning);
+    return { name: step.name, base, bar, color: step.color };
+  });
+
+  // Cumulative P&L sparkline
+  const plData = first6.map((s: any) => ({
     name: `M${s.month}`,
-    Balance: s.balance,
+    PnL: s.cumulative,
   }));
 
   return (
     <>
-      {/* Cash Balance Trajectory */}
-      <SideChartCard title="Cash Balance" subtitle="36-month projection">
-        {breakEvenMonth > 0 && (
-          <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md" style={{ background: '#2dd4bf08', border: '1px solid #2dd4bf15' }}>
-            <div className="w-1 h-1 rounded-full bg-[#2dd4bf] animate-pulse" />
-            <span className="text-[9px] text-[#2dd4bf] font-semibold">Break-even Month {breakEvenMonth}</span>
-          </div>
-        )}
-        <div className="h-[160px]">
+      {/* Cash Burn Waterfall */}
+      <SideChartCard title="Cash Burn Waterfall" subtitle="6-month fund allocation">
+        <div className="h-[140px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
+            <BarChart data={wfData} barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 8 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCompact(v)} width={40} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="base" stackId="a" fill="transparent" radius={0} />
+              <Bar dataKey="bar" stackId="a" radius={[3, 3, 0, 0]}>
+                {wfData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} fillOpacity={0.85} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 justify-center">
+          {wfSteps.slice(0, 4).map((s) => (
+            <div key={s.name} className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
+              <span className="text-[8px] text-white/30">{s.name}</span>
+            </div>
+          ))}
+        </div>
+      </SideChartCard>
+
+      {/* Cumulative P&L Sparkline */}
+      <SideChartCard title="Cumulative P&L" subtitle="6-month trajectory">
+        <div className="h-[110px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={plData}>
               <defs>
-                <linearGradient id="rpBalGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2dd4bf" stopOpacity={0.25} />
-                  <stop offset="50%" stopColor="#2dd4bf" stopOpacity={0.05} />
-                  <stop offset="100%" stopColor="#2dd4bf" stopOpacity={0} />
+                <linearGradient id="rpPnLGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#d4a853" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#d4a853" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }}
-                axisLine={false}
-                tickLine={false}
-                interval={11}
-              />
-              <YAxis
-                tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`}
-                width={35}
-              />
+              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.35)', fontSize: 8 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCompact(v)} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <ReferenceLine y={0} stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.1)'} strokeDasharray="4 4" />
-              {breakEvenMonth > 0 && (
-                <ReferenceLine x={`M${breakEvenMonth}`} stroke="#2dd4bf" strokeDasharray="6 4" strokeOpacity={0.4} />
-              )}
               <Area
                 type="monotone"
-                dataKey="Balance"
-                stroke="#2dd4bf"
-                fill="url(#rpBalGrad)"
+                dataKey="PnL"
+                stroke="#d4a853"
+                fill="url(#rpPnLGrad)"
                 strokeWidth={2}
-                dot={false}
+                dot={{ r: 2.5, fill: '#d4a853', strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>

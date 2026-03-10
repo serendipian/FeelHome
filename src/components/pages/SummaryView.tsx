@@ -29,7 +29,7 @@ export default function SummaryView() {
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="zebra-rows">
             {[
               { label: 'Gross Revenue', key: 'revenue', color: '#d4a853', bold: false },
               { label: 'Agent Commissions (25%)', key: 'commissions', color: '#f97316', bold: false },
@@ -38,7 +38,7 @@ export default function SummaryView() {
             ].map((row) => (
               <tr
                 key={row.key}
-                className={`transition-colors hover:bg-white/[0.015] ${
+                className={`transition-colors hover:!bg-white/[0.04] ${
                   row.bold ? 'border-t border-white/[0.06]' : 'border-b border-white/[0.02]'
                 }`}
               >

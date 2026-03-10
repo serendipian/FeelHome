@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
-import { formatMAD, formatNumber, formatPercent } from '@/lib/formatters';
+import { formatNumber } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
 import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
 import { defaultSaleRevenues, defaultRentalRevenues, defaultMediaRevenues } from '@/data/revenues';
 import { defaultExpenses } from '@/data/expenses';
 import { MonthlySnapshot } from '@/types';
-import KPICard from '@/components/ui/KPICard';
 import EditableCell from '@/components/ui/EditableCell';
 
 const MONTHS = 6;
@@ -23,23 +22,21 @@ interface SimData {
 
 export default function InvestmentView() {
   const {
-    investment, setInvestment,
-    growthBoost, setGrowthBoost,
-    simulation,
+    investment,
+    commissionRate,
     activeBrands,
     activeMarkets,
     saleRevenues,
     rentalRevenues,
     mediaRevenues,
     expenseItems,
+    activeScenario,
   } = useFinancial();
 
   const isMarketActive = useCallback((label: string) => {
     const key = label.toLowerCase() as keyof typeof activeMarkets;
     return activeMarkets[key] !== false;
   }, [activeMarkets]);
-
-  const { breakEvenMonth, roi, finalCash } = simulation;
 
   const tableMonths = [1, 2, 3, 4, 5, 6];
   const [salariesExpanded, setSalariesExpanded] = useState(false);
@@ -78,36 +75,64 @@ export default function InvestmentView() {
     };
   }
 
-  // Persist sim data to Supabase (debounced, label-keyed)
+  // Persist sim data to Supabase (debounced, label-keyed, scenario-aware)
   const simMounted = useRef(false);
   const simTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const simScenarioRef = useRef(activeScenario);
   useEffect(() => {
     if (!simMounted.current) return;
     clearTimeout(simTimer.current);
-    simTimer.current = setTimeout(() => { saveToSupabase('simdata', simToLabeled(sim)); }, 500);
+    simTimer.current = setTimeout(() => { saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim)); }, 500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sim]);
 
-  // Load sim data from Supabase on mount
+  // Zeroed sim for non-realistic scenarios (no saved data yet)
+  const zeroedSim: SimData = useMemo(() => ({
+    rentalConvs: defaultRentalRevenues.map(() => Array(MONTHS).fill(0)),
+    saleConvs: defaultSaleRevenues.map(() => Array(MONTHS).fill(0)),
+    mediaConvs: defaultMediaRevenues.map(() => Array(MONTHS).fill(0)),
+    expenses: defaultExpenses.map(item => Array(MONTHS).fill(item.y1)),
+  }), []);
+
+  // Load sim data from Supabase on mount and on scenario change
   const simHydrated = useRef(false);
-  useEffect(() => {
-    if (simHydrated.current) return;
-    simHydrated.current = true;
-    ensureMigrated().then(() =>
-      loadFromSupabase<LabeledSimData | SimData>('simdata', {}).then((data) => {
-        // Handle both old format (indexed arrays) and new format (label-keyed map)
-        if (data && 'rentalConvs' in data) {
-          // Old format — ignore it (indices may be wrong), use defaults
-          setSim(defaultSim);
-        } else if (data && Object.keys(data).length > 0) {
-          // New label-keyed format
-          setSim(labeledToSim(data as LabeledSimData, defaultSim));
-        }
-        simMounted.current = true;
-      })
-    );
+  const loadSimForScenario = useCallback((scenario: string) => {
+    simMounted.current = false;
+    const fallback = scenario === 'realistic' ? defaultSim : zeroedSim;
+    ensureMigrated().then(async () => {
+      // Try scenario-specific key, fall back to legacy 'simdata' for realistic
+      let data = await loadFromSupabase<LabeledSimData | SimData | null>(`simdata_${scenario}`, null);
+      if (data === null && scenario === 'realistic') {
+        data = await loadFromSupabase<LabeledSimData | SimData>('simdata', {});
+      }
+      if (data && 'rentalConvs' in data) {
+        setSim(fallback);
+      } else if (data && Object.keys(data).length > 0) {
+        setSim(labeledToSim(data as LabeledSimData, fallback));
+      } else {
+        setSim(fallback);
+      }
+      simScenarioRef.current = scenario as typeof activeScenario;
+      simMounted.current = true;
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultSim, zeroedSim]);
+
+  useEffect(() => {
+    if (!simHydrated.current) {
+      simHydrated.current = true;
+      loadSimForScenario(activeScenario);
+      return;
+    }
+    // Scenario changed — save current sim data to old scenario, load new
+    if (simScenarioRef.current !== activeScenario) {
+      if (simMounted.current) {
+        saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim));
+      }
+      loadSimForScenario(activeScenario);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeScenario]);
 
   const updateSimRental = (itemIdx: number, monthIdx: number, conv: number) => {
     setSim(prev => {
@@ -178,16 +203,9 @@ export default function InvestmentView() {
         });
       }
 
-      // Apply growth boost
-      const boost = 1 + growthBoost;
-      revenue *= boost;
-      revByBrand.feelHome *= boost;
-      revByBrand.mInvest *= boost;
-      revByBrand.expats *= boost;
-
       const commByBrand = {
-        feelHome: revByBrand.feelHome * 0.25,
-        mInvest: revByBrand.mInvest * 0.25,
+        feelHome: revByBrand.feelHome * commissionRate,
+        mInvest: revByBrand.mInvest * commissionRate,
         expats: 0,
       };
       const commissions = commByBrand.feelHome + commByBrand.mInvest;
@@ -213,66 +231,10 @@ export default function InvestmentView() {
     }
 
     return snaps;
-  }, [sim, activeBrands, activeMarkets, rentalRevenues, saleRevenues, mediaRevenues, expenseItems, investment, growthBoost, isMarketActive]);
+  }, [sim, activeBrands, activeMarkets, rentalRevenues, saleRevenues, mediaRevenues, expenseItems, investment, commissionRate, isMarketActive]);
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Sliders */}
-      <div className="grid grid-cols-2 gap-5">
-        <SliderCard
-          label="Initial Investment"
-          value={investment}
-          onChange={setInvestment}
-          min={100000}
-          max={2000000}
-          step={50000}
-          format={formatMAD}
-          color="#d4a853"
-        />
-        <SliderCard
-          label="Growth Adjustment"
-          value={growthBoost}
-          onChange={setGrowthBoost}
-          min={-0.3}
-          max={0.5}
-          step={0.05}
-          format={(v) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(0)}%`}
-          color="#1d7ff3"
-        />
-      </div>
-
-      {/* Result KPIs */}
-      <div className="grid grid-cols-4 gap-5">
-        <KPICard
-          title="Total Investment"
-          value={formatMAD(investment)}
-          color="#d4a853"
-          icon={<DollarIcon />}
-        />
-        <KPICard
-          title="Break-even Point"
-          value={breakEvenMonth > 0 ? `Month ${breakEvenMonth}` : 'N/A'}
-          subtitle={breakEvenMonth > 0 ? `Year ${Math.ceil(breakEvenMonth / 12)}` : 'Not reached in 36mo'}
-          color="#2dd4bf"
-          icon={<TargetIcon />}
-        />
-        <KPICard
-          title="3-Year ROI"
-          value={formatPercent(roi)}
-          subtitle={roi >= 0 ? 'Return on investment' : 'Capital loss'}
-          color={roi >= 0 ? '#2dd4bf' : '#f43f5e'}
-          trend={roi >= 0 ? 'up' : 'down'}
-          icon={<ChartIcon />}
-        />
-        <KPICard
-          title="Final Cash Position"
-          value={formatMAD(finalCash)}
-          subtitle="After 36 months"
-          color={finalCash >= 0 ? '#2dd4bf' : '#f43f5e'}
-          icon={<WalletIcon />}
-        />
-      </div>
-
       {/* Pre-launch Simulation — separate cards */}
       <div className="space-y-4">
         <div>
@@ -288,7 +250,7 @@ export default function InvestmentView() {
               {rentalRevenues.map((item, idx) => {
                 const active = isMarketActive(item.label);
                 return (
-                  <tr key={`rental-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-20'}`}>
+                  <tr key={`rental-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-20'}`}>
                     <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                     {tableMonths.map((m) => {
                       const mi = m - 1;
@@ -323,7 +285,7 @@ export default function InvestmentView() {
               {saleRevenues.map((item, idx) => {
                 const active = isMarketActive(item.label);
                 return (
-                  <tr key={`sale-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-20'}`}>
+                  <tr key={`sale-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-20'}`}>
                     <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                     {tableMonths.map((m) => {
                       const mi = m - 1;
@@ -356,7 +318,7 @@ export default function InvestmentView() {
             <>
               <CashFlowRow label="Expats.ma (Media)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.expats} color="#1d7ff3" bold />
               {mediaRevenues.map((item, idx) => (
-                <tr key={`media-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                <tr key={`media-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                   <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                   {tableMonths.map((m) => {
                     const mi = m - 1;
@@ -396,7 +358,7 @@ export default function InvestmentView() {
             const isCollapsed = collapseFromIdx > 0 && idx >= collapseFromIdx && !salariesExpanded;
             if (isCollapsed) return null;
             return (
-              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                 <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                 {tableMonths.map((m) => {
                   const mi = m - 1;
@@ -434,7 +396,7 @@ export default function InvestmentView() {
           {expenseItems.map((item, idx) => {
             if (item.category !== 'fixed' || !isExpenseActive(item, activeBrands)) return null;
             return (
-              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                 <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                 {tableMonths.map((m) => {
                   const mi = m - 1;
@@ -457,7 +419,7 @@ export default function InvestmentView() {
           {expenseItems.map((item, idx) => {
             if (item.category !== 'marketing' || !isExpenseActive(item, activeBrands)) return null;
             return (
-              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                 <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                 {tableMonths.map((m) => {
                   const mi = m - 1;
@@ -479,7 +441,7 @@ export default function InvestmentView() {
         </SimCard>
 
         {/* COMMISSIONS CARD */}
-        <SimCard title="Commissions (25%)" tableMonths={tableMonths}>
+        <SimCard title={`Commissions (${Math.round(commissionRate * 100)}%)`} tableMonths={tableMonths}>
           {activeBrands.feelHome && (
             <CashFlowRow label="Feel Home" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.commByBrand.feelHome} color="#d4875a" />
           )}
@@ -491,91 +453,9 @@ export default function InvestmentView() {
         </SimCard>
 
         {/* BOTTOM LINE CARD */}
-        <SimCard title="Bottom Line" tableMonths={tableMonths}>
-          <CashFlowRow label="Net Profit" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.profit} autoColor />
-          <CashFlowRow label="Cumulative P&L" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.cumulative} autoColor />
-          <CashFlowRow label="Cash Balance" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.balance} autoColor bold highlight />
-        </SimCard>
+        <BottomLineCard tableMonths={tableMonths} snapshots={localSnapshots} />
       </div>
     </div>
-  );
-}
-
-function SliderCard({
-  label, value, onChange, min, max, step, format, color,
-}: {
-  label: string; value: number; onChange: (v: number) => void;
-  min: number; max: number; step: number; format: (v: number) => string; color: string;
-}) {
-  const pct = ((value - min) / (max - min)) * 100;
-
-  return (
-    <div className="card p-6 relative overflow-hidden">
-      <div
-        className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-3xl opacity-[0.07]"
-        style={{ background: color }}
-      />
-      <div className="flex items-center justify-between mb-4 relative">
-        <span className="text-[11px] font-semibold text-white/35 uppercase tracking-[0.15em]">{label}</span>
-        <span className="font-mono text-[15px] font-bold" style={{ color }}>
-          {format(value)}
-        </span>
-      </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full cursor-pointer relative z-10"
-          style={{ accentColor: color }}
-        />
-        <div className="absolute top-[9px] left-0 right-0 h-[3px] rounded-full bg-white/[0.04] pointer-events-none">
-          <div
-            className="h-full rounded-full transition-all duration-150"
-            style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}60, ${color})` }}
-          />
-        </div>
-      </div>
-      <div className="flex justify-between mt-2 text-[9px] text-white/20 font-mono tracking-wide">
-        <span>{format(min)}</span>
-        <span>{format(max)}</span>
-      </div>
-    </div>
-  );
-}
-
-function DollarIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33" />
-    </svg>
-  );
-}
-
-function TargetIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0-4a5 5 0 100-10 5 5 0 000 10zm0-4a1 1 0 100-2 1 1 0 000 2z" />
-    </svg>
-  );
-}
-
-function ChartIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-    </svg>
-  );
-}
-
-function WalletIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
-    </svg>
   );
 }
 
@@ -599,14 +479,39 @@ function SimCard({ title, tableMonths, children }: { title: string; tableMonths:
             ))}
           </tr>
         </thead>
-        <tbody>{children}</tbody>
+        <tbody className="zebra-rows">{children}</tbody>
       </table>
     </div>
   );
 }
 
+function BottomLineCard({ tableMonths, snapshots }: { tableMonths: number[]; snapshots: MonthlySnapshot[] }) {
+  const prevRef = useRef<string>('');
+  const [flashKey, setFlashKey] = useState(0);
+
+  const signature = snapshots.map(s => `${s.revenue}|${s.commissions}|${s.expenses}|${s.profit}|${s.cumulative}|${s.balance}`).join(',');
+
+  useEffect(() => {
+    if (prevRef.current && prevRef.current !== signature) {
+      setFlashKey(k => k + 1);
+    }
+    prevRef.current = signature;
+  }, [signature]);
+
+  return (
+    <SimCard title="Bottom Line" tableMonths={tableMonths}>
+      <CashFlowRow label="Total Revenues" months={tableMonths} snapshots={snapshots} getValue={(s) => s.revenue} color="#2dd4bf" bold flashKey={flashKey} />
+      <CashFlowRow label="Total Commissions (Team)" months={tableMonths} snapshots={snapshots} getValue={(s) => s.commissions} color="#f59e0b" bold flashKey={flashKey} />
+      <CashFlowRow label="Total Expenses" months={tableMonths} snapshots={snapshots} getValue={(s) => s.expenses} color="#f43f5e" bold flashKey={flashKey} />
+      <CashFlowRow label="Net Profit" months={tableMonths} snapshots={snapshots} getValue={(s) => s.profit} autoColor bold flashKey={flashKey} />
+      <CashFlowRow label="Cumulative P&L" months={tableMonths} snapshots={snapshots} getValue={(s) => s.cumulative} autoColor bold flashKey={flashKey} />
+      <CashFlowRow label="Cash Balance" months={tableMonths} snapshots={snapshots} getValue={(s) => s.balance} autoColor bold highlight flashKey={flashKey} />
+    </SimCard>
+  );
+}
+
 function CashFlowRow({
-  label, months, snapshots, getValue, color, autoColor, bold, highlight,
+  label, months, snapshots, getValue, color, autoColor, bold, highlight, flashKey,
 }: {
   label: string;
   months: number[];
@@ -616,9 +521,10 @@ function CashFlowRow({
   autoColor?: boolean;
   bold?: boolean;
   highlight?: boolean;
+  flashKey?: number;
 }) {
   return (
-    <tr className={`border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors ${highlight ? 'bg-white/[0.02]' : ''}`}>
+    <tr className={`border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors ${highlight ? '!bg-white/[0.04]' : ''}`}>
       <td className={`px-5 py-2.5 whitespace-nowrap ${bold ? 'font-bold text-white/80 text-[12px]' : 'text-white/45 text-[11px] pl-8'}`}>
         {label}
       </td>
@@ -631,8 +537,8 @@ function CashFlowRow({
           : color || '#ffffff80';
         return (
           <td
-            key={m}
-            className={`px-3 py-2.5 text-center font-mono ${bold ? 'font-bold text-[12px]' : 'text-[11px]'}`}
+            key={flashKey ? `${m}-${flashKey}` : m}
+            className={`px-3 py-2.5 text-center font-mono ${bold ? 'font-bold text-[12px]' : 'text-[11px]'} ${flashKey ? 'flash-cell' : ''}`}
             style={{ color: cellColor }}
           >
             {val === 0 ? '—' : formatNumber(Math.round(val))}

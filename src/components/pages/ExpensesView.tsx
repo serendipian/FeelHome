@@ -96,9 +96,9 @@ export default function ExpensesView() {
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Var. Cost</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="zebra-rows">
                     {items.map(({ item, idx }) => (
-                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors h-[37px]">
+                      <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
                         <td className="px-4 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3">
                           <div className="flex gap-1 flex-nowrap">
@@ -146,9 +146,9 @@ export default function ExpensesView() {
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Amount</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="zebra-rows">
                         {items.map(({ item, idx }) => (
-                          <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors h-[37px]">
+                          <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
                             <td className="px-3 text-center font-mono text-white/50">
                               {item[y] > 0 ? (
                                 <EditableCell

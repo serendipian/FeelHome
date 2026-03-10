@@ -28,7 +28,7 @@ export async function saveToSupabase(key: string, value: unknown): Promise<void>
 }
 
 // Bump this to force a one-time reset of cached Supabase data (e.g. after reordering defaults)
-const DATA_VERSION = 4;
+const DATA_VERSION = 5;
 
 // Singleton promise — ensures migration runs once and all loaders wait for it
 let migrationPromise: Promise<void> | null = null;
@@ -39,7 +39,12 @@ export function ensureMigrated(): Promise<void> {
       try {
         const stored = await loadFromSupabase<number>('dataVersion', 0);
         if (stored >= DATA_VERSION) return;
-        const keysToReset = ['saleRevenues', 'rentalRevenues', 'mediaRevenues', 'expenseItems', 'simdata'];
+        const baseKeys = ['saleRevenues', 'rentalRevenues', 'mediaRevenues', 'expenseItems', 'simdata'];
+        const scenarios = ['pessimistic', 'optimistic'];
+        const keysToReset = [
+          ...baseKeys,
+          ...baseKeys.flatMap(k => scenarios.map(s => `${k}_${s}`)),
+        ];
         await Promise.all(keysToReset.map(k => saveToSupabase(k, null)));
         await saveToSupabase('dataVersion', DATA_VERSION);
       } catch {}

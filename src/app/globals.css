@@ -106,6 +106,24 @@ body::before {
   50% { opacity: 1; }
 }
 
+@keyframes sensitivity-flash {
+  0% { background-color: rgba(212, 168, 83, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.flash-cell {
+  animation: sensitivity-flash 1.2s ease-out;
+}
+
+html.light .flash-cell {
+  animation: sensitivity-flash-light 1.2s ease-out;
+}
+
+@keyframes sensitivity-flash-light {
+  0% { background-color: rgba(212, 168, 83, 0.15); }
+  100% { background-color: transparent; }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -183,6 +201,14 @@ input[type='range']:active::-webkit-slider-thumb {
 table {
   border-collapse: separate;
   border-spacing: 0;
+}
+
+.zebra-rows > tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+html.light .zebra-rows > tr:nth-child(even) {
+  background-color: rgba(15, 23, 42, 0.025);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -291,7 +317,7 @@ html.light .border-white\/\[0\.06\] { border-color: rgb(15 23 42 / 0.09); }
 
 /* ═══ Tailwind Hover State Overrides ═══ */
 html.light .hover\:bg-white\/\[0\.02\]:hover { background-color: rgb(15 23 42 / 0.025); }
-html.light .hover\:bg-white\/\[0\.015\]:hover { background-color: rgb(15 23 42 / 0.02); }
+html.light .hover\:\!bg-white\/\[0\.04\]:hover { background-color: rgb(15 23 42 / 0.04) !important; }
 html.light .hover\:text-white\/50:hover { color: rgb(15 23 42 / 0.5); }
 html.light .hover\:text-white\/60:hover { color: rgb(15 23 42 / 0.6); }
 
@@ -301,3 +327,4 @@ html.light .via-white\/\[0\.06\] { --tw-gradient-via: rgb(15 23 42 / 0.04); }
 /* ═══ Tailwind Ring / Separator Overrides ═══ */
 html.light .bg-white\/10 { background-color: rgb(15 23 42 / 0.08); }
 html.light .bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.03); }
+html.light .\!bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.04) !important; }

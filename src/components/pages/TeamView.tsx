@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 
 // ── Data ────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,15 @@ interface TeamMember {
   scope?: string;
   location?: string;
   color: string;
+  contract: 'CDI' | 'CDD' | 'Freelance';
+  startMonth: number; // M1, M2, ...
+  languages: string[];
+  schedule: { days: string; hours: string; status: 'Full-time' | 'Part-time' };
+  compensation: { salary: number; commission?: string; cnss: number; totalCost: number };
   responsibilities: Responsibility[];
+  skills: string[];
+  kpis: string[];
+  tools: string[];
 }
 
 const director: TeamMember = {
@@ -28,6 +37,11 @@ const director: TeamMember = {
   tagline: 'Driving strategy, closing deals, building the team.',
   initials: 'DIR',
   color: '#d4a853',
+  contract: 'CDI',
+  startMonth: 1,
+  languages: ['FR', 'EN', 'AR'],
+  schedule: { days: 'Mon – Sat', hours: '9h – 19h', status: 'Full-time' },
+  compensation: { salary: 25000, cnss: 6500, totalCost: 31500 },
   responsibilities: [
     { icon: <IconPeople />, label: 'HR Management' },
     { icon: <IconGear />, label: 'Operations' },
@@ -36,6 +50,9 @@ const director: TeamMember = {
     { icon: <IconChart />, label: 'Accounting & P&L' },
     { icon: <IconReport />, label: 'Reporting & KPIs' },
   ],
+  skills: ['Leadership', 'Negotiation', 'Financial Analysis', 'Team Management', 'Strategic Planning'],
+  kpis: ['Monthly revenue target', 'Team retention rate', 'Client satisfaction score', 'Deal closure rate'],
+  tools: ['CRM', 'Excel / Sheets', 'WhatsApp Business', 'Supabase Dashboard'],
 };
 
 const backoffice: TeamMember[] = [
@@ -46,6 +63,11 @@ const backoffice: TeamMember[] = [
     initials: 'DM',
     scope: 'Digital',
     color: '#8b5cf6',
+    contract: 'CDI',
+    startMonth: 1,
+    languages: ['FR', 'EN'],
+    schedule: { days: 'Mon – Fri', hours: '9h – 18h', status: 'Full-time' },
+    compensation: { salary: 8000, cnss: 2080, totalCost: 10080 },
     responsibilities: [
       { icon: <IconInbox />, label: 'Incoming requests' },
       { icon: <IconGlobe />, label: 'Listing publishing' },
@@ -54,6 +76,9 @@ const backoffice: TeamMember[] = [
       { icon: <IconChat />, label: 'Engagement & DMs' },
       { icon: <IconCamera />, label: 'Media coordination' },
     ],
+    skills: ['Content Creation', 'SEO / SEA', 'Canva / Adobe', 'Copywriting', 'Analytics'],
+    kpis: ['Leads generated / month', 'Engagement rate', 'Listing views', 'Response time < 1h'],
+    tools: ['Meta Business', 'Canva', 'Avito / Mubawab', 'Google Analytics', 'ChatGPT'],
   },
   {
     id: 'property-hunter',
@@ -62,6 +87,11 @@ const backoffice: TeamMember[] = [
     initials: 'PH',
     scope: 'Sourcing',
     color: '#06b6d4',
+    contract: 'CDI',
+    startMonth: 1,
+    languages: ['FR', 'AR', 'Darija'],
+    schedule: { days: 'Mon – Sat', hours: '9h – 18h', status: 'Full-time' },
+    compensation: { salary: 6000, cnss: 1560, totalCost: 7560 },
     responsibilities: [
       { icon: <IconSearch />, label: 'Property sourcing' },
       { icon: <IconPhone />, label: 'Owner outreach' },
@@ -70,18 +100,25 @@ const backoffice: TeamMember[] = [
       { icon: <IconDatabase />, label: 'Database updates' },
       { icon: <IconRefresh />, label: 'Follow-up tracking' },
     ],
+    skills: ['Cold Calling', 'Market Knowledge', 'Negotiation Basics', 'CRM Data Entry', 'Local Network'],
+    kpis: ['New listings / week', 'Owner response rate', 'Database accuracy', 'Qualified leads / month'],
+    tools: ['WhatsApp', 'Google Maps', 'CRM', 'Avito / Mubawab', 'Phone'],
   },
 ];
 
 const frontoffice: TeamMember[] = [
   {
     id: 'agent-casa',
-    title: 'Real Estate Agent',
-    subtitle: 'Casablanca',
+    title: 'Agent',
     initials: 'CA',
-    scope: 'Field — Casablanca',
+    scope: 'Casablanca',
     location: 'Casablanca',
     color: '#2dd4bf',
+    contract: 'Freelance',
+    startMonth: 1,
+    languages: ['FR', 'EN', 'Darija'],
+    schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
+    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -90,15 +127,46 @@ const frontoffice: TeamMember[] = [
       { icon: <IconRefresh />, label: 'Follow-ups' },
       { icon: <IconReport />, label: 'Activity reporting' },
     ],
+    skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Bilingual FR/EN'],
+    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
+  },
+  {
+    id: 'agent-marrakech',
+    title: 'Agent',
+    initials: 'MK',
+    scope: 'Marrakech',
+    location: 'Marrakech',
+    color: '#f59e0b',
+    contract: 'Freelance',
+    startMonth: 3,
+    languages: ['FR', 'EN', 'AR'],
+    schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
+    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    responsibilities: [
+      { icon: <IconChat />, label: 'Lead communication' },
+      { icon: <IconPeople />, label: 'Client meetings' },
+      { icon: <IconBuilding />, label: 'Property visits' },
+      { icon: <IconHandshake />, label: 'Negotiation' },
+      { icon: <IconRefresh />, label: 'Follow-ups' },
+      { icon: <IconReport />, label: 'Activity reporting' },
+    ],
+    skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Tourism Knowledge'],
+    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
   },
   {
     id: 'agent-rabat',
-    title: 'Real Estate Agent',
-    subtitle: 'Rabat',
+    title: 'Agent',
     initials: 'RA',
-    scope: 'Field — Rabat',
+    scope: 'Rabat',
     location: 'Rabat',
     color: '#1d7ff3',
+    contract: 'Freelance',
+    startMonth: 4,
+    languages: ['FR', 'AR', 'Darija'],
+    schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
+    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
     responsibilities: [
       { icon: <IconChat />, label: 'Lead communication' },
       { icon: <IconPeople />, label: 'Client meetings' },
@@ -107,54 +175,54 @@ const frontoffice: TeamMember[] = [
       { icon: <IconRefresh />, label: 'Follow-ups' },
       { icon: <IconReport />, label: 'Activity reporting' },
     ],
+    skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Admin / Embassy Knowledge'],
+    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
   },
 ];
+
+// ── Tab types ────────────────────────────────────────────────────────────
+
+type TabKey = 'overview' | 'schedule' | 'compensation' | 'skills';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'schedule', label: 'Contract' },
+  { key: 'compensation', label: 'Compensation' },
+  { key: 'skills', label: 'Skills & KPIs' },
+];
+
+// ── Format helpers ───────────────────────────────────────────────────────
+
+function formatMADShort(n: number) {
+  return n.toLocaleString('fr-MA') + ' MAD';
+}
 
 // ── Main Component ──────────────────────────────────────────────────────
 
 export default function TeamView() {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const toggle = (id: string) => setExpanded(expanded === id ? null : id);
+  const allIds = [director.id, ...backoffice.map(m => m.id), ...frontoffice.map(m => m.id)];
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(allIds));
+  const { isDark } = useTheme();
+  const toggle = (id: string) => setExpanded(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   return (
-    <div className="animate-fadeIn max-w-5xl mx-auto pb-8">
+    <div className="space-y-8 animate-fadeIn">
       {/* Inline keyframes */}
       <style>{`
-        @keyframes connectorPulse {
-          0%, 100% { opacity: 0.3; box-shadow: 0 0 6px 2px rgba(212,168,83,0.15); }
-          50% { opacity: 1; box-shadow: 0 0 12px 4px rgba(212,168,83,0.4); }
-        }
-        @keyframes lineGrow {
-          from { transform: scaleY(0); }
-          to { transform: scaleY(1); }
-        }
-        @keyframes branchGrow {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-        @keyframes dotAppear {
-          from { transform: scale(0); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
         @keyframes borderShimmer {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        @keyframes drawLine {
-          from { stroke-dashoffset: 200; }
-          to { stroke-dashoffset: 0; }
-        }
       `}</style>
 
-      {/* Header */}
-      <div className="mb-10">
-        <h2 className="text-xl font-bold text-white/90 tracking-tight">Team Structure</h2>
-        <p className="text-[12px] text-white/30 mt-1">Click on any role to expand responsibilities</p>
-      </div>
-
       {/* ━━━ LEVEL 1 — Director ━━━ */}
-      <DirectorCard member={director} expanded={expanded === director.id} onToggle={() => toggle(director.id)} />
+      <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
 
       {/* ━━━ Connector: Director → Backoffice ━━━ */}
       <ConnectorFork />
@@ -165,12 +233,12 @@ export default function TeamView() {
           <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.1)', color: 'rgba(139,92,246,0.6)' }}>
             <IconGear />
           </div>
-          <span className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-semibold">Backoffice</span>
+          <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Backoffice</span>
           <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(139,92,246,0.15), transparent)' }} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MemberCard member={backoffice[0]} expanded={expanded === backoffice[0].id} onToggle={() => toggle(backoffice[0].id)} />
-          <MemberCard member={backoffice[1]} expanded={expanded === backoffice[1].id} onToggle={() => toggle(backoffice[1].id)} />
+          <MemberCard member={backoffice[0]} expanded={expanded.has(backoffice[0].id)} onToggle={() => toggle(backoffice[0].id)} />
+          <MemberCard member={backoffice[1]} expanded={expanded.has(backoffice[1].id)} onToggle={() => toggle(backoffice[1].id)} />
         </div>
       </div>
 
@@ -183,29 +251,30 @@ export default function TeamView() {
           <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(45,212,191,0.1)', color: 'rgba(45,212,191,0.6)' }}>
             <IconTarget />
           </div>
-          <span className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-semibold">Field Agents</span>
+          <span className={`text-[10px] uppercase tracking-[0.2em] font-semibold ${isDark ? 'text-white/30' : 'text-slate-400'}`}>Field Agents</span>
           <div className="flex-1 max-w-[80px] h-px" style={{ background: 'linear-gradient(to right, rgba(45,212,191,0.15), transparent)' }} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MemberCard member={frontoffice[0]} expanded={expanded === frontoffice[0].id} onToggle={() => toggle(frontoffice[0].id)} />
-          <MemberCard member={frontoffice[1]} expanded={expanded === frontoffice[1].id} onToggle={() => toggle(frontoffice[1].id)} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {frontoffice.map((member) => (
+            <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} />
+          ))}
         </div>
       </div>
 
       {/* ━━━ Summary Bar ━━━ */}
       <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Headcount', value: '5', color: '#ffffff' },
+          { label: 'Total Headcount', value: '6', color: isDark ? '#ffffff' : '#1e293b' },
           { label: 'Management', value: '1', color: '#d4a853' },
           { label: 'Backoffice', value: '2', color: '#8b5cf6' },
-          { label: 'Frontoffice', value: '2', color: '#2dd4bf' },
+          { label: 'Frontoffice', value: '3', color: '#2dd4bf' },
         ].map((kpi) => (
           <div
             key={kpi.label}
             className="rounded-xl px-5 py-4 transition-all duration-300 hover:scale-[1.02]"
             style={{
-              background: 'rgba(255,255,255,0.015)',
-              border: '1px solid rgba(255,255,255,0.04)',
+              background: isDark ? 'rgba(255,255,255,0.015)' : '#ffffff',
+              border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.08)',
             }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -213,9 +282,9 @@ export default function TeamView() {
                 className="w-2 h-2 rounded-full shrink-0"
                 style={{ backgroundColor: kpi.color, opacity: kpi.color === '#ffffff' ? 0.4 : 0.7 }}
               />
-              <span className="text-[10px] text-white/30 uppercase tracking-[0.15em] font-medium">{kpi.label}</span>
+              <span className={`text-[10px] uppercase tracking-[0.15em] font-medium ${isDark ? 'text-white/30' : 'text-slate-400'}`}>{kpi.label}</span>
             </div>
-            <span className="text-2xl font-bold text-white/80 font-mono">{kpi.value}</span>
+            <span className={`text-2xl font-bold font-mono ${isDark ? 'text-white/80' : 'text-slate-800'}`}>{kpi.value}</span>
           </div>
         ))}
       </div>
@@ -223,117 +292,88 @@ export default function TeamView() {
   );
 }
 
-// ── Connector: Director → Backoffice (fork into 2) ─────────────────────
+// ── Animated flow line helper ────────────────────────────────────────────
+
+function FlowLine({
+  x1, y1, x2, y2, color, dotColor, dur, delay = 0,
+}: {
+  x1: number; y1: number; x2: number; y2: number;
+  color: string; dotColor: string; dur: number; delay?: number;
+}) {
+  const pathD = `M${x1},${y1} L${x2},${y2}`;
+  return (
+    <g>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="1" />
+      <circle r="3" fill={dotColor} opacity="0.9">
+        <animateMotion
+          path={pathD}
+          dur={`${dur}s`}
+          repeatCount="indefinite"
+          keyPoints="0;1;0"
+          keyTimes="0;0.5;1"
+          calcMode="spline"
+          keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+          begin={`${delay}s`}
+        />
+        <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} repeatCount="indefinite" begin={`${delay}s`} />
+      </circle>
+    </g>
+  );
+}
+
+// ── Connector: Director ↔ Backoffice (3 lines) ─────────────────────────
+// Director center (500, 0) → DM (250, 80), PH (750, 80), plus DM ↔ PH
 
 function ConnectorFork() {
+  const { isDark } = useTheme();
+  const lineAlpha = isDark ? 0.1 : 0.08;
+  const gold = `rgba(212,168,83,${lineAlpha})`;
+  const purple = `rgba(139,92,246,${lineAlpha})`;
+  const cyan = `rgba(6,182,212,${lineAlpha})`;
+  const dotGold = 'rgba(212,168,83,0.7)';
+  const dotPurple = 'rgba(139,92,246,0.6)';
+  const dotCyan = 'rgba(6,182,212,0.6)';
+
   return (
-    <div className="flex justify-center relative" style={{ height: 64 }}>
-      {/* Vertical stem from Director */}
-      <div
-        className="absolute left-1/2 top-0 w-px origin-top"
-        style={{
-          height: 36,
-          background: 'linear-gradient(to bottom, rgba(212,168,83,0.5), rgba(255,255,255,0.1))',
-          animation: 'lineGrow 0.5s ease-out forwards',
-          transform: 'translateX(-0.5px)',
-        }}
-      />
-      {/* Glowing junction dot */}
-      <div
-        className="absolute left-1/2 rounded-full"
-        style={{
-          top: 32,
-          width: 8,
-          height: 8,
-          background: '#d4a853',
-          transform: 'translateX(-4px)',
-          animation: 'connectorPulse 2.5s ease-in-out infinite, dotAppear 0.4s ease-out 0.4s both',
-        }}
-      />
-      {/* Horizontal branch */}
-      <div
-        className="absolute"
-        style={{
-          top: 35,
-          left: '25%',
-          right: '25%',
-          height: 1,
-          background: 'linear-gradient(to right, rgba(255,255,255,0.04), rgba(255,255,255,0.12), rgba(255,255,255,0.12), rgba(255,255,255,0.04))',
-          animation: 'branchGrow 0.5s ease-out 0.5s both',
-          transformOrigin: 'center',
-        }}
-      />
-      {/* Left drop */}
-      <div
-        className="absolute origin-top"
-        style={{ top: 36, left: '25%', width: 1, height: 28,
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
-          animation: 'lineGrow 0.3s ease-out 0.9s both',
-        }}
-      />
-      {/* Right drop */}
-      <div
-        className="absolute origin-top"
-        style={{ top: 36, right: '25%', width: 1, height: 28,
-          background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.03))',
-          animation: 'lineGrow 0.3s ease-out 0.9s both',
-        }}
-      />
-      {/* End dots */}
-      <div className="absolute rounded-full" style={{ top: 32, left: '25%', width: 5, height: 5, background: 'rgba(139,92,246,0.4)', transform: 'translateX(-2.5px)', animation: 'dotAppear 0.3s ease-out 1s both' }} />
-      <div className="absolute rounded-full" style={{ top: 32, right: '25%', width: 5, height: 5, background: 'rgba(6,182,212,0.4)', transform: 'translateX(2.5px)', animation: 'dotAppear 0.3s ease-out 1s both' }} />
+    <div className="relative w-full" style={{ height: 72 }}>
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 72" preserveAspectRatio="none" fill="none">
+        {/* Director → DM */}
+        <FlowLine x1={500} y1={0} x2={250} y2={72} color={gold} dotColor={dotGold} dur={3.2} delay={0} />
+        {/* Director → PH */}
+        <FlowLine x1={500} y1={0} x2={750} y2={72} color={gold} dotColor={dotGold} dur={3.5} delay={0.8} />
+        {/* DM ↔ PH */}
+        <FlowLine x1={250} y1={72} x2={750} y2={72} color={isDark ? `rgba(255,255,255,${lineAlpha})` : `rgba(15,23,42,${lineAlpha})`} dotColor={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.25)'} dur={4} delay={1.5} />
+      </svg>
     </div>
   );
 }
 
-// ── Connector: Backoffice → Agents (cross mesh — each BO connects to both agents) ──
+// ── Connector: Backoffice ↔ Agents (6 lines) ───────────────────────────
+// DM (250, 0) and PH (750, 0) each connect to 3 agents at (167, 72), (500, 72), (833, 72)
 
 function ConnectorMesh() {
+  const { isDark } = useTheme();
+  const lineAlpha = isDark ? 0.08 : 0.06;
+  const purple = `rgba(139,92,246,${lineAlpha})`;
+  const cyan = `rgba(6,182,212,${lineAlpha})`;
+  const dotPurple = 'rgba(139,92,246,0.5)';
+  const dotCyan = 'rgba(6,182,212,0.5)';
+
+  // Agent X positions in a 3-col grid
+  const agentX = [167, 500, 833];
+
   return (
-    <div className="relative w-full" style={{ height: 64 }}>
-      <svg
-        className="absolute inset-0 w-full h-full"
-        viewBox="0 0 800 64"
-        preserveAspectRatio="none"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Left-to-Left (DM → Casa): straight down-left */}
-        <line
-          x1="200" y1="0" x2="200" y2="64"
-          stroke="rgba(139,92,246,0.2)" strokeWidth="1"
-          strokeDasharray="200" style={{ animation: 'drawLine 0.8s ease-out 0.2s both' }}
-        />
-        {/* Right-to-Right (PH → Rabat): straight down-right */}
-        <line
-          x1="600" y1="0" x2="600" y2="64"
-          stroke="rgba(6,182,212,0.2)" strokeWidth="1"
-          strokeDasharray="200" style={{ animation: 'drawLine 0.8s ease-out 0.2s both' }}
-        />
-        {/* Left-to-Right cross (DM → Rabat) */}
-        <line
-          x1="200" y1="0" x2="600" y2="64"
-          stroke="rgba(139,92,246,0.1)" strokeWidth="1"
-          strokeDasharray="200" style={{ animation: 'drawLine 1s ease-out 0.5s both' }}
-        />
-        {/* Right-to-Left cross (PH → Casa) */}
-        <line
-          x1="600" y1="0" x2="200" y2="64"
-          stroke="rgba(6,182,212,0.1)" strokeWidth="1"
-          strokeDasharray="200" style={{ animation: 'drawLine 1s ease-out 0.5s both' }}
-        />
-        {/* Center junction glow dot */}
-        <circle cx="400" cy="32" r="3" fill="rgba(255,255,255,0.15)" style={{ animation: 'dotAppear 0.4s ease-out 0.8s both' }} />
+    <div className="relative w-full" style={{ height: 72 }}>
+      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 72" preserveAspectRatio="none" fill="none">
+        {/* DM (250) → 3 agents */}
+        {agentX.map((ax, i) => (
+          <FlowLine key={`dm-${i}`} x1={250} y1={0} x2={ax} y2={72} color={purple} dotColor={dotPurple} dur={3 + i * 0.4} delay={i * 0.6} />
+        ))}
+        {/* PH (750) → 3 agents */}
+        {agentX.map((ax, i) => (
+          <FlowLine key={`ph-${i}`} x1={750} y1={0} x2={ax} y2={72} color={cyan} dotColor={dotCyan} dur={3.2 + i * 0.3} delay={0.3 + i * 0.5} />
+        ))}
       </svg>
-      {/* "Communicates" label at center */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span
-          className="text-[9px] text-white/15 uppercase tracking-[0.2em] px-3 py-1 rounded-full"
-          style={{ background: 'rgba(6,7,10,0.8)', border: '1px solid rgba(255,255,255,0.04)' }}
-        >
-          reports to
-        </span>
-      </div>
     </div>
   );
 }
@@ -349,6 +389,13 @@ function DirectorCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const textPrimary = isDark ? 'text-white/90' : 'text-slate-800';
+  const textSecondary = isDark ? 'text-white/50' : 'text-slate-500';
+  const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
+  const borderSub = isDark ? 'border-white/[0.04]' : 'border-slate-100';
+
   return (
     <div
       className="relative rounded-2xl cursor-pointer group transition-all duration-300 overflow-hidden"
@@ -372,13 +419,15 @@ function DirectorCard({
       <div
         className="rounded-2xl transition-all duration-300"
         style={{
-          background: expanded
-            ? 'linear-gradient(135deg, rgba(212,168,83,0.06) 0%, rgba(212,168,83,0.02) 100%)'
-            : 'linear-gradient(135deg, rgba(212,168,83,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+          background: isDark
+            ? (expanded
+              ? 'linear-gradient(135deg, rgba(212,168,83,0.06) 0%, rgba(212,168,83,0.02) 100%)'
+              : 'linear-gradient(135deg, rgba(212,168,83,0.03) 0%, rgba(255,255,255,0.01) 100%)')
+            : '#ffffff',
         }}
       >
         <div className="px-7 py-6 flex items-center gap-6">
-          {/* Initials avatar with glow ring */}
+          {/* Initials avatar */}
           <div className="relative shrink-0">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
@@ -398,59 +447,50 @@ function DirectorCard({
 
           {/* Title area */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <h3 className="text-[17px] font-bold text-white/90 tracking-tight">{member.title}</h3>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h3 className={`text-[17px] font-bold tracking-tight ${textPrimary}`}>{member.title}</h3>
               <span
                 className="text-[10px] font-semibold uppercase tracking-[0.15em] px-2.5 py-1 rounded-md"
-                style={{
-                  color: '#d4a853',
-                  background: 'rgba(212,168,83,0.1)',
-                  border: '1px solid rgba(212,168,83,0.15)',
-                }}
+                style={{ color: '#d4a853', background: 'rgba(212,168,83,0.1)', border: '1px solid rgba(212,168,83,0.15)' }}
               >
                 {member.subtitle}
               </span>
+              <ContractBadge contract={member.contract} />
             </div>
             {member.tagline && (
-              <p className="text-[12px] text-white/35 mt-1.5 font-light tracking-wide">{member.tagline}</p>
+              <p className={`text-[12px] font-light tracking-wide mt-1.5 ${textTertiary}`}>{member.tagline}</p>
             )}
           </div>
 
-          {/* Expand chevron */}
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 shrink-0"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <svg
-              className={`w-4 h-4 text-white/30 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
+          {/* Flags + city */}
+          <div className="flex flex-col items-center gap-1.5 shrink-0">
+            <LanguageFlags languages={member.languages} />
+            <span className={`text-[9px] font-semibold uppercase tracking-[0.12em] ${textTertiary}`}>{member.location || 'Remote'}</span>
           </div>
         </div>
 
-        {/* Expanded responsibilities grid */}
+        {/* Expanded tabbed content */}
         <ExpandableSection expanded={expanded}>
           <div className="px-7 pb-6">
-            <div className="border-t border-white/[0.04] pt-5">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {member.responsibilities.map((r, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 hover:bg-white/[0.02]"
-                    style={{ border: '1px solid rgba(255,255,255,0.03)' }}
+            <div className={`border-t ${borderSub} pt-4`}>
+              {/* Tab bar */}
+              <div className="flex gap-1 mb-4">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={(e) => { e.stopPropagation(); setActiveTab(tab.key); }}
+                    className={`text-[10px] font-semibold uppercase tracking-[0.12em] px-3 py-1.5 rounded-md transition-all duration-200 ${
+                      activeTab === tab.key
+                        ? (isDark ? 'bg-white/[0.06] text-white/80' : 'bg-slate-100 text-slate-700')
+                        : (isDark ? 'text-white/25 hover:text-white/40 hover:bg-white/[0.02]' : 'text-slate-400 hover:text-slate-500 hover:bg-slate-50')
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(212,168,83,0.08)' }}>
-                      <span style={{ color: 'rgba(212,168,83,0.7)' }}>{r.icon}</span>
-                    </div>
-                    <span className="text-[12px] text-white/60 font-medium leading-tight">{r.label}</span>
-                  </div>
+                    {tab.label}
+                  </button>
                 ))}
               </div>
+              {/* Tab content */}
+              <TabContent member={member} tab={activeTab} color={member.color} />
             </div>
           </div>
         </ExpandableSection>
@@ -471,14 +511,21 @@ function MemberCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const textPrimary = isDark ? 'text-white/85' : 'text-slate-800';
+  const textSecondary = isDark ? 'text-white/50' : 'text-slate-500';
+  const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
+  const borderSub = isDark ? 'border-white/[0.04]' : 'border-slate-100';
+
   return (
     <div
       className="rounded-2xl cursor-pointer group transition-all duration-300 overflow-hidden"
       style={{
         background: expanded
-          ? `linear-gradient(135deg, ${member.color}08 0%, ${member.color}03 100%)`
-          : 'rgba(255,255,255,0.015)',
-        border: `1px solid ${expanded ? `${member.color}20` : 'rgba(255,255,255,0.04)'}`,
+          ? (isDark ? `linear-gradient(135deg, ${member.color}08 0%, ${member.color}03 100%)` : '#ffffff')
+          : (isDark ? 'rgba(255,255,255,0.015)' : '#ffffff'),
+        border: `1px solid ${expanded ? `${member.color}20` : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.08)')}`,
         boxShadow: expanded ? `0 0 20px ${member.color}08` : 'none',
       }}
       onClick={onToggle}
@@ -492,13 +539,13 @@ function MemberCard({
       onMouseLeave={(e) => {
         if (!expanded) {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
+          e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.06)';
           e.currentTarget.style.boxShadow = 'none';
         }
       }}
     >
       <div className="flex items-center gap-4 px-5 py-4">
-        {/* Avatar with colored ring */}
+        {/* Avatar */}
         <div className="relative shrink-0">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
@@ -517,63 +564,239 @@ function MemberCard({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-[13px] font-semibold text-white/85 tracking-tight">{member.title}</h4>
+            <h4 className={`text-[13px] font-semibold tracking-tight ${textPrimary}`}>{member.title}</h4>
             {member.subtitle && (
               <>
-                <span className="text-white/10">·</span>
-                <span className="text-[11px] text-white/35 font-light">{member.subtitle}</span>
+                <span className={isDark ? 'text-white/10' : 'text-slate-200'}>·</span>
+                <span className={`text-[11px] font-light ${textTertiary}`}>{member.subtitle}</span>
               </>
             )}
           </div>
-          {member.scope && (
-            <span
-              className="inline-block mt-1.5 text-[9px] font-semibold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md"
-              style={{
-                color: `${member.color}99`,
-                background: `${member.color}0a`,
-                border: `1px solid ${member.color}15`,
-              }}
-            >
-              {member.scope}
-            </span>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            <ContractBadge contract={member.contract} />
+          </div>
         </div>
 
-        {/* Chevron */}
-        <svg
-          className={`w-4 h-4 text-white/20 transition-transform duration-300 shrink-0 ${expanded ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
+        {/* Flags + city */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <LanguageFlags languages={member.languages} small />
+          <span className={`text-[8px] font-semibold uppercase tracking-[0.12em] ${textTertiary}`}>{member.location || 'Remote'}</span>
+        </div>
       </div>
 
-      {/* Expanded responsibilities */}
+      {/* Expanded tabbed content */}
       <ExpandableSection expanded={expanded}>
         <div className="px-5 pb-5">
-          <div className="border-t border-white/[0.04] pt-4">
-            <div className="grid grid-cols-2 gap-2">
-              {member.responsibilities.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-white/[0.02]"
+          <div className={`border-t ${borderSub} pt-4`}>
+            {/* Tab bar */}
+            <div className="flex gap-1 mb-4 flex-wrap">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={(e) => { e.stopPropagation(); setActiveTab(tab.key); }}
+                  className={`text-[9px] font-semibold uppercase tracking-[0.1em] px-2.5 py-1.5 rounded-md transition-all duration-200 ${
+                    activeTab === tab.key
+                      ? (isDark ? 'bg-white/[0.06] text-white/80' : 'bg-slate-100 text-slate-700')
+                      : (isDark ? 'text-white/25 hover:text-white/40 hover:bg-white/[0.02]' : 'text-slate-400 hover:text-slate-500 hover:bg-slate-50')
+                  }`}
                 >
-                  <div
-                    className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                    style={{ background: `${member.color}0a`, color: `${member.color}80` }}
-                  >
-                    {r.icon}
-                  </div>
-                  <span className="text-[11px] text-white/50 font-medium leading-tight">{r.label}</span>
-                </div>
+                  {tab.label}
+                </button>
               ))}
             </div>
+            <TabContent member={member} tab={activeTab} color={member.color} />
           </div>
         </div>
       </ExpandableSection>
+    </div>
+  );
+}
+
+// ── Tab Content ─────────────────────────────────────────────────────────
+
+function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; color: string }) {
+  const { isDark } = useTheme();
+  const textPrimary = isDark ? 'text-white/80' : 'text-slate-700';
+  const textSecondary = isDark ? 'text-white/50' : 'text-slate-500';
+  const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
+  const pillBg = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.03)';
+  const pillBorder = isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(15,23,42,0.06)';
+
+  if (tab === 'overview') {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {member.responsibilities.map((r, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors duration-200"
+            style={{ background: pillBg, border: pillBorder }}
+          >
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: `${color}0a`, color: `${color}80` }}
+            >
+              {r.icon}
+            </div>
+            <span className={`text-[11px] font-medium leading-tight ${textSecondary}`}>{r.label}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tab === 'schedule') {
+    const rows = [
+      { label: 'Contract', value: member.contract },
+      { label: 'Start', value: `Month ${member.startMonth}` },
+      { label: 'Status', value: member.schedule.status },
+      { label: 'Days', value: member.schedule.days },
+      { label: 'Hours', value: member.schedule.hours },
+      { label: 'Languages', value: member.languages.join(', ') },
+    ];
+    return (
+      <div className="space-y-1.5">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-center justify-between rounded-lg px-3 py-2"
+            style={{ background: pillBg, border: pillBorder }}
+          >
+            <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{row.label}</span>
+            <span className={`text-[11px] font-semibold ${textPrimary}`}>{row.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tab === 'compensation') {
+    const rows = [
+      { label: 'Base Salary', value: formatMADShort(member.compensation.salary), highlight: false },
+      ...(member.compensation.commission ? [{ label: 'Commission', value: member.compensation.commission, highlight: true }] : []),
+      { label: 'CNSS + AMO (~26%)', value: formatMADShort(member.compensation.cnss), highlight: false },
+      { label: 'Total Cost / Month', value: formatMADShort(member.compensation.totalCost), highlight: true },
+      { label: 'Total Cost / Year', value: formatMADShort(member.compensation.totalCost * 12), highlight: false },
+    ];
+    return (
+      <div className="space-y-1.5">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className={`flex items-center justify-between rounded-lg px-3 py-2 ${row.highlight ? '' : ''}`}
+            style={{
+              background: row.highlight ? `${color}08` : pillBg,
+              border: row.highlight ? `1px solid ${color}20` : pillBorder,
+            }}
+          >
+            <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{row.label}</span>
+            <span className={`text-[11px] font-bold font-mono ${row.highlight ? '' : ''} ${textPrimary}`}
+              style={row.highlight ? { color: `${color}cc` } : {}}
+            >
+              {row.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (tab === 'skills') {
+    return (
+      <div className="space-y-4">
+        {/* Skills */}
+        <div>
+          <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${textTertiary} mb-2 block`}>Skills</span>
+          <div className="flex flex-wrap gap-1.5">
+            {member.skills.map((s) => (
+              <span
+                key={s}
+                className={`text-[10px] font-medium px-2.5 py-1 rounded-md ${textSecondary}`}
+                style={{ background: pillBg, border: pillBorder }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+        {/* KPIs */}
+        <div>
+          <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${textTertiary} mb-2 block`}>KPIs</span>
+          <div className="space-y-1">
+            {member.kpis.map((k) => (
+              <div key={k} className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: `${color}60` }} />
+                <span className={`text-[11px] ${textSecondary}`}>{k}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Tools */}
+        <div>
+          <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${textTertiary} mb-2 block`}>Tools</span>
+          <div className="flex flex-wrap gap-1.5">
+            {member.tools.map((t) => (
+              <span
+                key={t}
+                className={`text-[10px] font-medium px-2.5 py-1 rounded-md ${textSecondary}`}
+                style={{ background: `${color}08`, border: `1px solid ${color}15` }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ── Shared UI pieces ────────────────────────────────────────────────────
+
+function ContractBadge({ contract }: { contract: string }) {
+  const { isDark } = useTheme();
+  const colors: Record<string, { bg: string; text: string; border: string }> = {
+    CDI: { bg: 'rgba(34,197,94,0.08)', text: 'rgba(34,197,94,0.8)', border: 'rgba(34,197,94,0.2)' },
+    CDD: { bg: 'rgba(251,191,36,0.08)', text: 'rgba(251,191,36,0.8)', border: 'rgba(251,191,36,0.2)' },
+    Freelance: { bg: isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.06)', text: 'rgba(139,92,246,0.8)', border: 'rgba(139,92,246,0.2)' },
+  };
+  const c = colors[contract] || colors.CDI;
+  return (
+    <span
+      className="text-[8px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md"
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+    >
+      {contract}
+    </span>
+  );
+}
+
+const LANG_FLAGS: Record<string, string> = {
+  FR: '\u{1F1EB}\u{1F1F7}',
+  EN: '\u{1F1EC}\u{1F1E7}',
+  AR: '\u{1F1F2}\u{1F1E6}',
+  Darija: '\u{1F1F2}\u{1F1E6}',
+};
+
+function LanguageFlags({ languages, small }: { languages: string[]; small?: boolean }) {
+  // Deduplicate flags (AR and Darija both map to Morocco)
+  const seen = new Set<string>();
+  const flags: string[] = [];
+  for (const lang of languages) {
+    const flag = LANG_FLAGS[lang];
+    if (flag && !seen.has(flag)) {
+      seen.add(flag);
+      flags.push(flag);
+    }
+  }
+  return (
+    <div className={`flex items-center ${small ? 'gap-0.5' : 'gap-1'} shrink-0`}>
+      {flags.map((flag, i) => (
+        <span key={i} className={small ? 'text-[14px]' : 'text-[18px]'} role="img">
+          {flag}
+        </span>
+      ))}
     </div>
   );
 }
@@ -585,9 +808,18 @@ function ExpandableSection({ expanded, children }: { expanded: boolean; children
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (contentRef.current) {
-      setHeight(expanded ? contentRef.current.scrollHeight : 0);
-    }
+    if (!contentRef.current) return;
+    if (!expanded) { setHeight(0); return; }
+
+    // Measure immediately
+    setHeight(contentRef.current.scrollHeight);
+
+    // Re-measure whenever inner content resizes (e.g. tab switch)
+    const ro = new ResizeObserver(() => {
+      if (contentRef.current) setHeight(contentRef.current.scrollHeight);
+    });
+    ro.observe(contentRef.current);
+    return () => ro.disconnect();
   }, [expanded]);
 
   return (

@@ -75,11 +75,11 @@ export default function RevenuesView() {
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="zebra-rows">
                     {rentalRevenues.map((item, idx) => {
                       const active = isMarketActive(item.label);
                       return (
-                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
                           <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={formatNumber} />
@@ -105,11 +105,11 @@ export default function RevenuesView() {
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="zebra-rows">
                         {rentalRevenues.map((item, idx) => {
                           const active = isMarketActive(item.label);
                           return (
-                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
                               <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
@@ -170,11 +170,11 @@ export default function RevenuesView() {
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="zebra-rows">
                     {saleRevenues.map((item, idx) => {
                       const active = isMarketActive(item.label);
                       return (
-                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                      <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
                           <EditableCell value={item.priceM2} onSave={(v) => updateSaleItem(idx, 'priceM2', v)} format={formatNumber} />
@@ -204,11 +204,11 @@ export default function RevenuesView() {
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="zebra-rows">
                         {saleRevenues.map((item, idx) => {
                           const active = isMarketActive(item.label);
                           return (
-                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-25'}`}>
+                          <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
                               <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
@@ -265,9 +265,9 @@ export default function RevenuesView() {
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Unit Price</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="zebra-rows">
                     {mediaRevenues.map((item, idx) => (
-                      <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                      <tr key={item.label} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-[#1d7ff3] font-semibold">
                           <EditableCell value={item.unitPrice} onSave={(v) => updateMediaItem(idx, 'unitPrice', v)} format={formatNumber} />
@@ -288,9 +288,9 @@ export default function RevenuesView() {
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="zebra-rows">
                         {mediaRevenues.map((item, idx) => (
-                          <tr key={item.label} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                          <tr key={item.label} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
                               <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>

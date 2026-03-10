@@ -9,6 +9,7 @@ const pageTitles: Record<string, string> = {
   '/revenues': 'Revenue Breakdown',
   '/expenses': 'Expense Detail',
   '/investment': 'Investment Simulation',
+  '/team': 'Team Structure',
 };
 
 export default function TopBar() {
@@ -23,7 +24,7 @@ export default function TopBar() {
       style={{
         background: isDark
           ? 'linear-gradient(180deg, rgba(6, 7, 10, 0.9) 0%, rgba(6, 7, 10, 0.7) 100%)'
-          : 'linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 252, 0.9) 100%)',
+          : 'rgba(255, 255, 255, 1)',
         borderBottom: isDark
           ? '1px solid rgba(255,255,255,0.03)'
           : '1px solid rgba(0,0,0,0.06)',
