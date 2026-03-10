@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useFinancial } from '@/context/FinancialContext';
+import { useFinancial, ScenarioKey } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
 import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
@@ -18,6 +18,40 @@ interface SimData {
   saleConvs: number[][];
   mediaConvs: number[][];
   expenses: number[][];   // [itemIdx][monthIdx]
+}
+
+// Label-keyed format for order-independent Supabase storage
+type LabeledSimData = Record<string, { type: string; months: number[] }>;
+
+// All 3 scenarios stored together in one Supabase key
+type ScenariosStore = Record<ScenarioKey, LabeledSimData>;
+
+const SUPABASE_KEY = 'simdata_v2';
+
+// Static zeroed sim (no conversions, default expenses)
+const ZEROED_SIM: SimData = {
+  rentalConvs: defaultRentalRevenues.map(() => Array(MONTHS).fill(0)),
+  saleConvs: defaultSaleRevenues.map(() => Array(MONTHS).fill(0)),
+  mediaConvs: defaultMediaRevenues.map(() => Array(MONTHS).fill(0)),
+  expenses: defaultExpenses.map(item => Array(MONTHS).fill(item.y1)),
+};
+
+function simToLabeled(s: SimData): LabeledSimData {
+  const out: LabeledSimData = {};
+  defaultRentalRevenues.forEach((item, i) => { out[`rental:${item.label}`] = { type: 'rental', months: s.rentalConvs[i] || Array(MONTHS).fill(0) }; });
+  defaultSaleRevenues.forEach((item, i) => { out[`sale:${item.label}`] = { type: 'sale', months: s.saleConvs[i] || Array(MONTHS).fill(0) }; });
+  defaultMediaRevenues.forEach((item, i) => { out[`media:${item.label}`] = { type: 'media', months: s.mediaConvs[i] || Array(MONTHS).fill(0) }; });
+  defaultExpenses.forEach((item, i) => { out[`exp:${item.label}`] = { type: 'exp', months: s.expenses[i] || Array(MONTHS).fill(0) }; });
+  return out;
+}
+
+function labeledToSim(labeled: LabeledSimData, fallback: SimData): SimData {
+  return {
+    rentalConvs: defaultRentalRevenues.map((item, i) => labeled[`rental:${item.label}`]?.months || fallback.rentalConvs[i] || Array(MONTHS).fill(0)),
+    saleConvs: defaultSaleRevenues.map((item, i) => labeled[`sale:${item.label}`]?.months || fallback.saleConvs[i] || Array(MONTHS).fill(0)),
+    mediaConvs: defaultMediaRevenues.map((item, i) => labeled[`media:${item.label}`]?.months || fallback.mediaConvs[i] || Array(MONTHS).fill(0)),
+    expenses: defaultExpenses.map((item, i) => labeled[`exp:${item.label}`]?.months || fallback.expenses[i] || Array(MONTHS).fill(0)),
+  };
 }
 
 export default function InvestmentView() {
@@ -44,7 +78,7 @@ export default function InvestmentView() {
   // Find index where collapsible salaries start
   const collapseFromIdx = expenseItems.findIndex(e => e.label === COLLAPSE_FROM_LABEL);
 
-  // Local simulation state — independent per-month, initialized from defaults
+  // Default sim for realistic (derived from context revenues)
   const defaultSim = useMemo(() => ({
     rentalConvs: rentalRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
     saleConvs: saleRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
@@ -52,97 +86,81 @@ export default function InvestmentView() {
     expenses: expenseItems.map(item => Array(MONTHS).fill(item.y1)),
   }), [rentalRevenues, saleRevenues, mediaRevenues, expenseItems]);
 
+  // Active sim state (for the currently displayed scenario)
   const [sim, setSim] = useState<SimData>(defaultSim);
 
-  // Save sim data as label-keyed map (order-independent)
-  type LabeledSimData = Record<string, { type: string; months: number[] }>;
-
-  function simToLabeled(s: SimData, scenario: string): LabeledSimData {
-    const out: LabeledSimData = {};
-    out['_meta'] = { type: 'meta', months: [], _scenario: scenario } as LabeledSimData[string];
-    defaultRentalRevenues.forEach((item, i) => { out[`rental:${item.label}`] = { type: 'rental', months: s.rentalConvs[i] || Array(MONTHS).fill(0) }; });
-    defaultSaleRevenues.forEach((item, i) => { out[`sale:${item.label}`] = { type: 'sale', months: s.saleConvs[i] || Array(MONTHS).fill(0) }; });
-    defaultMediaRevenues.forEach((item, i) => { out[`media:${item.label}`] = { type: 'media', months: s.mediaConvs[i] || Array(MONTHS).fill(0) }; });
-    defaultExpenses.forEach((item, i) => { out[`exp:${item.label}`] = { type: 'exp', months: s.expenses[i] || Array(MONTHS).fill(0) }; });
-    return out;
-  }
-
-  function labeledToSim(labeled: LabeledSimData, fallback: SimData): SimData {
-    return {
-      rentalConvs: defaultRentalRevenues.map((item, i) => labeled[`rental:${item.label}`]?.months || fallback.rentalConvs[i] || Array(MONTHS).fill(0)),
-      saleConvs: defaultSaleRevenues.map((item, i) => labeled[`sale:${item.label}`]?.months || fallback.saleConvs[i] || Array(MONTHS).fill(0)),
-      mediaConvs: defaultMediaRevenues.map((item, i) => labeled[`media:${item.label}`]?.months || fallback.mediaConvs[i] || Array(MONTHS).fill(0)),
-      expenses: defaultExpenses.map((item, i) => labeled[`exp:${item.label}`]?.months || fallback.expenses[i] || Array(MONTHS).fill(0)),
-    };
-  }
-
-  // Persist sim data to Supabase (debounced, label-keyed, scenario-aware)
+  // In-memory store for ALL 3 scenarios — switching reads from here (instant, no async)
+  const storeRef = useRef<ScenariosStore | null>(null);
   const simMounted = useRef(false);
-  const simTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const simScenarioRef = useRef(activeScenario);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Debounced save of the entire store to Supabase
+  const saveStore = useCallback(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      if (storeRef.current) saveToSupabase(SUPABASE_KEY, storeRef.current);
+    }, 500);
+  }, []);
+
+  // Load all scenarios from Supabase once on mount
+  const didHydrate = useRef(false);
   useEffect(() => {
-    if (!simMounted.current) return;
-    clearTimeout(simTimer.current);
-    simTimer.current = setTimeout(() => { saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim, simScenarioRef.current)); }, 500);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sim]);
-
-  // Zeroed sim for non-realistic scenarios (no saved data yet)
-  const zeroedSim: SimData = useMemo(() => ({
-    rentalConvs: defaultRentalRevenues.map(() => Array(MONTHS).fill(0)),
-    saleConvs: defaultSaleRevenues.map(() => Array(MONTHS).fill(0)),
-    mediaConvs: defaultMediaRevenues.map(() => Array(MONTHS).fill(0)),
-    expenses: defaultExpenses.map(item => Array(MONTHS).fill(item.y1)),
-  }), []);
-
-  // Load sim data from Supabase on mount and on scenario change
-  const simHydrated = useRef(false);
-  const loadSimForScenario = useCallback((scenario: string) => {
-    simMounted.current = false;
-    const fallback = scenario === 'realistic' ? defaultSim : zeroedSim;
+    if (didHydrate.current) return;
+    didHydrate.current = true;
     ensureMigrated().then(async () => {
-      // Try scenario-specific key, fall back to legacy 'simdata' for realistic
-      let data = await loadFromSupabase<LabeledSimData | SimData | null>(`simdata_${scenario}`, null);
-      if (data === null && scenario === 'realistic') {
-        data = await loadFromSupabase<LabeledSimData | SimData>('simdata', {});
+      let store = await loadFromSupabase<ScenariosStore | null>(SUPABASE_KEY, null);
+
+      if (!store) {
+        // Migrate from old per-scenario keys (one-time)
+        const legacyRealistic = await loadFromSupabase<LabeledSimData | null>('simdata_realistic', null)
+          || await loadFromSupabase<LabeledSimData | null>('simdata', null);
+
+        store = {
+          realistic: legacyRealistic && Object.keys(legacyRealistic).length > 0
+            ? legacyRealistic
+            : simToLabeled(defaultSim),
+          pessimistic: simToLabeled(ZEROED_SIM),
+          optimistic: simToLabeled(ZEROED_SIM),
+        };
+        // Save migrated store immediately
+        saveToSupabase(SUPABASE_KEY, store);
       }
 
-      // Reject data with mismatched scenario tag (prevents cross-scenario contamination)
-      if (data && typeof data === 'object' && '_meta' in data) {
-        const meta = (data as LabeledSimData)['_meta'] as { _scenario?: string };
-        if (meta?._scenario && meta._scenario !== scenario) {
-          data = null; // stale cross-scenario data, ignore it
-        }
-      }
-
-      if (data && 'rentalConvs' in data) {
-        setSim(fallback); // old format, use fallback
-      } else if (data && Object.keys(data).length > 0) {
-        setSim(labeledToSim(data as LabeledSimData, fallback));
-      } else {
-        setSim(fallback);
-      }
-      simScenarioRef.current = scenario as typeof activeScenario;
+      storeRef.current = store;
+      const fallback = activeScenario === 'realistic' ? defaultSim : ZEROED_SIM;
+      setSim(labeledToSim(store[activeScenario], fallback));
+      simScenarioRef.current = activeScenario;
       simMounted.current = true;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultSim, zeroedSim]);
+  }, []);
 
+  // Scenario switch — instant, in-memory only
   useEffect(() => {
-    if (!simHydrated.current) {
-      simHydrated.current = true;
-      loadSimForScenario(activeScenario);
-      return;
-    }
-    // Scenario changed — save current sim data to old scenario, load new
-    if (simScenarioRef.current !== activeScenario) {
-      if (simMounted.current) {
-        saveToSupabase(`simdata_${simScenarioRef.current}`, simToLabeled(sim, simScenarioRef.current));
-      }
-      loadSimForScenario(activeScenario);
-    }
+    if (!simMounted.current || !storeRef.current) return;
+    if (simScenarioRef.current === activeScenario) return;
+
+    // Save current scenario's sim to the store
+    storeRef.current[simScenarioRef.current] = simToLabeled(sim);
+
+    // Load new scenario from the store
+    const fallback = activeScenario === 'realistic' ? defaultSim : ZEROED_SIM;
+    setSim(labeledToSim(storeRef.current[activeScenario], fallback));
+    simScenarioRef.current = activeScenario;
+
+    // Persist the whole store
+    saveStore();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeScenario]);
+
+  // Persist on sim edits (debounced)
+  useEffect(() => {
+    if (!simMounted.current || !storeRef.current) return;
+    storeRef.current[simScenarioRef.current] = simToLabeled(sim);
+    saveStore();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sim]);
 
   const updateSimRental = (itemIdx: number, monthIdx: number, conv: number) => {
     setSim(prev => {

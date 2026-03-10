@@ -26,7 +26,7 @@ interface TeamMember {
   compensation: { salary: number; commission?: string; cnss: number; totalCost: number };
   responsibilities: Responsibility[];
   skills: string[];
-  kpis: string[];
+  kpis: { label: string; target: string }[];
   tools: string[];
 }
 
@@ -51,7 +51,12 @@ const director: TeamMember = {
     { icon: <IconReport />, label: 'Reporting & KPIs' },
   ],
   skills: ['Leadership', 'Negotiation', 'Financial Analysis', 'Team Management', 'Strategic Planning'],
-  kpis: ['Monthly revenue target', 'Team retention rate', 'Client satisfaction score', 'Deal closure rate'],
+  kpis: [
+    { label: 'Revenue target', target: '500k MAD/mo' },
+    { label: 'Team retention rate', target: '95%/mo' },
+    { label: 'Client satisfaction', target: '4.5/5/mo' },
+    { label: 'Deal closure rate', target: '40%/mo' },
+  ],
   tools: ['CRM', 'Excel / Sheets', 'WhatsApp Business', 'Supabase Dashboard'],
 };
 
@@ -77,7 +82,12 @@ const backoffice: TeamMember[] = [
       { icon: <IconCamera />, label: 'Media coordination' },
     ],
     skills: ['Content Creation', 'SEO / SEA', 'Canva / Adobe', 'Copywriting', 'Analytics'],
-    kpis: ['Leads generated / month', 'Engagement rate', 'Listing views', 'Response time < 1h'],
+    kpis: [
+      { label: 'Leads generated', target: '120/mo' },
+      { label: 'Engagement rate', target: '5%/mo' },
+      { label: 'Listing views', target: '10k/mo' },
+      { label: 'Response time', target: '<1h/mo' },
+    ],
     tools: ['Meta Business', 'Canva', 'Avito / Mubawab', 'Google Analytics', 'ChatGPT'],
   },
   {
@@ -101,8 +111,42 @@ const backoffice: TeamMember[] = [
       { icon: <IconRefresh />, label: 'Follow-up tracking' },
     ],
     skills: ['Cold Calling', 'Market Knowledge', 'Negotiation Basics', 'CRM Data Entry', 'Local Network'],
-    kpis: ['New listings / week', 'Owner response rate', 'Database accuracy', 'Qualified leads / month'],
+    kpis: [
+      { label: 'New listings', target: '20/mo' },
+      { label: 'Owner response rate', target: '60%/mo' },
+      { label: 'Database accuracy', target: '95%/mo' },
+      { label: 'Qualified leads', target: '30/mo' },
+    ],
     tools: ['WhatsApp', 'Google Maps', 'CRM', 'Avito / Mubawab', 'Phone'],
+  },
+  {
+    id: 'community-manager',
+    title: 'Community Manager',
+    subtitle: 'Content & Social',
+    initials: 'CM',
+    scope: 'Marketing',
+    color: '#ec4899',
+    contract: 'Freelance',
+    startMonth: 2,
+    languages: ['FR', 'EN'],
+    schedule: { days: 'Mon – Fri', hours: '9h – 18h', status: 'Full-time' },
+    compensation: { salary: 6000, cnss: 0, totalCost: 6000 },
+    responsibilities: [
+      { icon: <IconMegaphone />, label: 'Social media strategy' },
+      { icon: <IconCamera />, label: 'Photo & video content' },
+      { icon: <IconCalendar />, label: 'Editorial planning' },
+      { icon: <IconChat />, label: 'Community engagement' },
+      { icon: <IconGlobe />, label: 'Brand awareness' },
+      { icon: <IconChart />, label: 'Performance tracking' },
+    ],
+    skills: ['Content Creation', 'Social Media', 'Photography', 'Video Editing', 'Community Building'],
+    kpis: [
+      { label: 'Posts published', target: '30/mo' },
+      { label: 'Follower growth', target: '10%/mo' },
+      { label: 'Engagement rate', target: '6%/mo' },
+      { label: 'Inbound leads', target: '50/mo' },
+    ],
+    tools: ['Instagram', 'TikTok', 'Canva', 'CapCut', 'Meta Business'],
   },
 ];
 
@@ -128,7 +172,12 @@ const frontoffice: TeamMember[] = [
       { icon: <IconReport />, label: 'Activity reporting' },
     ],
     skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Bilingual FR/EN'],
-    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    kpis: [
+      { label: 'Visits', target: '15/mo' },
+      { label: 'Deals closed', target: '3/mo' },
+      { label: 'Client conversion', target: '25%/mo' },
+      { label: 'Avg. deal value', target: '50k MAD/mo' },
+    ],
     tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
   },
   {
@@ -152,7 +201,12 @@ const frontoffice: TeamMember[] = [
       { icon: <IconReport />, label: 'Activity reporting' },
     ],
     skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Tourism Knowledge'],
-    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    kpis: [
+      { label: 'Visits', target: '15/mo' },
+      { label: 'Deals closed', target: '3/mo' },
+      { label: 'Client conversion', target: '25%/mo' },
+      { label: 'Avg. deal value', target: '50k MAD/mo' },
+    ],
     tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
   },
   {
@@ -176,20 +230,55 @@ const frontoffice: TeamMember[] = [
       { icon: <IconReport />, label: 'Activity reporting' },
     ],
     skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Admin / Embassy Knowledge'],
-    kpis: ['Visits / week', 'Deals closed / month', 'Client conversion rate', 'Avg. deal value'],
+    kpis: [
+      { label: 'Visits', target: '15/mo' },
+      { label: 'Deals closed', target: '3/mo' },
+      { label: 'Client conversion', target: '25%/mo' },
+      { label: 'Avg. deal value', target: '50k MAD/mo' },
+    ],
+    tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
+  },
+  {
+    id: 'agent-other',
+    title: 'Agent',
+    initials: 'OT',
+    scope: 'Other',
+    location: 'Other',
+    color: '#a855f7',
+    contract: 'Freelance',
+    startMonth: 5,
+    languages: ['FR', 'EN', 'AR'],
+    schedule: { days: 'Mon – Sat', hours: '10h – 19h', status: 'Full-time' },
+    compensation: { salary: 4000, commission: '25% of gross', cnss: 0, totalCost: 4000 },
+    responsibilities: [
+      { icon: <IconChat />, label: 'Lead communication' },
+      { icon: <IconPeople />, label: 'Client meetings' },
+      { icon: <IconBuilding />, label: 'Property visits' },
+      { icon: <IconHandshake />, label: 'Negotiation' },
+      { icon: <IconRefresh />, label: 'Follow-ups' },
+      { icon: <IconReport />, label: 'Activity reporting' },
+    ],
+    skills: ['Client Relations', 'Negotiation', 'Local Market', 'Driving License', 'Adaptability'],
+    kpis: [
+      { label: 'Visits', target: '15/mo' },
+      { label: 'Deals closed', target: '3/mo' },
+      { label: 'Client conversion', target: '25%/mo' },
+      { label: 'Avg. deal value', target: '50k MAD/mo' },
+    ],
     tools: ['WhatsApp Business', 'CRM', 'Google Maps', 'Phone'],
   },
 ];
 
 // ── Tab types ────────────────────────────────────────────────────────────
 
-type TabKey = 'overview' | 'schedule' | 'compensation' | 'skills';
+type TabKey = 'overview' | 'schedule' | 'compensation' | 'skills' | 'kpis';
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'overview', label: 'Overview' },
+  { key: 'overview', label: 'Main Tasks' },
   { key: 'schedule', label: 'Contract' },
   { key: 'compensation', label: 'Compensation' },
-  { key: 'skills', label: 'Skills & KPIs' },
+  { key: 'skills', label: 'Skills' },
+  { key: 'kpis', label: 'KPIs' },
 ];
 
 // ── Format helpers ───────────────────────────────────────────────────────
@@ -220,11 +309,17 @@ export default function TeamView() {
         }
       `}</style>
 
-      {/* ━━━ Director ━━━ */}
+      {/* ━━━ Director + Community Manager ━━━ */}
       <div className="flex">
-        <div className="w-8 shrink-0 mr-3" />
-        <div className="flex-1">
-          <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
+        <SectionLabel label="Management" />
+        <div className="flex-1 flex items-start">
+          <div className="w-1/3 min-w-0">
+            <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} />
+          </div>
+          <HorizontalConnector isDark={isDark} />
+          <div className="w-1/3 min-w-0">
+            <MemberCard member={backoffice[2]} expanded={expanded.has(backoffice[2].id)} onToggle={() => toggle(backoffice[2].id)} />
+          </div>
         </div>
       </div>
 
@@ -233,8 +328,8 @@ export default function TeamView() {
         <div className="w-8 shrink-0 mr-3" />
         <div className="flex-1 relative" style={{ height: 48 }}>
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
-            <FlowLine id="d-dm" x1={500} y1={0} x2={240} y2={48} isDark={isDark} dur={6} delay={0} />
-            <FlowLine id="d-ph" x1={500} y1={0} x2={760} y2={48} isDark={isDark} dur={7} delay={1.5} />
+            <FlowLine id="d-dm" x1={250} y1={0} x2={250} y2={48} isDark={isDark} dur={6} delay={0} />
+            <FlowLine id="d-ph" x1={250} y1={0} x2={750} y2={48} isDark={isDark} dur={7} delay={1} />
           </svg>
         </div>
       </div>
@@ -258,11 +353,11 @@ export default function TeamView() {
         <div className="w-8 shrink-0 mr-3" />
         <div className="flex-1 relative" style={{ height: 48 }}>
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
-            {[165, 500, 835].map((ax, i) => (
-              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={240} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
+            {[125, 375, 625, 875].map((ax, i) => (
+              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={250} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
             ))}
-            {[165, 500, 835].map((ax, i) => (
-              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={760} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
+            {[125, 375, 625, 875].map((ax, i) => (
+              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={750} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
             ))}
           </svg>
         </div>
@@ -271,7 +366,7 @@ export default function TeamView() {
       {/* ━━━ Field Agents ━━━ */}
       <div className="flex">
         <SectionLabel label="Field Agents" />
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
           {frontoffice.map((member) => (
             <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} />
           ))}
@@ -281,10 +376,10 @@ export default function TeamView() {
       {/* ━━━ Summary Bar ━━━ */}
       <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Headcount', value: '6', color: isDark ? '#ffffff' : '#1e293b' },
-          { label: 'Management', value: '1', color: '#d4a853' },
+          { label: 'Total Headcount', value: '8', color: isDark ? '#ffffff' : '#1e293b' },
+          { label: 'Management', value: '2', color: '#d4a853' },
           { label: 'Backoffice', value: '2', color: '#8b5cf6' },
-          { label: 'Frontoffice', value: '3', color: '#2dd4bf' },
+          { label: 'Frontoffice', value: '4', color: '#2dd4bf' },
         ].map((kpi) => (
           <div
             key={kpi.label}
@@ -488,15 +583,15 @@ function DirectorCard({
           <div className="px-7 pb-6">
             <div className={`border-t ${borderSub} pt-4`}>
               {/* Tab bar */}
-              <div className="flex gap-1 mb-4">
+              <div className={`flex mb-4 rounded-lg p-0.5 ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
                 {TABS.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={(e) => { e.stopPropagation(); setActiveTab(tab.key); }}
-                    className={`text-[10px] font-semibold uppercase tracking-[0.12em] px-3 py-1.5 rounded-md transition-all duration-200 ${
+                    className={`flex-1 text-[8px] font-semibold uppercase tracking-[0.1em] py-1.5 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
                       activeTab === tab.key
-                        ? (isDark ? 'bg-white/[0.06] text-white/80' : 'bg-slate-100 text-slate-700')
-                        : (isDark ? 'text-white/25 hover:text-white/40 hover:bg-white/[0.02]' : 'text-slate-400 hover:text-slate-500 hover:bg-slate-50')
+                        ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
+                        : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
                     }`}
                   >
                     {tab.label}
@@ -603,15 +698,15 @@ function MemberCard({
         <div className="px-5 pb-5">
           <div className={`border-t ${borderSub} pt-4`}>
             {/* Tab bar */}
-            <div className="flex gap-1 mb-4 flex-wrap">
+            <div className={`flex mb-4 rounded-lg p-0.5 ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={(e) => { e.stopPropagation(); setActiveTab(tab.key); }}
-                  className={`text-[9px] font-semibold uppercase tracking-[0.1em] px-2.5 py-1.5 rounded-md transition-all duration-200 ${
+                  className={`flex-1 text-[8px] font-semibold uppercase tracking-[0.1em] py-1.5 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
                     activeTab === tab.key
-                      ? (isDark ? 'bg-white/[0.06] text-white/80' : 'bg-slate-100 text-slate-700')
-                      : (isDark ? 'text-white/25 hover:text-white/40 hover:bg-white/[0.02]' : 'text-slate-400 hover:text-slate-500 hover:bg-slate-50')
+                      ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
+                      : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
                   }`}
                 >
                   {tab.label}
@@ -638,7 +733,7 @@ function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; c
 
   if (tab === 'overview') {
     return (
-      <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1.5">
         {member.responsibilities.map((r, i) => (
           <div
             key={i}
@@ -665,7 +760,6 @@ function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; c
       { label: 'Status', value: member.schedule.status },
       { label: 'Days', value: member.schedule.days },
       { label: 'Hours', value: member.schedule.hours },
-      { label: 'Languages', value: member.languages.join(', ') },
     ];
     return (
       <div className="space-y-1.5">
@@ -732,18 +826,6 @@ function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; c
             ))}
           </div>
         </div>
-        {/* KPIs */}
-        <div>
-          <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${textTertiary} mb-2 block`}>KPIs</span>
-          <div className="space-y-1">
-            {member.kpis.map((k) => (
-              <div key={k} className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: `${color}60` }} />
-                <span className={`text-[11px] ${textSecondary}`}>{k}</span>
-              </div>
-            ))}
-          </div>
-        </div>
         {/* Tools */}
         <div>
           <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${textTertiary} mb-2 block`}>Tools</span>
@@ -759,6 +841,25 @@ function TabContent({ member, tab, color }: { member: TeamMember; tab: TabKey; c
             ))}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (tab === 'kpis') {
+    return (
+      <div className="space-y-2">
+        {member.kpis.map((k) => (
+          <div
+            key={k.label}
+            className="flex items-center justify-between rounded-lg px-3 py-2"
+            style={{ background: pillBg, border: pillBorder }}
+          >
+            <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{k.label}</span>
+            <span className="text-[11px] font-bold font-mono" style={{ color: `${color}cc` }}>
+              {k.target}
+            </span>
+          </div>
+        ))}
       </div>
     );
   }
