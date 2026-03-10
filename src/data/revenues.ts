@@ -99,28 +99,21 @@ export const defaultRentalRevenues: RentalRevenueItem[] = [
 // Expats.ma — Media platform revenues
 export const defaultMediaRevenues: MediaRevenueItem[] = [
   {
-    label: 'Sponsored Articles',
+    label: 'Advertising',
     unitPrice: 3000,
-    y1: { conv: 4, total: 12000 },
-    y2: { conv: 8, total: 24000 },
-    y3: { conv: 14, total: 42000 },
+    y1: { conv: 6, total: 18000 },
+    y2: { conv: 12, total: 36000 },
+    y3: { conv: 20, total: 60000 },
   },
   {
-    label: 'Banner Ads (monthly)',
-    unitPrice: 2000,
-    y1: { conv: 2, total: 4000 },
-    y2: { conv: 5, total: 10000 },
-    y3: { conv: 10, total: 20000 },
-  },
-  {
-    label: 'Premium Membership',
+    label: 'Memberships',
     unitPrice: 200,
     y1: { conv: 50, total: 10000 },
     y2: { conv: 150, total: 30000 },
     y3: { conv: 400, total: 80000 },
   },
   {
-    label: 'Events & Workshops',
+    label: 'Events',
     unitPrice: 5000,
     y1: { conv: 2, total: 10000 },
     y2: { conv: 4, total: 20000 },

@@ -28,7 +28,7 @@ export async function saveToSupabase(key: string, value: unknown): Promise<void>
 }
 
 // Bump this to force a one-time reset of cached Supabase data (e.g. after reordering defaults)
-const DATA_VERSION = 3;
+const DATA_VERSION = 4;
 
 // Singleton promise — ensures migration runs once and all loaders wait for it
 let migrationPromise: Promise<void> | null = null;
