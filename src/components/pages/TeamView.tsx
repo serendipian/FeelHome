@@ -233,8 +233,8 @@ export default function TeamView() {
         <div className="w-8 shrink-0 mr-3" />
         <div className="flex-1 relative" style={{ height: 48 }}>
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
-            <FlowLine id="d-dm" x1={500} y1={0} x2={240} y2={48} isDark={isDark} dur={3.2} delay={0} />
-            <FlowLine id="d-ph" x1={500} y1={0} x2={760} y2={48} isDark={isDark} dur={3.5} delay={0.8} />
+            <FlowLine id="d-dm" x1={500} y1={0} x2={240} y2={48} isDark={isDark} dur={6} delay={0} />
+            <FlowLine id="d-ph" x1={500} y1={0} x2={760} y2={48} isDark={isDark} dur={7} delay={1.5} />
           </svg>
         </div>
       </div>
@@ -259,10 +259,10 @@ export default function TeamView() {
         <div className="flex-1 relative" style={{ height: 48 }}>
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
             {[165, 500, 835].map((ax, i) => (
-              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={240} y1={0} x2={ax} y2={48} isDark={isDark} dur={3 + i * 0.4} delay={i * 0.5} />
+              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={240} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
             ))}
             {[165, 500, 835].map((ax, i) => (
-              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={760} y1={0} x2={ax} y2={48} isDark={isDark} dur={3.2 + i * 0.3} delay={0.3 + i * 0.4} />
+              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={760} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
             ))}
           </svg>
         </div>
@@ -375,7 +375,7 @@ function HorizontalConnector({ isDark }: { isDark: boolean }) {
         <g>
           <animateMotion
             path="M0,2 L100,2"
-            dur="3.5s"
+            dur="7s"
             repeatCount="indefinite"
             keyPoints="0;1;0"
             keyTimes="0;0.5;1"
