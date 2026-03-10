@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatMAD, formatNumber, formatPercent } from '@/lib/formatters';
 import { isExpenseActive } from '@/lib/calculations';
-import { loadFromSupabase, saveToSupabase } from '@/lib/supabase';
+import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
 import { MonthlySnapshot } from '@/types';
 import KPICard from '@/components/ui/KPICard';
 import EditableCell from '@/components/ui/EditableCell';
@@ -69,10 +69,12 @@ export default function InvestmentView() {
   useEffect(() => {
     if (simHydrated.current) return;
     simHydrated.current = true;
-    loadFromSupabase<SimData>('simdata', defaultSim).then((data) => {
-      setSim(data);
-      simMounted.current = true;
-    });
+    ensureMigrated().then(() =>
+      loadFromSupabase<SimData>('simdata', defaultSim).then((data) => {
+        setSim(data);
+        simMounted.current = true;
+      })
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

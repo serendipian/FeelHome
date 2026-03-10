@@ -14,7 +14,7 @@ import {
   recalcRentalItem,
   recalcMediaItem,
 } from '@/lib/calculations';
-import { loadFromSupabase, saveToSupabase, migrateSupabaseData } from '@/lib/supabase';
+import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
 
 export type MarketKey = 'casablanca' | 'rabat' | 'marrakech' | 'autre';
 
@@ -80,14 +80,14 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   const [investment, setInvestment] = useState(500000);
   const [growthBoost, setGrowthBoost] = useState(0);
 
-  // Load from Supabase on mount
-  const hydrated = useRef(false);
+  // Load from Supabase on mount, then enable persistence
+  const readyToSave = useRef(false);
+  const didHydrate = useRef(false);
   useEffect(() => {
-    if (hydrated.current) return;
-    hydrated.current = true;
+    if (didHydrate.current) return;
+    didHydrate.current = true;
     (async () => {
-      // Run migration first (clears stale data if version changed)
-      await migrateSupabaseData();
+      await ensureMigrated();
       const [ab, am, sr, rr, mr, ei, inv, gb] = await Promise.all([
         loadFromSupabase<Record<BrandKey, boolean>>('activeBrands', activeBrands),
         loadFromSupabase<Record<MarketKey, boolean>>('activeMarkets', activeMarkets),
@@ -106,24 +106,22 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
       setExpenseItems(ei);
       setInvestment(inv);
       setGrowthBoost(gb);
+      // Enable saving only AFTER hydration is fully applied
+      // Use setTimeout to skip the render triggered by the setters above
+      setTimeout(() => { readyToSave.current = true; }, 0);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist to Supabase (debounced)
-  const mounted = useRef(false);
-  useEffect(() => {
-    if (!mounted.current) return; // skip initial render — defaults don't need saving
-    debouncedSave('activeBrands', activeBrands);
-  }, [activeBrands]);
-  useEffect(() => { if (mounted.current) debouncedSave('activeMarkets', activeMarkets); }, [activeMarkets]);
-  useEffect(() => { if (mounted.current) debouncedSave('saleRevenues', saleRevenues); }, [saleRevenues]);
-  useEffect(() => { if (mounted.current) debouncedSave('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
-  useEffect(() => { if (mounted.current) debouncedSave('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
-  useEffect(() => { if (mounted.current) debouncedSave('expenseItems', expenseItems); }, [expenseItems]);
-  useEffect(() => { if (mounted.current) debouncedSave('investment', investment); }, [investment]);
-  useEffect(() => { if (mounted.current) debouncedSave('growthBoost', growthBoost); }, [growthBoost]);
-  useEffect(() => { mounted.current = true; }, []);
+  // Persist to Supabase (debounced) — only after hydration completes
+  useEffect(() => { if (readyToSave.current) debouncedSave('activeBrands', activeBrands); }, [activeBrands]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('activeMarkets', activeMarkets); }, [activeMarkets]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('saleRevenues', saleRevenues); }, [saleRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('expenseItems', expenseItems); }, [expenseItems]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('investment', investment); }, [investment]);
+  useEffect(() => { if (readyToSave.current) debouncedSave('growthBoost', growthBoost); }, [growthBoost]);
 
   const toggleBrand = (brand: BrandKey) => {
     setActiveBrands((prev) => ({ ...prev, [brand]: !prev[brand] }));
