@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { BrandKey, ExpenseItem, YearlyFinancials, MonthlySnapshot, SaleRevenueItem, RentalRevenueItem, MediaRevenueItem } from '@/types';
 import { defaultSaleRevenues, defaultRentalRevenues, defaultMediaRevenues } from '@/data/revenues';
 import { defaultExpenses } from '@/data/expenses';
@@ -39,8 +39,6 @@ interface FinancialState {
   // Investment simulation
   investment: number;
   setInvestment: (v: number) => void;
-  founderSalary: number;
-  setFounderSalary: (v: number) => void;
   growthBoost: number;
   setGrowthBoost: (v: number) => void;
   simulation: {
@@ -53,32 +51,58 @@ interface FinancialState {
 
 const FinancialContext = createContext<FinancialState | null>(null);
 
+const STORAGE_KEY = 'feelhome-financial';
+
+function loadState<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = localStorage.getItem(`${STORAGE_KEY}-${key}`);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+
+function saveState(key: string, value: unknown) {
+  try { localStorage.setItem(`${STORAGE_KEY}-${key}`, JSON.stringify(value)); } catch {}
+}
+
 export function FinancialProvider({ children }: { children: React.ReactNode }) {
-  const [activeBrands, setActiveBrands] = useState<Record<BrandKey, boolean>>({
-    feelHome: true,
-    mInvest: true,
-    expats: true,
-  });
+  const [activeBrands, setActiveBrands] = useState<Record<BrandKey, boolean>>(() =>
+    loadState('activeBrands', { feelHome: true, mInvest: true, expats: true })
+  );
 
-  const [saleRevenues, setSaleRevenues] = useState<SaleRevenueItem[]>(defaultSaleRevenues);
-  const [rentalRevenues, setRentalRevenues] = useState<RentalRevenueItem[]>(defaultRentalRevenues);
-  const [mediaRevenues, setMediaRevenues] = useState<MediaRevenueItem[]>(defaultMediaRevenues);
-  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>(defaultExpenses);
+  const [saleRevenues, setSaleRevenues] = useState<SaleRevenueItem[]>(() =>
+    loadState('saleRevenues', defaultSaleRevenues)
+  );
+  const [rentalRevenues, setRentalRevenues] = useState<RentalRevenueItem[]>(() =>
+    loadState('rentalRevenues', defaultRentalRevenues)
+  );
+  const [mediaRevenues, setMediaRevenues] = useState<MediaRevenueItem[]>(() =>
+    loadState('mediaRevenues', defaultMediaRevenues)
+  );
+  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>(() =>
+    loadState('expenseItems', defaultExpenses)
+  );
 
-  const [activeMarkets, setActiveMarkets] = useState<Record<MarketKey, boolean>>({
-    casablanca: true,
-    rabat: true,
-    marrakech: true,
-    autre: true,
-  });
+  const [activeMarkets, setActiveMarkets] = useState<Record<MarketKey, boolean>>(() =>
+    loadState('activeMarkets', { casablanca: true, rabat: true, marrakech: true, autre: true })
+  );
 
   const toggleMarket = (market: MarketKey) => {
     setActiveMarkets((prev) => ({ ...prev, [market]: !prev[market] }));
   };
 
-  const [investment, setInvestment] = useState(500000);
-  const [founderSalary, setFounderSalary] = useState(15000);
-  const [growthBoost, setGrowthBoost] = useState(0);
+  const [investment, setInvestment] = useState(() => loadState('investment', 500000));
+  const [growthBoost, setGrowthBoost] = useState(() => loadState('growthBoost', 0));
+
+  // Persist all editable state to localStorage
+  useEffect(() => { saveState('activeBrands', activeBrands); }, [activeBrands]);
+  useEffect(() => { saveState('activeMarkets', activeMarkets); }, [activeMarkets]);
+  useEffect(() => { saveState('saleRevenues', saleRevenues); }, [saleRevenues]);
+  useEffect(() => { saveState('rentalRevenues', rentalRevenues); }, [rentalRevenues]);
+  useEffect(() => { saveState('mediaRevenues', mediaRevenues); }, [mediaRevenues]);
+  useEffect(() => { saveState('expenseItems', expenseItems); }, [expenseItems]);
+  useEffect(() => { saveState('investment', investment); }, [investment]);
+  useEffect(() => { saveState('growthBoost', growthBoost); }, [growthBoost]);
 
   const toggleBrand = (brand: BrandKey) => {
     setActiveBrands((prev) => ({ ...prev, [brand]: !prev[brand] }));
@@ -142,23 +166,23 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   const yearly = useMemo(
     () =>
       (['y1', 'y2', 'y3'] as const).map((y) =>
-        calcYearlyFinancials(activeBrands, y, saleRevenues, rentalRevenues, mediaRevenues, expenseItems)
+        calcYearlyFinancials(activeBrands, y, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets)
       ) as [YearlyFinancials, YearlyFinancials, YearlyFinancials],
-    [activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
   );
 
   const monthly = useMemo(
-    () => calcMonthlyFinancials(activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems),
-    [activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    () => calcMonthlyFinancials(activeBrands, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets),
+    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
   );
 
   const revenueByBrand = useMemo(
     () => ({
-      y1: calcRevenueByBrand(activeBrands, 'y1', saleRevenues, rentalRevenues, mediaRevenues),
-      y2: calcRevenueByBrand(activeBrands, 'y2', saleRevenues, rentalRevenues, mediaRevenues),
-      y3: calcRevenueByBrand(activeBrands, 'y3', saleRevenues, rentalRevenues, mediaRevenues),
+      y1: calcRevenueByBrand(activeBrands, 'y1', saleRevenues, rentalRevenues, mediaRevenues, activeMarkets),
+      y2: calcRevenueByBrand(activeBrands, 'y2', saleRevenues, rentalRevenues, mediaRevenues, activeMarkets),
+      y3: calcRevenueByBrand(activeBrands, 'y3', saleRevenues, rentalRevenues, mediaRevenues, activeMarkets),
     }),
-    [activeBrands, saleRevenues, rentalRevenues, mediaRevenues]
+    [activeBrands, activeMarkets, saleRevenues, rentalRevenues, mediaRevenues]
   );
 
   const expensesByCategory = useMemo(
@@ -171,8 +195,8 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
   );
 
   const simulation = useMemo(
-    () => calcInvestmentSimulation(activeBrands, investment, founderSalary, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems),
-    [activeBrands, investment, founderSalary, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
+    () => calcInvestmentSimulation(activeBrands, investment, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems, activeMarkets),
+    [activeBrands, activeMarkets, investment, growthBoost, saleRevenues, rentalRevenues, mediaRevenues, expenseItems]
   );
 
   return (
@@ -196,8 +220,6 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
         updateExpenseItem,
         investment,
         setInvestment,
-        founderSalary,
-        setFounderSalary,
         growthBoost,
         setGrowthBoost,
         simulation,

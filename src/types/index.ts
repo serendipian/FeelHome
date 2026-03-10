@@ -63,7 +63,12 @@ export interface MonthlySnapshot {
   month: number;
   revenue: number;
   expenses: number;
+  commissions: number;
+  commByBrand: Record<BrandKey, number>;
   profit: number;
   cumulative: number;
   balance: number;
+  // Detailed breakdowns
+  revByBrand: Record<BrandKey, number>;
+  expByCategory: { salaries: number; fixed: number; marketing: number };
 }

@@ -10,8 +10,8 @@ import EditableCell from '@/components/ui/EditableCell';
 
 const categoryConfig: Record<string, { label: string; color: string; subtitle: string }> = {
   salaries: { label: 'Salaries', color: '#f43f5e', subtitle: 'Team & Agents' },
-  fixed: { label: 'Fixed Costs', color: '#5b8ec9', subtitle: 'Office, Tools & Operations' },
-  marketing: { label: 'Marketing', color: '#1d7ff3', subtitle: 'Acquisition & Branding' },
+  fixed: { label: 'Fixed Costs', color: '#f43f5e', subtitle: 'Office, Tools & Operations' },
+  marketing: { label: 'Marketing', color: '#f43f5e', subtitle: 'Acquisition & Branding' },
 };
 
 function YearTag({ year, color }: { year: number; color: string }) {
@@ -87,16 +87,16 @@ export default function ExpensesView() {
                   </thead>
                   <tbody>
                     {items.map(({ item, idx }) => (
-                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
-                        <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
-                        <td className="px-3 py-2.5">
-                          <div className="flex gap-1 flex-wrap">
+                      <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors h-[37px]">
+                        <td className="px-4 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                        <td className="px-3">
+                          <div className="flex gap-1 flex-nowrap">
                             {item.brands.map((b) => (
                               <BrandPill key={b} brandKey={b} />
                             ))}
                           </div>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/30">
+                        <td className="px-3 text-right font-mono text-white/30">
                           <EditableCell
                             value={item.variableCost}
                             onSave={(v) => updateExpenseItem(idx, 'variableCost', v)}
@@ -118,13 +118,13 @@ export default function ExpensesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-right uppercase tracking-wider">Amount</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {items.map(({ item, idx }) => (
-                          <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
-                            <td className="px-3 py-2.5 text-right font-mono text-white/50">
+                          <tr key={idx} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors h-[37px]">
+                            <td className="px-3 text-center font-mono text-white/50">
                               {item[y] > 0 ? (
                                 <EditableCell
                                   value={item[y]}
@@ -144,7 +144,7 @@ export default function ExpensesView() {
                         ))}
                         {/* Subtotal row */}
                         <tr className="border-t border-white/[0.06]">
-                          <td className="px-3 py-3 text-right font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
+                          <td className="px-3 py-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
                             {formatNumber(items.reduce((s, { item }) => s + item[y], 0))}
                           </td>
                         </tr>

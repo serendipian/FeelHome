@@ -58,7 +58,7 @@ export default function RightPanel() {
 
   return (
     <div
-      className="w-[280px] shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto"
+      className="w-[340px] shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto"
       style={{
         background: 'linear-gradient(180deg, rgba(6, 7, 10, 0.6) 0%, rgba(6, 7, 10, 0.9) 100%)',
         borderLeft: '1px solid rgba(255,255,255,0.04)',

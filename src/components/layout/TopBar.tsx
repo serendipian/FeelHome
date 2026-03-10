@@ -2,23 +2,20 @@
 
 import { usePathname } from 'next/navigation';
 import { useFinancial } from '@/context/FinancialContext';
-import { brands, brandKeys } from '@/data/brands';
 import { formatCompact } from '@/lib/formatters';
 
-const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  '/': { title: 'P&L Overview', subtitle: 'Consolidated financial performance' },
-  '/summary': { title: 'P&L Overview', subtitle: 'Consolidated financial performance' },
-  '/revenues': { title: 'Revenue Breakdown', subtitle: 'Monthly assumptions by business unit' },
-  '/expenses': { title: 'Expense Detail', subtitle: 'Operating costs by category' },
-  '/investment': { title: 'Investment Simulation', subtitle: 'Scenario modeling & projections' },
+const pageTitles: Record<string, string> = {
+  '/': 'P&L Overview',
+  '/summary': 'P&L Overview',
+  '/revenues': 'Revenue Breakdown',
+  '/expenses': 'Expense Detail',
+  '/investment': 'Investment Simulation',
 };
 
 export default function TopBar() {
   const pathname = usePathname();
-  const { activeBrands, yearly } = useFinancial();
-
-  const activeBrandList = brandKeys.filter((k) => activeBrands[k]);
-  const page = pageTitles[pathname] || pageTitles['/'];
+  const { yearly } = useFinancial();
+  const title = pageTitles[pathname] || pageTitles['/'];
 
   return (
     <div
@@ -28,26 +25,7 @@ export default function TopBar() {
         borderBottom: '1px solid rgba(255,255,255,0.03)',
       }}
     >
-      <div className="flex items-center gap-4">
-        <div>
-          <h1 className="text-[14px] font-semibold text-white/85 leading-tight">{page.title}</h1>
-          <p className="text-[10px] text-white/25 leading-tight">{page.subtitle}</p>
-        </div>
-        <div className="h-5 w-px bg-white/[0.06]" />
-        <div className="flex items-center gap-1.5">
-          {activeBrandList.map((key) => (
-            <div
-              key={key}
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: brands[key].color, boxShadow: `0 0 6px ${brands[key].color}40` }}
-              title={brands[key].name}
-            />
-          ))}
-          <span className="text-[10px] text-white/20 ml-1">
-            {activeBrandList.length} active
-          </span>
-        </div>
-      </div>
+      <h1 className="text-[18px] font-semibold text-white/90 leading-tight">{title}</h1>
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2 px-3 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>

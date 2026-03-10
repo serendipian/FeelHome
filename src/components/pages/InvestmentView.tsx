@@ -1,29 +1,179 @@
 'use client';
 
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatMAD, formatNumber, formatPercent } from '@/lib/formatters';
+import { isExpenseActive } from '@/lib/calculations';
+import { MonthlySnapshot } from '@/types';
 import KPICard from '@/components/ui/KPICard';
+import EditableCell from '@/components/ui/EditableCell';
+
+const MONTHS = 6;
+const COLLAPSE_FROM_LABEL = 'Agent Casablanca #2';
+
+interface SimData {
+  rentalConvs: number[][]; // [itemIdx][monthIdx]
+  saleConvs: number[][];
+  mediaConvs: number[][];
+  expenses: number[][];   // [itemIdx][monthIdx]
+}
 
 export default function InvestmentView() {
   const {
     investment, setInvestment,
-    founderSalary, setFounderSalary,
     growthBoost, setGrowthBoost,
     simulation,
+    activeBrands,
+    activeMarkets,
+    saleRevenues,
+    rentalRevenues,
+    mediaRevenues,
+    expenseItems,
   } = useFinancial();
 
-  const { snapshots, breakEvenMonth, roi, finalCash } = simulation;
+  const isMarketActive = useCallback((label: string) => {
+    const key = label.toLowerCase() as keyof typeof activeMarkets;
+    return activeMarkets[key] !== false;
+  }, [activeMarkets]);
 
-  const tableMonths = [1, 6, 12, 18, 24, 30, 36];
-  if (breakEvenMonth > 0 && !tableMonths.includes(breakEvenMonth)) {
-    tableMonths.push(breakEvenMonth);
-    tableMonths.sort((a, b) => a - b);
-  }
+  const { breakEvenMonth, roi, finalCash } = simulation;
+
+  const tableMonths = [1, 2, 3, 4, 5, 6];
+  const [salariesExpanded, setSalariesExpanded] = useState(false);
+
+  // Find index where collapsible salaries start
+  const collapseFromIdx = expenseItems.findIndex(e => e.label === COLLAPSE_FROM_LABEL);
+
+  // Local simulation state — independent per-month, initialized from Y1 or localStorage
+  const [sim, setSim] = useState<SimData>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('feelhome-simdata');
+        if (raw) return JSON.parse(raw);
+      } catch {}
+    }
+    return {
+      rentalConvs: rentalRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+      saleConvs: saleRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+      mediaConvs: mediaRevenues.map(item => Array(MONTHS).fill(item.y1.conv)),
+      expenses: expenseItems.map(item => Array(MONTHS).fill(item.y1)),
+    };
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('feelhome-simdata', JSON.stringify(sim)); } catch {}
+  }, [sim]);
+
+  const updateSimRental = (itemIdx: number, monthIdx: number, conv: number) => {
+    setSim(prev => {
+      const next = { ...prev, rentalConvs: prev.rentalConvs.map(a => [...a]) };
+      next.rentalConvs[itemIdx][monthIdx] = conv;
+      return next;
+    });
+  };
+
+  const updateSimSale = (itemIdx: number, monthIdx: number, conv: number) => {
+    setSim(prev => {
+      const next = { ...prev, saleConvs: prev.saleConvs.map(a => [...a]) };
+      next.saleConvs[itemIdx][monthIdx] = conv;
+      return next;
+    });
+  };
+
+  const updateSimMedia = (itemIdx: number, monthIdx: number, conv: number) => {
+    setSim(prev => {
+      const next = { ...prev, mediaConvs: prev.mediaConvs.map(a => [...a]) };
+      next.mediaConvs[itemIdx][monthIdx] = conv;
+      return next;
+    });
+  };
+
+  const updateSimExpense = (itemIdx: number, monthIdx: number, amount: number) => {
+    setSim(prev => {
+      const next = { ...prev, expenses: prev.expenses.map(a => [...a]) };
+      next.expenses[itemIdx][monthIdx] = amount;
+      return next;
+    });
+  };
+
+  // Compute local snapshots from local sim data
+  const localSnapshots: MonthlySnapshot[] = useMemo(() => {
+    const snaps: MonthlySnapshot[] = [];
+    let cumulative = 0;
+
+    for (let mi = 0; mi < MONTHS; mi++) {
+      let revenue = 0;
+      const revByBrand = { feelHome: 0, mInvest: 0, expats: 0 };
+
+      if (activeBrands.feelHome) {
+        rentalRevenues.forEach((item, i) => {
+          if (isMarketActive(item.label)) {
+            const val = (sim.rentalConvs[i]?.[mi] ?? 0) * item.revPerConv;
+            revByBrand.feelHome += val;
+            revenue += val;
+          }
+        });
+      }
+
+      if (activeBrands.mInvest) {
+        saleRevenues.forEach((item, i) => {
+          if (isMarketActive(item.label)) {
+            const val = (sim.saleConvs[i]?.[mi] ?? 0) * item.revPerConv;
+            revByBrand.mInvest += val;
+            revenue += val;
+          }
+        });
+      }
+
+      if (activeBrands.expats) {
+        mediaRevenues.forEach((item, i) => {
+          const val = (sim.mediaConvs[i]?.[mi] ?? 0) * item.unitPrice;
+          revByBrand.expats += val;
+          revenue += val;
+        });
+      }
+
+      // Apply growth boost
+      const boost = 1 + growthBoost;
+      revenue *= boost;
+      revByBrand.feelHome *= boost;
+      revByBrand.mInvest *= boost;
+      revByBrand.expats *= boost;
+
+      const commByBrand = {
+        feelHome: revByBrand.feelHome * 0.25,
+        mInvest: revByBrand.mInvest * 0.25,
+        expats: 0,
+      };
+      const commissions = commByBrand.feelHome + commByBrand.mInvest;
+
+      let expensesTotal = 0;
+      const expByCategory = { salaries: 0, fixed: 0, marketing: 0 };
+      expenseItems.forEach((item, i) => {
+        if (isExpenseActive(item, activeBrands)) {
+          const val = sim.expenses[i]?.[mi] ?? 0;
+          expByCategory[item.category] += val;
+          expensesTotal += val;
+        }
+      });
+
+      const profit = revenue - commissions - expensesTotal;
+      cumulative += profit;
+      const balance = investment + cumulative;
+
+      snaps.push({
+        month: mi + 1, revenue, expenses: expensesTotal, commissions, commByBrand, profit, cumulative, balance,
+        revByBrand, expByCategory,
+      });
+    }
+
+    return snaps;
+  }, [sim, activeBrands, activeMarkets, rentalRevenues, saleRevenues, mediaRevenues, expenseItems, investment, growthBoost, isMarketActive]);
 
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Sliders */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 gap-5">
         <SliderCard
           label="Initial Investment"
           value={investment}
@@ -33,16 +183,6 @@ export default function InvestmentView() {
           step={50000}
           format={formatMAD}
           color="#d4a853"
-        />
-        <SliderCard
-          label="Founder Salary"
-          value={founderSalary}
-          onChange={setFounderSalary}
-          min={0}
-          max={40000}
-          step={2000}
-          format={formatMAD}
-          color="#f97316"
         />
         <SliderCard
           label="Growth Adjustment"
@@ -88,61 +228,229 @@ export default function InvestmentView() {
         />
       </div>
 
-      {/* Snapshots Table */}
-      <div className="card overflow-hidden">
-        <div className="px-7 py-4 border-b border-white/[0.04]">
-          <h3 className="text-[13px] font-semibold text-white/70">Cash Flow Snapshots</h3>
-          <p className="text-[11px] text-white/25 mt-0.5">Key milestones over 36 months</p>
+      {/* Pre-launch Simulation — separate cards */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-[13px] font-semibold text-white/70">Pre-launch Simulation</h3>
+          <p className="text-[11px] text-white/25 mt-0.5">6-month micro cash flow — independent from main projections</p>
         </div>
-        <table className="w-full text-[12px]">
-          <thead>
-            <tr className="border-b border-white/[0.04]">
-              {['Month', 'Monthly P&L', 'Cumulative', 'Cash Balance'].map((h) => (
-                <th key={h} className="px-7 py-3 text-[10px] font-semibold text-white/30 uppercase tracking-wider text-right first:text-left">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tableMonths.map((m) => {
-              const snap = snapshots[m - 1];
-              if (!snap) return null;
-              const isBreakEven = m === breakEvenMonth;
-              return (
-                <tr
-                  key={m}
-                  className={`transition-colors ${
-                    isBreakEven
-                      ? 'bg-[#2dd4bf]/[0.04]'
-                      : 'border-b border-white/[0.02] hover:bg-white/[0.015]'
-                  }`}
-                  style={isBreakEven ? { borderTop: '1px solid rgba(45,212,191,0.15)', borderBottom: '1px solid rgba(45,212,191,0.15)' } : {}}
-                >
-                  <td className="px-7 py-3 text-white/50 font-medium">
-                    {isBreakEven ? (
-                      <span className="text-[#2dd4bf] font-bold flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf] animate-pulse" />
-                        Month {m}
-                      </span>
-                    ) : (
-                      `Month ${m}`
-                    )}
-                  </td>
-                  <td className="px-7 py-3 text-right font-mono font-medium" style={{ color: snap.profit >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-                    {formatNumber(Math.round(snap.profit))}
-                  </td>
-                  <td className="px-7 py-3 text-right font-mono font-medium" style={{ color: snap.cumulative >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-                    {formatNumber(Math.round(snap.cumulative))}
-                  </td>
-                  <td className="px-7 py-3 text-right font-mono font-bold" style={{ color: snap.balance >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-                    {formatNumber(Math.round(snap.balance))}
-                  </td>
+
+        {/* REVENUE CARD */}
+        <SimCard title="Revenue" tableMonths={tableMonths}>
+          {activeBrands.feelHome && (
+            <>
+              <CashFlowRow label="Feel Home (Rental)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.feelHome} color="#d4875a" bold />
+              {rentalRevenues.map((item, idx) => {
+                const active = isMarketActive(item.label);
+                return (
+                  <tr key={`rental-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-20'}`}>
+                    <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                    {tableMonths.map((m) => {
+                      const mi = m - 1;
+                      const conv = sim.rentalConvs[idx]?.[mi] ?? 0;
+                      const total = conv * item.revPerConv;
+                      return (
+                        <td key={m} className="px-2 py-2 text-center font-mono text-[11px]">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <EditableCell
+                              value={conv}
+                              onSave={(v) => updateSimRental(idx, mi, v)}
+                              format={(v) => String(Math.round(v))}
+                              className="text-white/30"
+                            />
+                            <span className="text-white/15">×</span>
+                            <span style={{ color: '#d4875a' }}>
+                              {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                            </span>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </>
+          )}
+
+          {activeBrands.mInvest && (
+            <>
+              <CashFlowRow label="M Invest (Sales)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.mInvest} color="#5b8ec9" bold />
+              {saleRevenues.map((item, idx) => {
+                const active = isMarketActive(item.label);
+                return (
+                  <tr key={`sale-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:bg-white/[0.015]' : 'opacity-20'}`}>
+                    <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                    {tableMonths.map((m) => {
+                      const mi = m - 1;
+                      const conv = sim.saleConvs[idx]?.[mi] ?? 0;
+                      const total = conv * item.revPerConv;
+                      return (
+                        <td key={m} className="px-2 py-2 text-center font-mono text-[11px]">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <EditableCell
+                              value={conv}
+                              onSave={(v) => updateSimSale(idx, mi, v)}
+                              format={(v) => String(Math.round(v))}
+                              className="text-white/30"
+                            />
+                            <span className="text-white/15">×</span>
+                            <span style={{ color: '#5b8ec9' }}>
+                              {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                            </span>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </>
+          )}
+
+          {activeBrands.expats && (
+            <>
+              <CashFlowRow label="Expats.ma (Media)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.expats} color="#1d7ff3" bold />
+              {mediaRevenues.map((item, idx) => (
+                <tr key={`media-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                  <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                  {tableMonths.map((m) => {
+                    const mi = m - 1;
+                    const conv = sim.mediaConvs[idx]?.[mi] ?? 0;
+                    const total = conv * item.unitPrice;
+                    return (
+                      <td key={m} className="px-2 py-2 text-center font-mono text-[11px]">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <EditableCell
+                            value={conv}
+                            onSave={(v) => updateSimMedia(idx, mi, v)}
+                            format={(v) => String(Math.round(v))}
+                            className="text-white/30"
+                          />
+                          <span className="text-white/15">×</span>
+                          <span style={{ color: '#1d7ff3' }}>
+                            {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                          </span>
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </>
+          )}
+
+          <CashFlowRow label="Total Revenue" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revenue} color="#2dd4bf" bold />
+        </SimCard>
+
+        {/* EXPENSES CARD */}
+        <SimCard title="Expenses" tableMonths={tableMonths}>
+          {/* Salaries */}
+          <CashFlowRow label="Salaries" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.salaries} color="#f43f5e" bold />
+          {expenseItems.map((item, idx) => {
+            if (item.category !== 'salaries' || !isExpenseActive(item, activeBrands)) return null;
+            const isCollapsed = collapseFromIdx > 0 && idx >= collapseFromIdx && !salariesExpanded;
+            if (isCollapsed) return null;
+            return (
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                {tableMonths.map((m) => {
+                  const mi = m - 1;
+                  return (
+                    <td key={m} className="px-3 py-2 text-center font-mono text-[11px]" style={{ color: '#f43f5e' }}>
+                      <EditableCell
+                        value={sim.expenses[idx]?.[mi] ?? 0}
+                        onSave={(v) => updateSimExpense(idx, mi, v)}
+                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+          {collapseFromIdx > 0 && (
+            <tr className="border-b border-white/[0.02]">
+              <td colSpan={tableMonths.length + 1} className="px-10 py-1.5">
+                <button
+                  onClick={() => setSalariesExpanded(!salariesExpanded)}
+                  className="text-[10px] text-white/25 hover:text-white/50 transition-colors flex items-center gap-1"
+                >
+                  <svg className={`w-3 h-3 transition-transform ${salariesExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  {salariesExpanded ? 'Collapse future hires' : `Show ${expenseItems.filter((e, i) => e.category === 'salaries' && i >= collapseFromIdx && isExpenseActive(e, activeBrands)).length} future hires`}
+                </button>
+              </td>
+            </tr>
+          )}
+
+          {/* Fixed Costs */}
+          <CashFlowRow label="Fixed Costs" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.fixed} color="#f43f5e" bold />
+          {expenseItems.map((item, idx) => {
+            if (item.category !== 'fixed' || !isExpenseActive(item, activeBrands)) return null;
+            return (
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                {tableMonths.map((m) => {
+                  const mi = m - 1;
+                  return (
+                    <td key={m} className="px-3 py-2 text-center font-mono text-[11px]" style={{ color: '#f43f5e' }}>
+                      <EditableCell
+                        value={sim.expenses[idx]?.[mi] ?? 0}
+                        onSave={(v) => updateSimExpense(idx, mi, v)}
+                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+
+          {/* Marketing */}
+          <CashFlowRow label="Marketing" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.marketing} color="#f43f5e" bold />
+          {expenseItems.map((item, idx) => {
+            if (item.category !== 'marketing' || !isExpenseActive(item, activeBrands)) return null;
+            return (
+              <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors">
+                <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                {tableMonths.map((m) => {
+                  const mi = m - 1;
+                  return (
+                    <td key={m} className="px-3 py-2 text-center font-mono text-[11px]" style={{ color: '#f43f5e' }}>
+                      <EditableCell
+                        value={sim.expenses[idx]?.[mi] ?? 0}
+                        onSave={(v) => updateSimExpense(idx, mi, v)}
+                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+
+          <CashFlowRow label="Total Expenses" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expenses} color="#f43f5e" bold />
+        </SimCard>
+
+        {/* COMMISSIONS CARD */}
+        <SimCard title="Commissions (25%)" tableMonths={tableMonths}>
+          {activeBrands.feelHome && (
+            <CashFlowRow label="Feel Home" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.commByBrand.feelHome} color="#d4875a" />
+          )}
+          {activeBrands.mInvest && (
+            <CashFlowRow label="M Invest" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.commByBrand.mInvest} color="#5b8ec9" />
+          )}
+
+          <CashFlowRow label="Total Commissions" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.commissions} color="#f59e0b" bold />
+        </SimCard>
+
+        {/* BOTTOM LINE CARD */}
+        <SimCard title="Bottom Line" tableMonths={tableMonths}>
+          <CashFlowRow label="Net Profit" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.profit} autoColor />
+          <CashFlowRow label="Cumulative P&L" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.cumulative} autoColor />
+          <CashFlowRow label="Cash Balance" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.balance} autoColor bold highlight />
+        </SimCard>
       </div>
     </div>
   );
@@ -223,5 +531,63 @@ function WalletIcon() {
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" />
     </svg>
+  );
+}
+
+function SimCard({ title, tableMonths, children }: { title: string; tableMonths: number[]; children: React.ReactNode }) {
+  return (
+    <div className="card overflow-hidden">
+      <table className="w-full text-[12px]">
+        <thead>
+          <tr className="border-b border-white/[0.06] bg-white/[0.02]">
+            <th className="px-5 py-3 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider w-[180px]">{title}</th>
+            {tableMonths.map((m) => (
+              <th key={m} className="px-3 py-3 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider">
+                Month {m}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function CashFlowRow({
+  label, months, snapshots, getValue, color, autoColor, bold, highlight,
+}: {
+  label: string;
+  months: number[];
+  snapshots: MonthlySnapshot[];
+  getValue: (s: MonthlySnapshot) => number;
+  color?: string;
+  autoColor?: boolean;
+  bold?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <tr className={`border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors ${highlight ? 'bg-white/[0.02]' : ''}`}>
+      <td className={`px-5 py-2.5 whitespace-nowrap ${bold ? 'font-bold text-white/80 text-[12px]' : 'text-white/45 text-[11px] pl-8'}`}>
+        {label}
+      </td>
+      {months.map((m) => {
+        const snap = snapshots[m - 1];
+        if (!snap) return <td key={m} />;
+        const val = getValue(snap);
+        const cellColor = autoColor
+          ? val >= 0 ? '#2dd4bf' : '#f43f5e'
+          : color || '#ffffff80';
+        return (
+          <td
+            key={m}
+            className={`px-3 py-2.5 text-center font-mono ${bold ? 'font-bold text-[12px]' : 'text-[11px]'}`}
+            style={{ color: cellColor }}
+          >
+            {val === 0 ? '—' : formatNumber(Math.round(val))}
+          </td>
+        );
+      })}
+    </tr>
   );
 }

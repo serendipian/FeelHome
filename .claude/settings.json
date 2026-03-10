@@ -10,7 +10,8 @@
       "Bash(npm install recharts)",
       "Bash(npx next build)",
       "Bash(rm -rf node_modules)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(npm run build)"
     ]
   }
 }
