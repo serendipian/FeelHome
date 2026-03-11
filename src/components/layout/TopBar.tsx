@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
+import { useCurrency } from '@/context/CurrencyContext';
 
 const pageTitles: Record<string, string> = {
   '/': 'P&L Overview',
@@ -15,6 +16,7 @@ const pageTitles: Record<string, string> = {
 export default function TopBar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { currency, isUSD, toggleCurrency } = useCurrency();
   const title = pageTitles[pathname] || pageTitles['/'];
   const isDark = theme === 'dark';
 
@@ -31,6 +33,39 @@ export default function TopBar() {
       }}
     >
       <h1 className="text-[18px] font-semibold leading-tight" style={{ color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.85)' }}>{title}</h1>
+
+      <div className="flex items-center gap-2">
+      <button
+        onClick={toggleCurrency}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer"
+        style={{
+          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+          border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+        }}
+        title={isUSD ? 'Switch to MAD' : 'Switch to USD'}
+      >
+        <div className="relative w-[36px] h-[20px] rounded-full transition-colors duration-300" style={{
+          background: isUSD ? 'rgba(29,127,243,0.3)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
+        }}>
+          <div
+            className="absolute top-[2px] w-[16px] h-[16px] rounded-full transition-all duration-300 flex items-center justify-center"
+            style={{
+              left: isUSD ? '18px' : '2px',
+              background: isUSD ? '#1d7ff3' : isDark ? '#1a1c22' : '#888',
+              boxShadow: isUSD
+                ? '0 1px 4px rgba(29,127,243,0.4)'
+                : '0 1px 4px rgba(0,0,0,0.3)',
+            }}
+          >
+            <span style={{ fontSize: '8px', fontWeight: 700, color: 'white', lineHeight: 1 }}>
+              {isUSD ? '$' : 'د'}
+            </span>
+          </div>
+        </div>
+        <span className="text-[11px] font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.45)' }}>
+          {currency}
+        </span>
+      </button>
 
       <button
         onClick={toggleTheme}
@@ -77,6 +112,7 @@ export default function TopBar() {
           {isDark ? 'Dark' : 'Light'}
         </span>
       </button>
+      </div>
     </div>
   );
 }

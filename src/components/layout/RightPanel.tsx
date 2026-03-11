@@ -8,6 +8,7 @@ import { BrandKey } from '@/types';
 import BrandAvatar from '@/components/ui/BrandAvatar';
 import Toggle from '@/components/ui/Toggle';
 import { formatCompact, formatMAD, formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import EditableCell from '@/components/ui/EditableCell';
 import ChartTooltip from '@/components/ui/ChartTooltip';
 import {
@@ -51,6 +52,7 @@ const scenarioConfig: { key: ScenarioKey; label: string; color: string }[] = [
 export default function RightPanel() {
   const pathname = usePathname();
   const { isDark } = useTheme();
+  const { fNum, currency } = useCurrencyFormatters();
   const {
     activeBrands,
     toggleBrand,
@@ -207,7 +209,7 @@ export default function RightPanel() {
                 <EditableCell
                   value={investment}
                   onSave={setInvestment}
-                  format={(v) => `${formatNumber(Math.round(v))} MAD`}
+                  format={(v) => `${fNum(Math.round(v))} ${currency}`}
                 />
               </div>
             </div>
@@ -261,6 +263,7 @@ function SummaryCharts({
   monthly: any[];
 }) {
   const { isDark } = useTheme();
+  const { fCompact } = useCurrencyFormatters();
   const chartData = yearly.map((y, i) => ({
     name: `Y${i + 1}`,
     Revenue: y.revenue,
@@ -354,7 +357,7 @@ function SummaryCharts({
             <div className="flex items-center justify-between py-0.5">
               <span className="text-[10px] text-white/30">{item.label}</span>
               <span className="text-[11px] font-mono font-bold" style={{ color: item.color }}>
-                {formatCompact(item.value)}
+                {fCompact(item.value)}
               </span>
             </div>
           </div>
@@ -545,6 +548,7 @@ function ExpenseCharts({
 /* ── Investment Charts (waterfall + cumulative P&L + KPIs) ── */
 function InvestmentCharts({ simulation }: { simulation: any }) {
   const { isDark } = useTheme();
+  const { fCompact } = useCurrencyFormatters();
   const { snapshots, breakEvenMonth, roi, finalCash } = simulation;
 
   // Use first 6 months for waterfall & cumulative P&L
@@ -587,7 +591,7 @@ function InvestmentCharts({ simulation }: { simulation: any }) {
             <BarChart data={wfData} barSize={20}>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 8 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCompact(v)} width={40} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => fCompact(v)} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <Bar dataKey="base" stackId="a" fill="transparent" radius={0} />
               <Bar dataKey="bar" stackId="a" radius={[3, 3, 0, 0]}>
@@ -621,7 +625,7 @@ function InvestmentCharts({ simulation }: { simulation: any }) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.35)', fontSize: 8 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCompact(v)} width={40} />
+              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => fCompact(v)} width={40} />
               <Tooltip content={<ChartTooltip />} />
               <ReferenceLine y={0} stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.1)'} strokeDasharray="4 4" />
               <Area
@@ -656,7 +660,7 @@ function InvestmentCharts({ simulation }: { simulation: any }) {
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-white/30">Final Cash</span>
           <span className="text-[11px] font-mono font-bold" style={{ color: finalCash >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-            {formatCompact(finalCash)}
+            {fCompact(finalCash)}
           </span>
         </div>
       </div>

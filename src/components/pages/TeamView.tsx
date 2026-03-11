@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useFinancial } from '@/context/FinancialContext';
+import type { BrandKey } from '@/types';
+import type { MarketKey } from '@/context/FinancialContext';
+import { useCurrency } from '@/context/CurrencyContext';
 
 // ── Data ────────────────────────────────────────────────────────────────
 
@@ -25,6 +28,8 @@ interface TeamMember {
   languages: string[];
   schedule: { days: string; hours: string; status: 'Full-time' | 'Part-time' };
   expenseLabel: string;
+  brands?: BrandKey[];
+  market?: MarketKey;
   responsibilities: Responsibility[];
   skills: string[];
   kpis: { label: string; target: string }[];
@@ -75,12 +80,12 @@ const backoffice: TeamMember[] = [
     schedule: { days: 'Mon – Fri', hours: '9h – 18h', status: 'Full-time' },
     expenseLabel: 'Digital Coordinator - Community Manager',
       responsibilities: [
-      { icon: <IconInbox />, label: 'Incoming requests' },
-      { icon: <IconGlobe />, label: 'Listing publishing' },
-      { icon: <IconMegaphone />, label: 'Social media mgmt' },
-      { icon: <IconCalendar />, label: 'Content scheduling' },
-      { icon: <IconChat />, label: 'Engagement & DMs' },
-      { icon: <IconCamera />, label: 'Media coordination' },
+      { icon: <IconChat />, label: 'Reply to Leads' },
+      { icon: <IconFilter />, label: 'Qualify Leads' },
+      { icon: <IconDatabase />, label: 'Publish on CRM' },
+      { icon: <IconGlobe />, label: 'Publish on Website' },
+      { icon: <IconMegaphone />, label: 'Publish on Social Media' },
+      { icon: <IconInbox />, label: 'Publish on MLS' },
     ],
     skills: ['Content Creation', 'SEO / SEA', 'Canva / Adobe', 'Copywriting', 'Analytics'],
     kpis: [
@@ -98,7 +103,7 @@ const backoffice: TeamMember[] = [
     initials: 'PH',
     scope: 'Sourcing',
     color: '#06b6d4',
-    contract: 'CDI',
+    contract: 'Freelance',
     startMonth: 1,
     languages: ['FR', 'AR', 'Darija'],
     schedule: { days: 'Mon – Sat', hours: '9h – 18h', status: 'Full-time' },
@@ -126,6 +131,7 @@ const backoffice: TeamMember[] = [
     subtitle: 'Content & Social',
     initials: 'CM',
     scope: 'Marketing',
+    brands: ['expats'],
     color: '#ec4899',
     contract: 'Freelance',
     startMonth: 2,
@@ -158,6 +164,7 @@ const frontoffice: TeamMember[] = [
     initials: 'CA',
     scope: 'Casablanca',
     location: 'Casablanca',
+    market: 'casablanca',
     color: '#2dd4bf',
     contract: 'Freelance',
     startMonth: 1,
@@ -187,6 +194,7 @@ const frontoffice: TeamMember[] = [
     initials: 'MK',
     scope: 'Marrakech',
     location: 'Marrakech',
+    market: 'marrakech',
     color: '#f59e0b',
     contract: 'Freelance',
     startMonth: 3,
@@ -216,6 +224,7 @@ const frontoffice: TeamMember[] = [
     initials: 'RA',
     scope: 'Rabat',
     location: 'Rabat',
+    market: 'rabat',
     color: '#1d7ff3',
     contract: 'Freelance',
     startMonth: 4,
@@ -245,6 +254,7 @@ const frontoffice: TeamMember[] = [
     initials: 'OT',
     scope: 'Other',
     location: 'Other',
+    market: 'autre',
     color: '#a855f7',
     contract: 'Freelance',
     startMonth: 5,
@@ -284,8 +294,9 @@ const TABS: { key: TabKey; label: string }[] = [
 
 // ── Format helpers ───────────────────────────────────────────────────────
 
-function formatMADShort(n: number) {
-  return n.toLocaleString('fr-MA') + ' MAD';
+function formatMADShort(n: number, currency: 'MAD' | 'USD' = 'MAD') {
+  const v = currency === 'USD' ? n / 10 : n;
+  return v.toLocaleString('fr-MA') + ` ${currency}`;
 }
 
 // ── Main Component ──────────────────────────────────────────────────────
@@ -301,12 +312,14 @@ export default function TeamView() {
   const allIds = [director.id, ...backoffice.map(m => m.id), ...frontoffice.map(m => m.id)];
   const [expanded, setExpanded] = useState<Set<string>>(new Set(allIds));
   const { isDark } = useTheme();
+  const { activeBrands, activeMarkets } = useFinancial();
 
   // Commission state per member
   const [commissions, setCommissions] = useState<Record<string, CommissionConfig>>(() => {
     const init: Record<string, CommissionConfig> = {};
+    const linkedDealsIds = new Set(['property-hunter', ...frontoffice.map(m => m.id)]);
     [director, ...backoffice, ...frontoffice].forEach(m => {
-      init[m.id] = { rate: 10, type: 'All Revenues' };
+      init[m.id] = { rate: 10, type: linkedDealsIds.has(m.id) ? 'Linked Deals' : 'All Revenues' };
     });
     return init;
   });
@@ -319,6 +332,11 @@ export default function TeamView() {
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
+
+  // Filter agents by active markets
+  const visibleAgents = frontoffice.filter(m => !m.market || activeMarkets[m.market]);
+  const agentXPositions = visibleAgents.length <= 1 ? [500]
+    : visibleAgents.map((_, i) => Math.round(1000 * (i + 0.5) / visibleAgents.length));
 
   return (
     <div className="animate-fadeIn">
@@ -337,10 +355,14 @@ export default function TeamView() {
           <div className="w-1/3 min-w-0">
             <DirectorCard member={director} expanded={expanded.has(director.id)} onToggle={() => toggle(director.id)} commission={commissions[director.id]} onCommissionRateChange={(r) => updateCommissionRate(director.id, r)} onCommissionTypeChange={(t) => updateCommissionType(director.id, t)} />
           </div>
-          <HorizontalConnector isDark={isDark} />
-          <div className="w-1/3 min-w-0">
-            <MemberCard member={backoffice[2]} expanded={expanded.has(backoffice[2].id)} onToggle={() => toggle(backoffice[2].id)} commission={commissions[backoffice[2].id]} onCommissionRateChange={(r) => updateCommissionRate(backoffice[2].id, r)} onCommissionTypeChange={(t) => updateCommissionType(backoffice[2].id, t)} />
-          </div>
+          {activeBrands.expats && (
+            <>
+              <HorizontalConnector isDark={isDark} />
+              <div className="w-1/3 min-w-0">
+                <MemberCard member={backoffice[2]} expanded={expanded.has(backoffice[2].id)} onToggle={() => toggle(backoffice[2].id)} commission={commissions[backoffice[2].id]} onCommissionRateChange={(r) => updateCommissionRate(backoffice[2].id, r)} onCommissionTypeChange={(t) => updateCommissionType(backoffice[2].id, t)} />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -370,29 +392,33 @@ export default function TeamView() {
       </div>
 
       {/* ━━━ Connector: Backoffice → Agents ━━━ */}
-      <div className="flex">
-        <div className="w-8 shrink-0 mr-3" />
-        <div className="flex-1 relative" style={{ height: 48 }}>
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
-            {[125, 375, 625, 875].map((ax, i) => (
-              <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={250} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
-            ))}
-            {[125, 375, 625, 875].map((ax, i) => (
-              <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={750} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
-            ))}
-          </svg>
+      {visibleAgents.length > 0 && (
+        <div className="flex">
+          <div className="w-8 shrink-0 mr-3" />
+          <div className="flex-1 relative" style={{ height: 48 }}>
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
+              {agentXPositions.map((ax, i) => (
+                <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={250} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
+              ))}
+              {agentXPositions.map((ax, i) => (
+                <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={750} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
+              ))}
+            </svg>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ━━━ Field Agents ━━━ */}
-      <div className="flex">
-        <SectionLabel label="Field Agents" />
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4">
-          {frontoffice.map((member) => (
-            <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} commission={commissions[member.id]} onCommissionRateChange={(r) => updateCommissionRate(member.id, r)} onCommissionTypeChange={(t) => updateCommissionType(member.id, t)} />
-          ))}
+      {visibleAgents.length > 0 && (
+        <div className="flex">
+          <SectionLabel label="Field Agents" />
+          <div className={`flex-1 grid grid-cols-1 gap-4`} style={{ gridTemplateColumns: `repeat(${Math.min(visibleAgents.length, 4)}, minmax(0, 1fr))` }}>
+            {visibleAgents.map((member) => (
+              <MemberCard key={member.id} member={member} expanded={expanded.has(member.id)} onToggle={() => toggle(member.id)} commission={commissions[member.id]} onCommissionRateChange={(r) => updateCommissionRate(member.id, r)} onCommissionTypeChange={(t) => updateCommissionType(member.id, t)} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ━━━ Summary Bar ━━━ */}
       <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -755,6 +781,7 @@ function TabContent({ member, tab, color, commission, onCommissionRateChange, on
 }) {
   const { isDark } = useTheme();
   const { expenseItems } = useFinancial();
+  const { currency } = useCurrency();
   const textPrimary = isDark ? 'text-white/80' : 'text-slate-700';
   const textSecondary = isDark ? 'text-white/50' : 'text-slate-500';
   const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
@@ -815,9 +842,9 @@ function TabContent({ member, tab, color, commission, onCommissionRateChange, on
     const cnss = isCDI ? totalCost - baseSalary : 0;
 
     const rows = [
-      { label: 'Base Salary', value: formatMADShort(baseSalary), highlight: false },
-      ...(isCDI ? [{ label: 'CNSS + AMO (~26%)', value: formatMADShort(cnss), highlight: false }] : []),
-      { label: 'Total Cost / Month', value: formatMADShort(totalCost), highlight: true },
+      { label: 'Base Salary', value: formatMADShort(baseSalary, currency), highlight: false },
+      ...(isCDI ? [{ label: 'CNSS + AMO (~26%)', value: formatMADShort(cnss, currency), highlight: false }] : []),
+      { label: 'Total Cost / Month', value: formatMADShort(totalCost, currency), highlight: true },
     ];
     return (
       <div className="space-y-1.5">
@@ -948,9 +975,9 @@ function TabContent({ member, tab, color, commission, onCommissionRateChange, on
 function ContractBadge({ contract }: { contract: string }) {
   const { isDark } = useTheme();
   const colors: Record<string, { bg: string; text: string; border: string }> = {
-    CDI: { bg: 'rgba(34,197,94,0.08)', text: 'rgba(34,197,94,0.8)', border: 'rgba(34,197,94,0.2)' },
+    CDI: { bg: 'rgba(239,68,68,0.08)', text: 'rgba(239,68,68,0.8)', border: 'rgba(239,68,68,0.2)' },
     CDD: { bg: 'rgba(251,191,36,0.08)', text: 'rgba(251,191,36,0.8)', border: 'rgba(251,191,36,0.2)' },
-    Freelance: { bg: isDark ? 'rgba(139,92,246,0.08)' : 'rgba(139,92,246,0.06)', text: 'rgba(139,92,246,0.8)', border: 'rgba(139,92,246,0.2)' },
+    Freelance: { bg: isDark ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.06)', text: 'rgba(59,130,246,0.8)', border: 'rgba(59,130,246,0.2)' },
   };
   const c = colors[contract] || colors.CDI;
   return (

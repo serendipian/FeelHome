@@ -1,10 +1,11 @@
 'use client';
 
 import { useFinancial } from '@/context/FinancialContext';
-import { formatMAD, formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 
 export default function SummaryView() {
   const { yearly } = useFinancial();
+  const { fMAD, fNum } = useCurrencyFormatters();
 
   const profitGrowth = yearly[1].profit !== 0
     ? ((yearly[2].profit - yearly[1].profit) / Math.abs(yearly[1].profit) * 100).toFixed(0)
@@ -54,7 +55,7 @@ export default function SummaryView() {
                       style={{ color: row.bold ? row.color : `${row.color}99` }}
                     >
                       {row.key === 'commissions' || row.key === 'expenses' ? '(' : ''}
-                      {formatNumber(Math.abs(val))}
+                      {fNum(Math.abs(val))}
                       {row.key === 'commissions' || row.key === 'expenses' ? ')' : ''}
                     </td>
                   );
@@ -82,11 +83,11 @@ export default function SummaryView() {
               textShadow: `0 0 40px ${yearly[2].profit >= 0 ? '#2dd4bf' : '#f43f5e'}15`,
             }}
           >
-            {formatMAD(yearly[2].profit)}
+            {fMAD(yearly[2].profit)}
           </p>
           <div className="flex items-center justify-center gap-6 mt-4">
             <span className="text-[12px] text-white/25 font-mono">
-              {formatMAD(yearly[2].profit / 12)} /mo
+              {fMAD(yearly[2].profit / 12)} /mo
             </span>
             <span className="w-px h-3 bg-white/10" />
             <span className="text-[12px] font-mono" style={{ color: Number(profitGrowth) >= 0 ? '#2dd4bf80' : '#f43f5e80' }}>

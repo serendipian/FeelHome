@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from '@/context/ThemeContext';
-import { formatMAD } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 
 interface ChartTooltipProps {
   active?: boolean;
@@ -11,6 +11,7 @@ interface ChartTooltipProps {
 
 export default function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   const { isDark } = useTheme();
+  const { fMAD } = useCurrencyFormatters();
 
   if (!active || !payload) return null;
 
@@ -31,7 +32,7 @@ export default function ChartTooltip({ active, payload, label }: ChartTooltipPro
           <div key={i} className="flex items-center gap-2 text-[12px]">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color, boxShadow: `0 0 6px ${entry.color}40` }} />
             <span style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)' }}>{entry.name}</span>
-            <span className="font-mono font-semibold ml-auto" style={{ color: isDark ? '#fff' : '#1e293b' }}>{formatMAD(entry.value)}</span>
+            <span className="font-mono font-semibold ml-auto" style={{ color: isDark ? '#fff' : '#1e293b' }}>{fMAD(entry.value)}</span>
           </div>
         ))}
       </div>

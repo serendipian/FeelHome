@@ -314,6 +314,7 @@ html.light .border-white\/\[0\.02\] { border-color: rgb(15 23 42 / 0.05); }
 html.light .border-white\/\[0\.03\] { border-color: rgb(15 23 42 / 0.06); }
 html.light .border-white\/\[0\.04\] { border-color: rgb(15 23 42 / 0.07); }
 html.light .border-white\/\[0\.06\] { border-color: rgb(15 23 42 / 0.09); }
+html.light .border-white\/\[0\.12\] { border-color: rgb(15 23 42 / 0.18); }
 
 /* ═══ Tailwind Hover State Overrides ═══ */
 html.light .hover\:bg-white\/\[0\.02\]:hover { background-color: rgb(15 23 42 / 0.025); }

@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { formatMAD as _formatMAD, formatCompact as _formatCompact, formatNumber } from '@/lib/formatters';
 
 export type Currency = 'MAD' | 'USD';
 
@@ -48,3 +49,18 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useCurrency = () => useContext(CurrencyContext);
+
+/** Pre-bound formatters that auto-apply currency conversion */
+export function useCurrencyFormatters() {
+  const { currency, convert } = useCurrency();
+  return useMemo(() => ({
+    /** Format with currency label (e.g. "1.5M MAD" or "150K USD") */
+    fMAD: (v: number) => _formatMAD(v, currency),
+    /** Format compact with conversion (e.g. "1.5M" or "150K") */
+    fCompact: (v: number) => _formatCompact(v, currency),
+    /** Format a monetary value with currency conversion (no label) */
+    fNum: (v: number) => formatNumber(convert(v)),
+    convert,
+    currency,
+  }), [currency, convert]);
+}

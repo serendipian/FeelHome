@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import { isExpenseActive } from '@/lib/calculations';
 import { ExpenseItem } from '@/types';
 import BrandPill from '@/components/ui/BrandPill';
@@ -31,6 +32,7 @@ function YearTag({ year, color }: { year: number; color: string }) {
 
 export default function ExpensesView() {
   const { activeBrands, expenseItems, updateExpenseItem, yearly } = useFinancial();
+  const { fNum } = useCurrencyFormatters();
   const [salariesExpanded, setSalariesExpanded] = useState(false);
 
   const activeItems = expenseItems
@@ -154,13 +156,13 @@ export default function ExpensesView() {
                                 <EditableCell
                                   value={item[y]}
                                   onSave={(v) => updateExpenseItem(idx, y, v)}
-                                  format={formatNumber}
+                                  format={fNum}
                                 />
                               ) : (
                                 <EditableCell
                                   value={item[y]}
                                   onSave={(v) => updateExpenseItem(idx, y, v)}
-                                  format={(v) => v === 0 ? '—' : formatNumber(v)}
+                                  format={(v) => v === 0 ? '—' : fNum(v)}
                                   className="text-white/15"
                                 />
                               )}
@@ -182,7 +184,7 @@ export default function ExpensesView() {
                         {/* Subtotal row */}
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
-                            {formatNumber(allItems.reduce((s, { item }) => s + item[y], 0))}
+                            {fNum(allItems.reduce((s, { item }) => s + item[y], 0))}
                           </td>
                         </tr>
                       </tbody>

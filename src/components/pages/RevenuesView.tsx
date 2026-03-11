@@ -3,6 +3,7 @@
 import React from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import { brands } from '@/data/brands';
 import BrandAvatar from '@/components/ui/BrandAvatar';
 import TotalBar from '@/components/ui/TotalBar';
@@ -34,6 +35,8 @@ export default function RevenuesView() {
     updateRentalItem,
     updateMediaItem,
   } = useFinancial();
+
+  const { fNum } = useCurrencyFormatters();
 
   const isMarketActive = (label: string) => {
     const key = label.toLowerCase() as keyof typeof activeMarkets;
@@ -82,12 +85,12 @@ export default function RevenuesView() {
                       <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
-                          <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={formatNumber} />
+                          <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={fNum} />
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
                           <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v} mo`} step={0.1} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
                       </tr>
                       );
                     })}
@@ -114,7 +117,7 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                           );
@@ -122,7 +125,7 @@ export default function RevenuesView() {
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#d4875a] whitespace-nowrap">
-                            {formatNumber(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
                           </td>
                         </tr>
                       </tbody>
@@ -177,16 +180,16 @@ export default function RevenuesView() {
                       <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
-                          <EditableCell value={item.priceM2} onSave={(v) => updateSaleItem(idx, 'priceM2', v)} format={formatNumber} />
+                          <EditableCell value={item.priceM2} onSave={(v) => updateSaleItem(idx, 'priceM2', v)} format={fNum} />
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
                           <EditableCell value={item.area} onSave={(v) => updateSaleItem(idx, 'area', v)} format={(v) => `${v}m²`} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/25 whitespace-nowrap">{formatNumber(item.avgPrice)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-white/25 whitespace-nowrap">{fNum(item.avgPrice)}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
                           <EditableCell value={item.commRate} onSave={(v) => updateSaleItem(idx, 'commRate', v)} isPercent format={(v) => `${(v * 100).toFixed(1)}%`} step={0.1} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[#5b8ec9] font-semibold whitespace-nowrap">{formatNumber(item.revPerConv)}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-[#5b8ec9] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
                       </tr>
                       );
                     })}
@@ -213,7 +216,7 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                           );
@@ -221,7 +224,7 @@ export default function RevenuesView() {
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#5b8ec9] whitespace-nowrap">
-                            {formatNumber(saleRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(saleRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
                           </td>
                         </tr>
                       </tbody>
@@ -270,7 +273,7 @@ export default function RevenuesView() {
                       <tr key={item.label} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
                         <td className="px-3 py-2.5 text-right font-mono text-[#1d7ff3] font-semibold">
-                          <EditableCell value={item.unitPrice} onSave={(v) => updateMediaItem(idx, 'unitPrice', v)} format={formatNumber} />
+                          <EditableCell value={item.unitPrice} onSave={(v) => updateMediaItem(idx, 'unitPrice', v)} format={fNum} />
                         </td>
                       </tr>
                     ))}
@@ -295,14 +298,14 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? formatNumber(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                         ))}
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#1d7ff3] whitespace-nowrap">
-                            {formatNumber(mediaRevenues.reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(mediaRevenues.reduce((s, r) => s + r[y].total, 0))}
                           </td>
                         </tr>
                       </tbody>

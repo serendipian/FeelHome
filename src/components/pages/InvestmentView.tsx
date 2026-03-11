@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useFinancial, ScenarioKey } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import { isExpenseActive } from '@/lib/calculations';
 import { loadFromSupabase, saveToSupabase, ensureMigrated } from '@/lib/supabase';
 import { defaultSaleRevenues, defaultRentalRevenues, defaultMediaRevenues } from '@/data/revenues';
@@ -66,6 +67,8 @@ export default function InvestmentView() {
     expenseItems,
     activeScenario,
   } = useFinancial();
+
+  const { fNum } = useCurrencyFormatters();
 
   const isMarketActive = useCallback((label: string) => {
     const key = label.toLowerCase() as keyof typeof activeMarkets;
@@ -279,6 +282,7 @@ export default function InvestmentView() {
                 const totalRev = localSnapshots.reduce((s, snap) => s + snap.revByBrand.feelHome, 0);
                 return (
                   <CashFlowRow label="Feel Home (Rental)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.feelHome} color="#d4875a" bold
+                    getConvs={(m) => rentalRevenues.reduce((a, _, i) => a + (isMarketActive(rentalRevenues[i].label) ? (sim.rentalConvs[i]?.[m - 1] ?? 0) : 0), 0)}
                     totalCells={[{ value: 0, customRender: <RevTotalCell convs={totalConvs} rev={totalRev} color="#d4875a" bold /> }]} />
                 );
               })()}
@@ -304,7 +308,7 @@ export default function InvestmentView() {
                             />
                             <span className="text-white/15">×</span>
                             <span style={{ color: '#d4875a' }}>
-                              {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                              {total > 0 ? fNum(Math.round(total)) : '—'}
                             </span>
                           </div>
                         </td>
@@ -324,6 +328,7 @@ export default function InvestmentView() {
                 const totalRev = localSnapshots.reduce((s, snap) => s + snap.revByBrand.mInvest, 0);
                 return (
                   <CashFlowRow label="M Invest (Sales)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.mInvest} color="#5b8ec9" bold
+                    getConvs={(m) => saleRevenues.reduce((a, _, i) => a + (isMarketActive(saleRevenues[i].label) ? (sim.saleConvs[i]?.[m - 1] ?? 0) : 0), 0)}
                     totalCells={[{ value: 0, customRender: <RevTotalCell convs={totalConvs} rev={totalRev} color="#5b8ec9" bold /> }]} />
                 );
               })()}
@@ -349,7 +354,7 @@ export default function InvestmentView() {
                             />
                             <span className="text-white/15">×</span>
                             <span style={{ color: '#5b8ec9' }}>
-                              {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                              {total > 0 ? fNum(Math.round(total)) : '—'}
                             </span>
                           </div>
                         </td>
@@ -369,6 +374,7 @@ export default function InvestmentView() {
                 const totalRev = localSnapshots.reduce((s, snap) => s + snap.revByBrand.expats, 0);
                 return (
                   <CashFlowRow label="Expats.ma (Media)" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revByBrand.expats} color="#1d7ff3" bold
+                    getConvs={(m) => mediaRevenues.reduce((a, _, i) => a + (sim.mediaConvs[i]?.[m - 1] ?? 0), 0)}
                     totalCells={[{ value: 0, customRender: <RevTotalCell convs={totalConvs} rev={totalRev} color="#1d7ff3" bold /> }]} />
                 );
               })()}
@@ -393,7 +399,7 @@ export default function InvestmentView() {
                             />
                             <span className="text-white/15">×</span>
                             <span style={{ color: '#1d7ff3' }}>
-                              {total > 0 ? formatNumber(Math.round(total)) : '—'}
+                              {total > 0 ? fNum(Math.round(total)) : '—'}
                             </span>
                           </div>
                         </td>
@@ -407,6 +413,14 @@ export default function InvestmentView() {
           )}
 
           <CashFlowRow label="Total Revenue" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.revenue} color="#2dd4bf" bold
+            getConvs={(m) => {
+              const mi = m - 1;
+              let c = 0;
+              if (activeBrands.feelHome) rentalRevenues.forEach((_, i) => { if (isMarketActive(rentalRevenues[i].label)) c += sim.rentalConvs[i]?.[mi] ?? 0; });
+              if (activeBrands.mInvest) saleRevenues.forEach((_, i) => { if (isMarketActive(saleRevenues[i].label)) c += sim.saleConvs[i]?.[mi] ?? 0; });
+              if (activeBrands.expats) mediaRevenues.forEach((_, i) => { c += sim.mediaConvs[i]?.[mi] ?? 0; });
+              return c;
+            }}
             totalCells={[{
               value: 0,
               customRender: (() => {
@@ -444,12 +458,12 @@ export default function InvestmentView() {
                       <EditableCell
                         value={sim.expenses[idx]?.[mi] ?? 0}
                         onSave={(v) => updateSimExpense(idx, mi, v)}
-                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                        format={(v) => v === 0 ? '—' : fNum(Math.round(v))}
                       />
                     </td>
                   );
                 })}
-                <td className="px-3 py-2 text-center font-mono text-[11px] border-l border-white/[0.04]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? formatNumber(Math.round(rowTotal)) : '—'}</td>
+                <td className="px-3 py-2 text-center font-mono text-[11px] border-l-2 border-white/[0.12]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? fNum(Math.round(rowTotal)) : '—'}</td>
               </tr>
             );
           })}
@@ -485,12 +499,12 @@ export default function InvestmentView() {
                       <EditableCell
                         value={sim.expenses[idx]?.[mi] ?? 0}
                         onSave={(v) => updateSimExpense(idx, mi, v)}
-                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                        format={(v) => v === 0 ? '—' : fNum(Math.round(v))}
                       />
                     </td>
                   );
                 })}
-                <td className="px-3 py-2 text-center font-mono text-[11px] border-l border-white/[0.04]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? formatNumber(Math.round(rowTotal)) : '—'}</td>
+                <td className="px-3 py-2 text-center font-mono text-[11px] border-l-2 border-white/[0.12]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? fNum(Math.round(rowTotal)) : '—'}</td>
               </tr>
             );
           })}
@@ -511,12 +525,12 @@ export default function InvestmentView() {
                       <EditableCell
                         value={sim.expenses[idx]?.[mi] ?? 0}
                         onSave={(v) => updateSimExpense(idx, mi, v)}
-                        format={(v) => v === 0 ? '—' : formatNumber(Math.round(v))}
+                        format={(v) => v === 0 ? '—' : fNum(Math.round(v))}
                       />
                     </td>
                   );
                 })}
-                <td className="px-3 py-2 text-center font-mono text-[11px] border-l border-white/[0.04]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? formatNumber(Math.round(rowTotal)) : '—'}</td>
+                <td className="px-3 py-2 text-center font-mono text-[11px] border-l-2 border-white/[0.12]" style={{ color: '#f43f5e' }}>{rowTotal > 0 ? fNum(Math.round(rowTotal)) : '—'}</td>
               </tr>
             );
           })}
@@ -570,7 +584,7 @@ function SimCard({ title, tableMonths, totalHeaders, children }: { title: string
               </th>
             ))}
             {totalHeaders?.map((h, i) => (
-              <th key={`th${i}`} className="px-3 py-3 text-[10px] font-semibold text-white/30 text-center uppercase tracking-wider border-l border-white/[0.04]">
+              <th key={`th${i}`} className="px-3 py-3 text-[10px] font-semibold text-white/30 text-center uppercase tracking-wider border-l-2 border-white/[0.12]">
                 {h}
               </th>
             ))}
@@ -617,24 +631,26 @@ function BottomLineCard({ tableMonths, snapshots }: { tableMonths: number[]; sna
 }
 
 function RevTotalCell({ convs, rev, color, bold }: { convs: number; rev: number; color: string; bold?: boolean }) {
+  const { fNum } = useCurrencyFormatters();
   return (
-    <td className={`px-3 py-1 text-center font-mono border-l border-white/[0.04] ${bold ? 'font-bold text-[11px]' : 'text-[10px]'}`}>
-      <div className="flex items-center justify-center gap-2">
+    <td className={`px-3 py-1 text-center font-mono border-l-2 border-white/[0.12] ${bold ? 'font-bold text-[11px]' : 'text-[10px]'}`}>
+      <div className="flex items-center justify-center gap-1.5">
         <span className="text-white/40">{convs || '—'}</span>
-        <div className="w-px h-4 bg-white/[0.08]" />
-        <span style={{ color }}>{rev > 0 ? formatNumber(Math.round(rev)) : '—'}</span>
+        <span className="text-white/15">—</span>
+        <span style={{ color }}>{rev > 0 ? fNum(Math.round(rev)) : '—'}</span>
       </div>
     </td>
   );
 }
 
 function CashFlowRow({
-  label, months, snapshots, getValue, color, autoColor, bold, highlight, flashKey, totalCells,
+  label, months, snapshots, getValue, getConvs, color, autoColor, bold, highlight, flashKey, totalCells,
 }: {
   label: string;
   months: number[];
   snapshots: MonthlySnapshot[];
   getValue: (s: MonthlySnapshot) => number;
+  getConvs?: (month: number) => number;
   color?: string;
   autoColor?: boolean;
   bold?: boolean;
@@ -642,6 +658,7 @@ function CashFlowRow({
   flashKey?: number;
   totalCells?: { value: number; color?: string; autoColor?: boolean; customRender?: React.ReactNode }[];
 }) {
+  const { fNum } = useCurrencyFormatters();
   const total = snapshots.reduce((sum, s) => sum + getValue(s), 0);
   const derivedTotals = totalCells ?? (autoColor
     ? [{ value: total, autoColor: true }]
@@ -656,6 +673,7 @@ function CashFlowRow({
         const snap = snapshots[m - 1];
         if (!snap) return <td key={m} />;
         const val = getValue(snap);
+        const convs = getConvs?.(m);
         const cellColor = autoColor
           ? val >= 0 ? '#2dd4bf' : '#f43f5e'
           : color || '#ffffff80';
@@ -663,9 +681,16 @@ function CashFlowRow({
           <td
             key={flashKey ? `${m}-${flashKey}` : m}
             className={`px-3 py-2.5 text-center font-mono ${bold ? 'font-bold text-[12px]' : 'text-[11px]'} ${flashKey ? 'flash-cell' : ''} ${mi > 0 ? 'border-l border-white/[0.04]' : ''}`}
-            style={{ color: cellColor }}
           >
-            {val === 0 ? '—' : formatNumber(Math.round(val))}
+            {convs != null ? (
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-white/40">{convs || '—'}</span>
+                <span className="text-white/15">—</span>
+                <span style={{ color: cellColor }}>{val === 0 ? '—' : fNum(Math.round(val))}</span>
+              </div>
+            ) : (
+              <span style={{ color: cellColor }}>{val === 0 ? '—' : fNum(Math.round(val))}</span>
+            )}
           </td>
         );
       })}
@@ -673,8 +698,8 @@ function CashFlowRow({
         if (t.customRender) return <React.Fragment key={`t${i}`}>{t.customRender}</React.Fragment>;
         const c = t.autoColor ? (t.value >= 0 ? '#2dd4bf' : '#f43f5e') : (t.color || '#ffffff80');
         return (
-          <td key={`t${i}`} className={`px-3 py-2.5 text-center font-mono border-l border-white/[0.04] ${bold ? 'font-bold text-[12px]' : 'text-[11px]'}`} style={{ color: c }}>
-            {t.value === 0 ? '—' : formatNumber(Math.round(t.value))}
+          <td key={`t${i}`} className={`px-3 py-2.5 text-center font-mono border-l-2 border-white/[0.12] ${bold ? 'font-bold text-[12px]' : 'text-[11px]'}`} style={{ color: c }}>
+            {t.value === 0 ? '—' : fNum(Math.round(t.value))}
           </td>
         );
       })}

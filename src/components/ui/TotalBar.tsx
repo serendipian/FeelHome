@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from '@/context/ThemeContext';
-import { formatNumber } from '@/lib/formatters';
+import { useCurrencyFormatters } from '@/context/CurrencyContext';
 
 export default function TotalBar({
   label,
@@ -13,6 +13,7 @@ export default function TotalBar({
   color?: string;
 }) {
   const { isDark } = useTheme();
+  const { fNum } = useCurrencyFormatters();
 
   const bgStyle = {
     background: `linear-gradient(135deg, ${color}06 0%, ${color}02 100%)`,
@@ -39,7 +40,7 @@ export default function TotalBar({
             className="flex-1 flex items-center justify-center py-4 rounded-2xl backdrop-blur-2xl"
             style={bgStyle}
           >
-            <div className="font-mono text-[13px] font-bold" style={{ color }}>{formatNumber(Math.round(v))}</div>
+            <div className="font-mono text-[13px] font-bold" style={{ color }}>{fNum(Math.round(v))}</div>
           </div>
         ))}
       </div>
