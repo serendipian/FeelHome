@@ -7,7 +7,6 @@ import { brands, brandKeys } from '@/data/brands';
 import { BrandKey } from '@/types';
 import BrandAvatar from '@/components/ui/BrandAvatar';
 import Toggle from '@/components/ui/Toggle';
-import { formatCompact, formatMAD, formatNumber } from '@/lib/formatters';
 import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import EditableCell from '@/components/ui/EditableCell';
 import ChartTooltip from '@/components/ui/ChartTooltip';
@@ -24,7 +23,6 @@ import {
   AreaChart,
   Area,
   CartesianGrid,
-  ReferenceLine,
 } from 'recharts';
 
 const marketLabels: Record<MarketKey, string> = {
@@ -59,9 +57,6 @@ export default function RightPanel() {
     activeMarkets,
     toggleMarket,
     revenueByBrand,
-    yearly,
-    monthly,
-    simulation,
     expensesByCategory,
     saleRevenues,
     rentalRevenues,
@@ -237,133 +232,12 @@ export default function RightPanel() {
       <div className="h-px bg-white/[0.04]" />
 
       {/* Contextual Charts — relocated from main pages */}
-      {pathname === '/' || pathname === '/summary' ? (
-        <SummaryCharts revenueByBrand={revenueByBrand} yearly={yearly} monthly={monthly} />
-      ) : pathname === '/revenues' ? (
+      {pathname === '/revenues' ? (
         <RevenueCharts revenueByBrand={revenueByBrand} saleRevenues={saleRevenues} rentalRevenues={rentalRevenues} activeMarkets={activeMarkets} />
       ) : pathname === '/expenses' ? (
         <ExpenseCharts expensesByCategory={expensesByCategory} />
-      ) : pathname === '/investment' ? (
-        <InvestmentCharts simulation={simulation} />
-      ) : (
-        <SummaryCharts revenueByBrand={revenueByBrand} yearly={yearly} monthly={monthly} />
-      )}
+      ) : null}
     </div>
-  );
-}
-
-/* ── Summary Charts (relocated: bar chart + KPIs) ──── */
-function SummaryCharts({
-  revenueByBrand,
-  yearly,
-  monthly,
-}: {
-  revenueByBrand: { y1: Record<BrandKey, number>; y2: Record<BrandKey, number>; y3: Record<BrandKey, number> };
-  yearly: any[];
-  monthly: any[];
-}) {
-  const { isDark } = useTheme();
-  const { fCompact } = useCurrencyFormatters();
-  const chartData = yearly.map((y, i) => ({
-    name: `Y${i + 1}`,
-    Revenue: y.revenue,
-    Costs: y.expenses + y.commissions,
-    Profit: y.profit,
-  }));
-
-  const brandPieData = brandKeys
-    .map((key) => ({
-      name: brands[key].shortName,
-      value: revenueByBrand.y3[key] * 12,
-      color: brands[key].color,
-    }))
-    .filter((d) => d.value > 0);
-
-  return (
-    <>
-      {/* Annual Comparison Bar Chart */}
-      <SideChartCard title="Annual Comparison" subtitle="Revenue vs Costs vs Profit">
-        <div className="flex items-center gap-3 mb-2">
-          {[
-            { label: 'Revenue', color: '#d4a853' },
-            { label: 'Costs', color: '#f43f5e' },
-            { label: 'Profit', color: '#2dd4bf' },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-[8px] text-white/30">{item.label}</span>
-            </div>
-          ))}
-        </div>
-        <div className="h-[150px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={2} barSize={14}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`} width={35} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="Revenue" fill="#d4a853" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Costs" fill="#f43f5e" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Profit" fill="#2dd4bf" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SideChartCard>
-
-      {/* Revenue Split Donut */}
-      <SideChartCard title="Revenue Split" subtitle="Year 3 by brand">
-        <div className="h-[120px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={brandPieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={30}
-                outerRadius={48}
-                paddingAngle={3}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {brandPieData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<ChartTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex flex-wrap gap-2 mt-1 justify-center">
-          {brandPieData.map((d) => (
-            <div key={d.name} className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: d.color }} />
-              <span className="text-[9px] text-white/35">{d.name}</span>
-            </div>
-          ))}
-        </div>
-      </SideChartCard>
-
-      {/* Monthly KPIs */}
-      <div className="rounded-xl p-3 space-y-2" style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)' }}>
-        <div className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-1">Monthly Y1</div>
-        {[
-          { label: 'Revenue', value: monthly[0].revenue, color: '#d4a853' },
-          { label: 'Expenses', value: monthly[0].expenses, color: '#f43f5e' },
-          { label: 'Commissions', value: monthly[0].commissions, color: '#f97316' },
-          { label: 'Net Profit', value: monthly[0].profit, color: '#2dd4bf' },
-        ].map((item, i) => (
-          <div key={item.label}>
-            {i > 0 && <div className="h-px bg-white/[0.04]" />}
-            <div className="flex items-center justify-between py-0.5">
-              <span className="text-[10px] text-white/30">{item.label}</span>
-              <span className="text-[11px] font-mono font-bold" style={{ color: item.color }}>
-                {fCompact(item.value)}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
   );
 }
 
@@ -541,129 +415,6 @@ function ExpenseCharts({
           </ResponsiveContainer>
         </div>
       </SideChartCard>
-    </>
-  );
-}
-
-/* ── Investment Charts (waterfall + cumulative P&L + KPIs) ── */
-function InvestmentCharts({ simulation }: { simulation: any }) {
-  const { isDark } = useTheme();
-  const { fCompact } = useCurrencyFormatters();
-  const { snapshots, breakEvenMonth, roi, finalCash } = simulation;
-
-  // Use first 6 months for waterfall & cumulative P&L
-  const first6 = snapshots.slice(0, 6);
-  const totalRev = first6.reduce((s: number, snap: any) => s + snap.revenue, 0);
-  const totalExp = first6.reduce((s: number, snap: any) => s + snap.expenses, 0);
-  const totalComm = first6.reduce((s: number, snap: any) => s + snap.commissions, 0);
-  const inv = first6[0]?.balance - first6[0]?.cumulative || 0; // investment amount
-  const remaining = inv + totalRev - totalExp - totalComm;
-
-  // Waterfall: base (invisible) + bar (visible), stacked so bar sits on top of base
-  const wfSteps = [
-    { name: 'Invest.', running: inv, color: '#d4a853' },
-    { name: 'Expenses', running: inv - totalExp, color: '#f43f5e' },
-    { name: 'Comm.', running: inv - totalExp - totalComm, color: '#f59e0b' },
-    { name: 'Revenue', running: remaining, color: '#2dd4bf' },
-    { name: 'Cash', running: remaining, color: remaining >= 0 ? '#2dd4bf' : '#f43f5e' },
-  ];
-
-  const wfData = wfSteps.map((step, i) => {
-    const isTotal = i === 0 || i === wfSteps.length - 1;
-    const prevRunning = i > 0 ? wfSteps[i - 1].running : 0;
-    const base = isTotal ? 0 : Math.min(prevRunning, step.running);
-    const bar = isTotal ? Math.abs(step.running) : Math.abs(step.running - prevRunning);
-    return { name: step.name, base, bar, color: step.color };
-  });
-
-  // Cumulative P&L sparkline
-  const plData = first6.map((s: any) => ({
-    name: `M${s.month}`,
-    PnL: s.cumulative,
-  }));
-
-  return (
-    <>
-      {/* Cash Burn Waterfall */}
-      <SideChartCard title="Cash Burn Waterfall" subtitle="6-month fund allocation">
-        <div className="h-[140px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={wfData} barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.4)', fontSize: 8 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => fCompact(v)} width={40} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="base" stackId="a" fill="transparent" radius={0} />
-              <Bar dataKey="bar" stackId="a" radius={[3, 3, 0, 0]}>
-                {wfData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} fillOpacity={0.85} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 justify-center">
-          {wfSteps.slice(0, 4).map((s) => (
-            <div key={s.name} className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color }} />
-              <span className="text-[8px] text-white/30">{s.name}</span>
-            </div>
-          ))}
-        </div>
-      </SideChartCard>
-
-      {/* Cumulative P&L Sparkline */}
-      <SideChartCard title="Cumulative P&L" subtitle="6-month trajectory">
-        <div className="h-[110px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={plData}>
-              <defs>
-                <linearGradient id="rpPnLGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#d4a853" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#d4a853" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(15,23,42,0.06)'} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.35)', fontSize: 8 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.3)', fontSize: 7 }} axisLine={false} tickLine={false} tickFormatter={(v) => fCompact(v)} width={40} />
-              <Tooltip content={<ChartTooltip />} />
-              <ReferenceLine y={0} stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.1)'} strokeDasharray="4 4" />
-              <Area
-                type="monotone"
-                dataKey="PnL"
-                stroke="#d4a853"
-                fill="url(#rpPnLGrad)"
-                strokeWidth={2}
-                dot={{ r: 2.5, fill: '#d4a853', strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </SideChartCard>
-
-      {/* KPI Summary */}
-      <div className="rounded-xl p-3 space-y-2" style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)', border: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)' }}>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-white/30">Break-even</span>
-          <span className="text-[11px] font-mono font-bold text-[#2dd4bf]">
-            {breakEvenMonth > 0 ? `Month ${breakEvenMonth}` : 'N/A'}
-          </span>
-        </div>
-        <div className="h-px bg-white/[0.04]" />
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-white/30">3Y ROI</span>
-          <span className="text-[11px] font-mono font-bold" style={{ color: roi >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-            {(roi * 100).toFixed(1)}%
-          </span>
-        </div>
-        <div className="h-px bg-white/[0.04]" />
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-white/30">Final Cash</span>
-          <span className="text-[11px] font-mono font-bold" style={{ color: finalCash >= 0 ? '#2dd4bf' : '#f43f5e' }}>
-            {fCompact(finalCash)}
-          </span>
-        </div>
-      </div>
     </>
   );
 }
