@@ -55,7 +55,6 @@ export default function RightPanel() {
   const { fNum, currency } = useCurrencyFormatters();
   const { panelOpen, closePanel } = useMobileNav();
   const { isUSD, toggleCurrency, currency: currLabel } = useCurrency();
-  const { theme, toggleTheme } = useTheme();
   const {
     activeBrands,
     toggleBrand,
@@ -73,6 +72,11 @@ export default function RightPanel() {
     setActiveScenario,
   } = useFinancial();
 
+  // Hide panel on pages that don't need financial controls
+  const hiddenPages = ['/workflow', '/team'];
+  const isHidden = hiddenPages.includes(pathname);
+  if (isHidden) return null;
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -84,7 +88,7 @@ export default function RightPanel() {
       )}
     <div
       className={`
-        fixed right-0 top-0 h-screen z-50 w-[300px] sm:w-[340px]
+        fixed right-0 top-0 h-screen z-50 w-[85vw] max-w-[340px]
         md:static md:h-auto md:z-auto md:w-[340px]
         shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto
         transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
@@ -98,44 +102,26 @@ export default function RightPanel() {
         borderLeft: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
       }}
     >
-      {/* Mobile-only: close button + theme/currency toggles */}
+      {/* Mobile-only: close button + currency toggle */}
       <div className="md:hidden flex items-center justify-between mb-2">
-        <span className="text-[12px] font-semibold text-white/60">Settings</span>
+        <span className="text-[12px] font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>Settings</span>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleCurrency}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer"
             style={{
-              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+              background: 'rgba(0,0,0,0.04)',
+              border: '1px solid rgba(0,0,0,0.08)',
             }}
           >
-            <span className="text-[10px] font-bold" style={{ color: isUSD ? '#1d7ff3' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)') }}>
+            <span className="text-[10px] font-bold" style={{ color: isUSD ? '#1d7ff3' : 'rgba(0,0,0,0.5)' }}>
               {isUSD ? '$' : 'MAD'}
             </span>
           </button>
           <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer"
-            style={{
-              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
-            }}
-          >
-            {isDark ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-              </svg>
-            )}
-          </button>
-          <button
             onClick={closePanel}
             className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer"
-            style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}
+            style={{ color: 'rgba(0,0,0,0.4)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />

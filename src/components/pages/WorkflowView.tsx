@@ -56,19 +56,34 @@ function TriggerIcon({ icon, className }: { icon: string; className?: string }) 
     facebook: <svg className={c} viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
     phone: <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>,
     social: <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>,
+    crm: <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75m16.5 3.75v3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75" /></svg>,
   };
   return icons[icon] || <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><circle cx={12} cy={12} r={9}/></svg>;
 }
 
 // ── Involves Avatar ──────────────────────────────────────────────
 
-function SingleAvatar({ id, isDark }: { id: RoleId | 'lead'; isDark: boolean }) {
+function SingleAvatar({ id, isDark }: { id: RoleId | 'lead' | 'partner'; isDark: boolean }) {
   if (id === 'lead') {
     return (
       <div
         className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0"
         style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)', color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(15,23,42,0.45)' }}
         title="Lead / Owner"
+      >
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+      </div>
+    );
+  }
+  if (id === 'partner') {
+    const partnerColor = '#ef4444';
+    return (
+      <div
+        className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0"
+        style={{ background: `${partnerColor}20`, color: partnerColor }}
+        title="Partner"
       >
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -90,7 +105,7 @@ function SingleAvatar({ id, isDark }: { id: RoleId | 'lead'; isDark: boolean }) 
   );
 }
 
-function InvolvesAvatar({ involves, isDark }: { involves: (RoleId | 'lead') | (RoleId | 'lead')[]; isDark: boolean }) {
+function InvolvesAvatar({ involves, isDark }: { involves: (RoleId | 'lead' | 'partner') | (RoleId | 'lead' | 'partner')[]; isDark: boolean }) {
   const ids = Array.isArray(involves) ? involves : [involves];
   return (
     <div className="flex shrink-0" style={{ gap: 0 }}>
@@ -262,7 +277,11 @@ function TriggerNode({ workflow, isDark }: { workflow: Workflow; isDark: boolean
     <div className="card overflow-hidden" style={{ width: TRIGGER_W, borderTop: `3px solid ${workflow.color}` }}>
       <div className="px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center text-[12px] font-extrabold shrink-0" style={{ background: `${workflow.color}20`, color: workflow.color }}>0</div>
+          <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0" style={{ background: `${workflow.color}20`, color: workflow.color }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+            </div>
           <span className="text-sm font-extrabold uppercase tracking-wide" style={{ color: isDark ? '#fff' : '#1e293b' }}>Incoming Lead</span>
         </div>
       </div>
@@ -304,15 +323,16 @@ function BranchCard({ label, color, triggers, isDark }: {
 function ZoomControls({ isDark }: { isDark: boolean }) {
   const { zoomIn, zoomOut, resetTransform } = useControls();
   const s = {
-    background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)',
-    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'}`,
-    color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)',
+    background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.9)',
+    border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.15)'}`,
+    color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.6)',
+    boxShadow: isDark ? 'none' : '0 1px 4px rgba(15,23,42,0.08)',
   };
   return (
     <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1">
-      <button onClick={() => zoomIn()} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>+</button>
-      <button onClick={() => zoomOut()} className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>−</button>
-      <button onClick={() => resetTransform()} className="h-8 px-2.5 rounded-lg flex items-center justify-center text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity" style={s}>Fit</button>
+      <button onClick={() => zoomIn()} className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>+</button>
+      <button onClick={() => zoomOut()} className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>−</button>
+      <button onClick={() => resetTransform()} className="h-10 px-3 rounded-lg flex items-center justify-center text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity" style={s}>Fit</button>
     </div>
   );
 }
@@ -506,7 +526,21 @@ function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isD
 
 // ── Canvas ───────────────────────────────────────────────────────
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
+
 function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: boolean }) {
+  const isMobile = useIsMobile();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [initialScale, setInitialScale] = useState(isMobile ? 0.25 : 0.42);
   const [pos, setPos] = useState<Record<CardKey, CardPos>>(() =>
     computePositions({
       trigger: H_TRIGGER, branchTop: H_BRANCH_TOP, branchBot: H_BRANCH_BOT,
@@ -556,8 +590,21 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
   const canvasW = Math.max(...Object.values(pos).map(p => p.x + p.w)) + 60;
   const canvasH = Math.max(...Object.values(pos).map(p => p.y + p.h)) + 60;
 
+  // Compute initial scale to fit canvas within container
+  useEffect(() => {
+    if (containerRef.current && canvasW > 0 && canvasH > 0) {
+      const cw = containerRef.current.offsetWidth;
+      const ch = containerRef.current.offsetHeight;
+      const scaleX = cw / canvasW;
+      const scaleY = ch / canvasH;
+      const fitScale = Math.min(scaleX, scaleY) * 0.95;
+      setInitialScale(isMobile ? Math.min(fitScale, 0.25) : Math.max(0.15, Math.min(fitScale, 0.6)));
+    }
+  }, [canvasW, canvasH, isMobile]);
+
   return (
     <div
+      ref={containerRef}
       className="relative rounded-2xl overflow-hidden"
       style={{
         height: 'calc(100vh - 180px)',
@@ -565,7 +612,7 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
         background: isDark
           ? 'radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.008) 0%, transparent 70%)'
           : 'radial-gradient(ellipse at 50% 50%, rgba(15,23,42,0.008) 0%, transparent 70%)',
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.04)'}`,
+        border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.1)'}`,
       }}
     >
       {/* Dot grid */}
@@ -574,7 +621,7 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
         backgroundSize: '20px 20px',
       }} />
 
-      <TransformWrapper initialScale={0.65} minScale={0.2} maxScale={2.5} initialPositionX={20} initialPositionY={10} limitToBounds={false} panning={{ velocityDisabled: true }}>
+      <TransformWrapper key={initialScale} initialScale={initialScale} minScale={0.15} maxScale={2.5} initialPositionX={isMobile ? 5 : 15} initialPositionY={isMobile ? 5 : 15} limitToBounds={false} panning={{ velocityDisabled: true }}>
         <ZoomControls isDark={isDark} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 
@@ -635,7 +682,8 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
 
       {/* Hints */}
       <div className="absolute bottom-4 left-4 z-20 text-[10px] flex items-center gap-3" style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.2)' }}>
-        <span>Scroll to zoom</span>
+        <span className="hidden md:inline">Scroll to zoom</span>
+        <span className="md:hidden">Pinch to zoom</span>
         <span>Drag to pan</span>
       </div>
     </div>
@@ -663,13 +711,37 @@ export default function WorkflowView() {
             <p className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)' }}>{activeWorkflow.subtitle}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {WORKFLOWS.map(w => (
-            <button key={w.id} onClick={() => setActiveWorkflowId(w.id)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 shrink-0 cursor-pointer"
-              style={{ background: w.id === activeWorkflowId ? `${w.color}12` : 'transparent', border: `1px solid ${w.id === activeWorkflowId ? `${w.color}25` : 'transparent'}`, color: w.id === activeWorkflowId ? w.color : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)') }}
-            >{w.title}</button>
-          ))}
+
+        {/* Workflow Tabs */}
+        <div
+          className="flex rounded-xl overflow-hidden"
+          style={{
+            background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.06)'}`,
+          }}
+        >
+          {WORKFLOWS.map((w) => {
+            const active = activeWorkflowId === w.id;
+            return (
+              <button
+                key={w.id}
+                onClick={() => setActiveWorkflowId(w.id)}
+                className="px-4 py-2 text-[11px] font-semibold tracking-wide transition-all duration-300 relative cursor-pointer"
+                style={{
+                  color: active ? w.color : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)'),
+                  background: active ? `${w.color}12` : 'transparent',
+                }}
+              >
+                {active && (
+                  <div
+                    className="absolute bottom-0 left-[20%] right-[20%] h-[2px] rounded-full"
+                    style={{ background: w.color }}
+                  />
+                )}
+                {w.title}
+              </button>
+            );
+          })}
         </div>
       </div>
       <WorkflowCanvas workflow={activeWorkflow} isDark={isDark} />

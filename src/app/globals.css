@@ -329,3 +329,18 @@ html.light .via-white\/\[0\.06\] { --tw-gradient-via: rgb(15 23 42 / 0.04); }
 html.light .bg-white\/10 { background-color: rgb(15 23 42 / 0.08); }
 html.light .bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.03); }
 html.light .\!bg-white\/\[0\.04\] { background-color: rgb(15 23 42 / 0.04) !important; }
+
+/* ═══ Mobile Touch & Focus ═══ */
+@media (hover: none) {
+  .card:hover {
+    border-color: inherit;
+    box-shadow: inherit;
+  }
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgba(212, 168, 83, 0.5);
+  outline-offset: 2px;
+}

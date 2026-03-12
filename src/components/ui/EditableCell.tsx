@@ -64,7 +64,7 @@ export default function EditableCell({
         onKeyDown={handleKeyDown}
         className="w-full rounded px-2 py-1 text-right font-mono text-[12px] outline-none transition-colors"
         style={{
-          minWidth: 60,
+          minWidth: 70,
           background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.04)',
           border: '1px solid rgba(212,168,83,0.4)',
           color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(15,23,42,0.85)',
@@ -78,7 +78,7 @@ export default function EditableCell({
   return (
     <span
       onClick={handleClick}
-      className={`cursor-pointer rounded px-1.5 py-0.5 -mx-1.5 transition-all hover:bg-[#d4a853]/10 hover:text-[#d4a853] ${className}`}
+      className={`cursor-pointer rounded px-2 py-1.5 -mx-2 transition-all hover:bg-[#d4a853]/10 hover:text-[#d4a853] ${className}`}
       style={style}
       title="Click to edit"
     >
