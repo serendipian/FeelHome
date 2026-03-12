@@ -404,7 +404,7 @@ export const DEFAULT_TEAM_DATA: TeamMemberData[] = [
 
 export const TEAM_DISPLAY: Record<string, TeamMemberDisplay> = {
   director: { id: 'director', initials: 'DIR', color: '#d4a853', subtitle: 'Agency Lead', scope: undefined, location: undefined },
-  'digital-manager': { id: 'digital-manager', initials: 'DM', color: '#8b5cf6', subtitle: 'Community Manager', scope: 'Digital', location: undefined },
+  'digital-manager': { id: 'digital-manager', initials: 'DM', color: '#9a6b3a', subtitle: 'Community Manager', scope: 'Digital', location: undefined },
   'property-hunter': { id: 'property-hunter', initials: 'PH', color: '#06b6d4', subtitle: 'Customer Service', scope: 'Sourcing', location: undefined },
   'community-manager': { id: 'community-manager', initials: 'CM', color: '#ec4899', subtitle: 'Content & Social', scope: 'Marketing', location: undefined },
   'agent-casa': { id: 'agent-casa', initials: 'CA', color: '#1d7ff3', scope: 'Casablanca', location: 'Casablanca' },

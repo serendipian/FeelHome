@@ -11,7 +11,7 @@ export interface RoleMeta {
 
 export const ROLE_META: Record<RoleId, RoleMeta> = {
   director:            { label: 'Director',          shortLabel: 'DIR', color: '#d4a853', initials: 'DIR' },
-  'digital-manager':   { label: 'Digital Manager',   shortLabel: 'DM',  color: '#8b5cf6', initials: 'DM'  },
+  'digital-manager':   { label: 'Digital Manager',   shortLabel: 'DM',  color: '#9a6b3a', initials: 'DM'  },
   agent:               { label: 'Agent',             shortLabel: 'AGT', color: '#1d7ff3', initials: 'AG'  },
   'property-hunter':   { label: 'Property Hunter',   shortLabel: 'PH',  color: '#06b6d4', initials: 'PH'  },
   'community-manager': { label: 'Community Manager', shortLabel: 'CM',  color: '#ec4899', initials: 'CM'  },
@@ -35,6 +35,7 @@ export interface WorkflowTask {
   label: string;
   tools?: string[];       // e.g. ["WhatsApp", "CRM"]
   description?: string;
+  involves?: (RoleId | 'lead') | (RoleId | 'lead')[];  // show avatar(s) when task involves other people
 }
 
 export interface WorkflowHandoff {
@@ -96,10 +97,10 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Onboarding',
         responsible: 'director',
         tasks: [
-          { label: 'Reply to Lead (Owner)',  tools: ['WhatsApp', 'Phone'] },
-          { label: 'Collect Property Info',  tools: ['WhatsApp', 'Phone'] },
+          { label: 'Reply to Lead (Owner)',  tools: ['Script'], involves: 'lead' },
+          { label: 'Collect Property Info',  tools: ['WhatsApp', 'Phone'], involves: 'lead' },
           { label: 'Pre-Qualify Request',    tools: ['CRM'] },
-          { label: 'Refer Lead to Agent',    tools: ['CRM', 'WhatsApp'] },
+          { label: 'Connect Lead-Agent',      tools: ['WhatsApp'], involves: ['lead', 'agent'] },
           { label: 'Add Lead to CRM',        tools: ['CRM'] },
         ],
         handoff: {
@@ -115,10 +116,10 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Onboarding',
         responsible: 'digital-manager',
         tasks: [
-          { label: 'Reply to Lead (Owner)',      tools: ['WhatsApp', 'Email'] },
-          { label: 'Collect Property Info',      tools: ['WhatsApp', 'Email'] },
+          { label: 'Reply to Lead (Owner)',      tools: ['Script'], involves: 'lead' },
+          { label: 'Collect Property Info',      tools: ['WhatsApp', 'Email'], involves: 'lead' },
           { label: 'Pre-Qualify Request',        tools: ['CRM'] },
-          { label: 'Refer Lead to Agent/Director', tools: ['CRM', 'WhatsApp'] },
+          { label: 'Connect Lead-Agent',             tools: ['WhatsApp'], involves: ['lead', 'agent'] },
           { label: 'Add Lead to CRM',            tools: ['CRM'] },
         ],
       },
@@ -130,10 +131,12 @@ export const WORKFLOWS: Workflow[] = [
         responsible: 'agent',
         parallel: true,
         tasks: [
-          { label: 'Call Lead',                tools: ['Phone'] },
-          { label: 'Qualify Lead + Property',  tools: ['CRM', 'Phone'] },
-          { label: 'Set Conditions',           tools: ['CRM'] },
-          { label: 'Schedule Meeting',         tools: ['WhatsApp', 'Google Calendar'] },
+          { label: 'Call Lead',                tools: ['Script'], involves: 'lead' },
+          { label: 'Qualify Lead',             tools: ['Form'], involves: 'lead' },
+          { label: 'Qualify Property',         tools: ['Form'], involves: 'lead' },
+          { label: 'Discuss Conditions',       tools: ['Script'], involves: 'lead' },
+          { label: 'Schedule Meeting',         tools: ['Google Calendar'], involves: 'lead' },
+          { label: 'Update CRM',              tools: ['Google Sheet'] },
         ],
       },
       // Step 3: Agent — Meeting
@@ -143,9 +146,11 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Meeting',
         responsible: 'agent',
         tasks: [
-          { label: 'Property Inspection',  tools: ['Phone', 'CRM'] },
-          { label: 'Photo Shoot',          tools: ['Camera'] },
-          { label: 'Mandate Signing',      tools: ['CRM'] },
+          { label: 'Property Inspection',      tools: ['Form'], involves: 'lead' },
+          { label: 'Photo and Video Shoot',    tools: ['Camera'] },
+          { label: 'Mandate Signing',          tools: ['Template'], involves: 'lead' },
+          { label: 'Upload Photos',            tools: ['Google Drive'], involves: 'digital-manager' },
+          { label: 'Send Report',              tools: ['WhatsApp'], involves: 'digital-manager' },
         ],
       },
       // Step 4: Digital Manager — Publishing
@@ -154,7 +159,6 @@ export const WORKFLOWS: Workflow[] = [
         stepNumber: 4,
         title: 'Publishing',
         responsible: 'digital-manager',
-        gateCondition: 'Photos Available + Mandate Signed',
         tasks: [
           { label: 'List Property on CRM',                tools: ['CRM'] },
           { label: 'Publish Property on Website',          tools: ['Website CMS'] },

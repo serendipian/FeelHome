@@ -38,7 +38,7 @@ const marketColors: Record<MarketKey, string> = {
   casablanca: '#d4a853',
   rabat: '#2dd4bf',
   marrakech: '#f97316',
-  autre: '#8b5cf6',
+  autre: '#9a6b3a',
 };
 
 const marketKeys: MarketKey[] = ['casablanca', 'rabat', 'marrakech', 'autre'];

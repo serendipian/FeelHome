@@ -8,11 +8,13 @@ import {
   ROLE_META,
   type Workflow,
   type WorkflowStep,
+  type WorkflowTask,
+  type RoleId,
 } from '@/data/workflows';
 
 // ── Layout constants ─────────────────────────────────────────────
 
-const CARD_W = 270;
+const CARD_W = 320;
 const TRIGGER_W = 140;
 const BRANCH_W = 160;
 const GAP_X = 80;
@@ -23,8 +25,8 @@ const COL0 = 50;                                    // Incoming Lead
 const COL1 = COL0 + TRIGGER_W + GAP_X;              // Branch cards (Message / Call)
 const COL2 = COL1 + BRANCH_W + GAP_X;               // Step 1 (DM / Director)
 const COL3 = COL2 + CARD_W + GAP_X;                 // Step 2 Qualification (Agent)
-const COL4 = COL3 + CARD_W + GAP_X;                 // Step 3 Meeting (Agent)
-const COL5 = COL4 + CARD_W + GAP_X;                 // Step 4 Publishing (DM)
+const COL4 = COL3 + CARD_W + GAP_X * 2;             // Step 3 Meeting (Agent) — double gap for condition box
+const COL5 = COL4 + CARD_W + GAP_X * 2;             // Step 4 Publishing (DM) — double gap for condition box
 const COL6 = COL5 + CARD_W + GAP_X;                 // Step 5 Follow-ups
 
 // Initial estimated card heights
@@ -56,6 +58,49 @@ function TriggerIcon({ icon, className }: { icon: string; className?: string }) 
     social: <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"/></svg>,
   };
   return icons[icon] || <svg className={c} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><circle cx={12} cy={12} r={9}/></svg>;
+}
+
+// ── Involves Avatar ──────────────────────────────────────────────
+
+function SingleAvatar({ id, isDark }: { id: RoleId | 'lead'; isDark: boolean }) {
+  if (id === 'lead') {
+    return (
+      <div
+        className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0"
+        style={{ background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)', color: isDark ? 'rgba(255,255,255,0.45)' : 'rgba(15,23,42,0.45)' }}
+        title="Lead / Owner"
+      >
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+      </div>
+    );
+  }
+  const meta = ROLE_META[id];
+  return (
+    <div
+      className="w-5 h-5 rounded-full flex items-center justify-center text-[7px] font-bold shrink-0"
+      style={{ background: `${meta.color}20`, color: meta.color }}
+      title={meta.label}
+    >
+      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    </div>
+  );
+}
+
+function InvolvesAvatar({ involves, isDark }: { involves: (RoleId | 'lead') | (RoleId | 'lead')[]; isDark: boolean }) {
+  const ids = Array.isArray(involves) ? involves : [involves];
+  return (
+    <div className="flex shrink-0" style={{ gap: 0 }}>
+      {ids.map((id, i) => (
+        <div key={i} style={i > 0 ? { marginLeft: -6 } : undefined}>
+          <SingleAvatar id={id} isDark={isDark} />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ── Tool Tag ─────────────────────────────────────────────────────
@@ -155,27 +200,39 @@ function StepCard({ step, isDark }: {
         )}
       </div>
 
-      {/* Tasks — always visible */}
+      {/* Tasks — sub-cards */}
       {hasTasks && (
-        <>
-          <div className="mx-4 h-px" style={{ background: isDark ? 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)' : 'linear-gradient(to right, transparent, rgba(15,23,42,0.06), transparent)' }} />
-          <div className="px-4 py-3 space-y-2">
-            {step.tasks.map((task, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: meta.color }} />
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)' }}>{task.label}</span>
-                  {task.description && <span className="text-[10px] ml-1" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(15,23,42,0.3)' }}>({task.description})</span>}
-                  {task.tools && task.tools.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-0.5">
-                      {task.tools.map((t, j) => <ToolTag key={j} name={t} isDark={isDark} />)}
-                    </div>
-                  )}
-                </div>
+        <div className="px-3 pb-3 pt-1 space-y-1.5">
+          {step.tasks.map((task, i) => (
+            <div
+              key={i}
+              className="rounded-lg px-2.5 py-2"
+              style={{
+                background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.015)',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-3.5 h-3.5 rounded shrink-0"
+                  style={{
+                    border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(15,23,42,0.15)'}`,
+                  }}
+                />
+                <span className="text-[10px] font-medium leading-tight min-w-0" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(15,23,42,0.6)' }}>{task.label}</span>
+                {task.tools && task.tools.length > 0 && (
+                  <div className="flex gap-1 shrink-0">
+                    {task.tools.map((t, j) => <ToolTag key={j} name={t} isDark={isDark} />)}
+                  </div>
+                )}
+                <div className="flex-1" />
+                {task.involves && (
+                  <InvolvesAvatar involves={task.involves} isDark={isDark} />
+                )}
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Handoff */}
@@ -348,20 +405,97 @@ function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isD
       <path d={`M ${trigR.x} ${trigR.y} C ${mid01} ${trigR.y}, ${mid01} ${brTopL.y}, ${brTopL.x} ${brTopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
       <path d={`M ${trigR.x} ${trigR.y} C ${mid01} ${trigR.y}, ${mid01} ${brBotL.y}, ${brBotL.x} ${brBotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
 
-      {/* Branch top → Step 1 top (straight, solid — same lane) */}
-      <line x1={brTopR.x} y1={brTopR.y} x2={s1TopL.x} y2={s1TopL.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
-      {/* Branch bottom → Step 1 bottom (straight, solid — same lane) */}
-      <line x1={brBotR.x} y1={brBotR.y} x2={s1BotL.x} y2={s1BotL.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+      {/* Branch top → Step 1 top (Message → DM) with "REGULAR" condition box — dashed + curved */}
+      {(() => {
+        const midBr = (brTopR.x + s1TopL.x) / 2;
+        const midX = midBr;
+        const midY = (brTopR.y + s1TopL.y) / 2;
+        const boxW = 68;
+        const boxH = 22;
+        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)';
+        return (
+          <>
+            <path d={`M ${brTopR.x} ${brTopR.y} C ${midBr} ${brTopR.y}, ${midBr} ${s1TopL.y}, ${s1TopL.x} ${s1TopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
+            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">REGULAR</text>
+          </>
+        );
+      })()}
+      {/* Branch top → Step 1 bottom (VIP path: Message → Director) with condition box */}
+      {(() => {
+        const midBr = (brTopR.x + s1BotL.x) / 2;
+        const midX = midBr;
+        const midY = (brTopR.y + s1BotL.y) / 2;
+        const boxW = 42;
+        const boxH = 22;
+        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)'; // grey = neutral
+        return (
+          <>
+            <path d={`M ${brTopR.x} ${brTopR.y} C ${midBr} ${brTopR.y}, ${midBr} ${s1BotL.y}, ${s1BotL.x} ${s1BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
+            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">VIP</text>
+          </>
+        );
+      })()}
+      {/* Branch bottom → Step 1 bottom (Call → Director) with "ALL" condition box — curved */}
+      {(() => {
+        const midBr = (brBotR.x + s1BotL.x) / 2;
+        const midX = midBr;
+        const midY = (brBotR.y + s1BotL.y) / 2;
+        const boxW = 42;
+        const boxH = 22;
+        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)';
+        return (
+          <>
+            <path d={`M ${brBotR.x} ${brBotR.y} C ${midBr} ${brBotR.y}, ${midBr} ${s1BotL.y}, ${s1BotL.x} ${s1BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
+            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">ALL</text>
+          </>
+        );
+      })()}
 
       {/* Step 1 → Step 2 (merging = dashed) */}
       <path d={`M ${s1TopR.x} ${s1TopR.y} C ${mid23} ${s1TopR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
       <path d={`M ${s1BotR.x} ${s1BotR.y} C ${mid23} ${s1BotR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
 
-      {/* Step 2 → Step 3 Meeting (single to single = solid) */}
-      <line x1={s2R.x} y1={s2R.y} x2={s3L.x} y2={s3L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+      {/* Step 2 → Step 3 Meeting with "Qualified" condition box */}
+      {(() => {
+        const midX = (s2R.x + s3L.x) / 2;
+        const midY = (s2R.y + s3L.y) / 2;
+        const boxW = 76;
+        const boxH = 22;
+        const borderColor = '#22c55e'; // green = positive condition
+        return (
+          <>
+            {/* Full line underneath */}
+            <line x1={s2R.x} y1={s2R.y} x2={s3L.x} y2={s3L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            {/* Box on top of line */}
+            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
+            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">QUALIFIED</text>
+          </>
+        );
+      })()}
 
-      {/* Step 3 Meeting → Step 4 Publishing (single to single = solid) */}
-      <line x1={s3R.x} y1={s3R.y} x2={s4L.x} y2={s4L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+      {/* Step 3 Meeting → Step 4 Publishing with "SIGNED MANDATE" condition box */}
+      {(() => {
+        const midX = (s3R.x + s4L.x) / 2;
+        const midY = (s3R.y + s4L.y) / 2;
+        const boxW = 116;
+        const boxH = 22;
+        const borderColor = '#22c55e'; // green = positive condition
+        return (
+          <>
+            <line x1={s3R.x} y1={s3R.y} x2={s4L.x} y2={s4L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
+            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">SIGNED MANDATE</text>
+          </>
+        );
+      })()}
 
       {/* Step 4 Publishing → Step 5 Follow-ups (forking = dashed) */}
       <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
@@ -453,7 +587,7 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
 
           {/* COL 1 top: Message branch */}
           <div ref={refs.branchTop} className="absolute" style={{ left: pos.branchTop.x, top: pos.branchTop.y }}>
-            <BranchCard label="Message" color="#8b5cf6" triggers={digital} isDark={isDark} />
+            <BranchCard label="Message" color="#9a6b3a" triggers={digital} isDark={isDark} />
           </div>
 
           {/* COL 1 bottom: Call branch */}
@@ -529,16 +663,14 @@ export default function WorkflowView() {
             <p className="text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)' }}>{activeWorkflow.subtitle}</p>
           </div>
         </div>
-        {WORKFLOWS.length > 1 && (
-          <div className="flex items-center gap-2">
-            {WORKFLOWS.map(w => (
-              <button key={w.id} onClick={() => setActiveWorkflowId(w.id)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 shrink-0 cursor-pointer"
-                style={{ background: w.id === activeWorkflowId ? `${w.color}12` : 'transparent', border: `1px solid ${w.id === activeWorkflowId ? `${w.color}25` : 'transparent'}`, color: w.id === activeWorkflowId ? w.color : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)') }}
-              >{w.title}</button>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {WORKFLOWS.map(w => (
+            <button key={w.id} onClick={() => setActiveWorkflowId(w.id)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 shrink-0 cursor-pointer"
+              style={{ background: w.id === activeWorkflowId ? `${w.color}12` : 'transparent', border: `1px solid ${w.id === activeWorkflowId ? `${w.color}25` : 'transparent'}`, color: w.id === activeWorkflowId ? w.color : (isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)') }}
+            >{w.title}</button>
+          ))}
+        </div>
       </div>
       <WorkflowCanvas workflow={activeWorkflow} isDark={isDark} />
     </div>

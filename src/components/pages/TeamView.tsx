@@ -200,7 +200,7 @@ export default function TeamView() {
         {[
           { label: 'Total Headcount', value: String(totalCount), color: isDark ? '#ffffff' : '#1e293b' },
           { label: 'Management', value: String(managementCount), color: '#d4a853' },
-          { label: 'Backoffice', value: String(backofficeCount), color: '#8b5cf6' },
+          { label: 'Backoffice', value: String(backofficeCount), color: '#9a6b3a' },
           { label: 'Frontoffice', value: String(frontofficeCount), color: '#1d7ff3' },
         ].map((kpi) => (
           <div
