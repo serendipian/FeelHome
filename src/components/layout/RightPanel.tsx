@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useFinancial, MarketKey, ScenarioKey } from '@/context/FinancialContext';
+import { useMobileNav } from '@/context/MobileNavContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import { brands, brandKeys } from '@/data/brands';
 import { BrandKey } from '@/types';
 import BrandAvatar from '@/components/ui/BrandAvatar';
@@ -51,6 +53,9 @@ export default function RightPanel() {
   const pathname = usePathname();
   const { isDark } = useTheme();
   const { fNum, currency } = useCurrencyFormatters();
+  const { panelOpen, closePanel } = useMobileNav();
+  const { isUSD, toggleCurrency, currency: currLabel } = useCurrency();
+  const { theme, toggleTheme } = useTheme();
   const {
     activeBrands,
     toggleBrand,
@@ -69,15 +74,75 @@ export default function RightPanel() {
   } = useFinancial();
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {panelOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={closePanel}
+        />
+      )}
     <div
-      className="w-[340px] shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto"
+      className={`
+        fixed right-0 top-0 h-screen z-50 w-[300px] sm:w-[340px]
+        md:static md:h-auto md:z-auto md:w-[340px]
+        shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto
+        transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
+        ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
+        md:translate-x-0
+      `}
       style={{
         background: isDark
-          ? 'linear-gradient(180deg, rgba(6, 7, 10, 0.6) 0%, rgba(6, 7, 10, 0.9) 100%)'
-          : 'linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.95) 100%)',
+          ? 'linear-gradient(180deg, rgba(6, 7, 10, 0.98) 0%, rgba(6, 7, 10, 0.99) 100%)'
+          : 'linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.99) 100%)',
         borderLeft: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
       }}
     >
+      {/* Mobile-only: close button + theme/currency toggles */}
+      <div className="md:hidden flex items-center justify-between mb-2">
+        <span className="text-[12px] font-semibold text-white/60">Settings</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleCurrency}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg cursor-pointer"
+            style={{
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+            }}
+          >
+            <span className="text-[10px] font-bold" style={{ color: isUSD ? '#1d7ff3' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)') }}>
+              {isUSD ? '$' : 'MAD'}
+            </span>
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer"
+            style={{
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+              border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+            }}
+          >
+            {isDark ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={closePanel}
+            className="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer"
+            style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      </div>
       {/* Scenario Selector */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -238,6 +303,7 @@ export default function RightPanel() {
         <ExpenseCharts expensesByCategory={expensesByCategory} />
       ) : null}
     </div>
+    </>
   );
 }
 

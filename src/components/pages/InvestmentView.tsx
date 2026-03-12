@@ -564,8 +564,8 @@ export default function InvestmentView() {
 function SimCard({ title, tableMonths, totalHeaders, children }: { title: string; tableMonths: number[]; totalHeaders?: string[]; children: React.ReactNode }) {
   const totalCols = totalHeaders?.length ?? 0;
   return (
-    <div className="card overflow-hidden">
-      <table className="w-full text-[12px] table-fixed">
+    <div className="card overflow-x-auto">
+      <table className="w-full text-[12px] table-fixed min-w-[700px]">
         <colgroup>
           <col className="w-[180px]" />
           {tableMonths.map((m) => (

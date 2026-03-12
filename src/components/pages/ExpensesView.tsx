@@ -65,8 +65,8 @@ export default function ExpensesView() {
         return (
           <div key={cat} className="space-y-3">
             {/* Category Header with year tags */}
-            <div className="flex gap-3 items-end">
-              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <div className="w-full md:w-1/2 flex items-center gap-4 px-1 pb-1">
                 <div
                   className="w-6 h-6 rounded-lg flex items-center justify-center"
                   style={{ background: `${config.color}15`, border: `1px solid ${config.color}25` }}
@@ -77,7 +77,7 @@ export default function ExpensesView() {
                   <span className="text-[14px] font-semibold text-white/90">{config.label}</span>
                 </div>
               </div>
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="flex-1 text-center">
                     <YearTag year={n} color={config.color} />
@@ -87,9 +87,9 @@ export default function ExpensesView() {
             </div>
 
             {/* Cards row */}
-            <div className="flex gap-3 items-stretch">
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
               {/* Left card: expense label, brands, variable cost */}
-              <div className="card overflow-hidden w-1/2">
+              <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
@@ -139,7 +139,7 @@ export default function ExpensesView() {
               </div>
 
               {/* Right: 3 year cards */}
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {(['y1', 'y2', 'y3'] as const).map((y) => (
                   <div key={y} className="card overflow-hidden flex-1 min-w-0">
                     <table className="w-full text-[12px]">

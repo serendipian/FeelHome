@@ -50,14 +50,14 @@ export default function RevenuesView() {
         return (
           <div className="space-y-3">
             {/* Brand Header with year tags */}
-            <div className="flex gap-3 items-end">
-              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <div className="w-full md:w-1/2 flex items-center gap-4 px-1 pb-1">
                 <BrandAvatar brand={brands.feelHome} size={24} />
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{brands.feelHome.name}</span>
                 </div>
               </div>
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="flex-1 text-center">
                     <YearTag year={n} color="#d4875a" />
@@ -67,8 +67,8 @@ export default function RevenuesView() {
             </div>
 
             {/* 4 cards */}
-            <div className="flex gap-3 items-stretch">
-              <div className="card overflow-hidden w-1/2">
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+              <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
@@ -98,7 +98,7 @@ export default function RevenuesView() {
                 </table>
               </div>
 
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {(['y1', 'y2', 'y3'] as const).map((y) => (
                   <div key={y} className="card overflow-hidden flex-1 min-w-0">
                     <table className="w-full text-[12px]">
@@ -143,14 +143,14 @@ export default function RevenuesView() {
         return (
           <div className="space-y-3">
             {/* Brand Header with year tags aligned above year cards */}
-            <div className="flex gap-3 items-end">
-              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <div className="w-full md:w-1/2 flex items-center gap-4 px-1 pb-1">
                 <BrandAvatar brand={brands.mInvest} size={24} />
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{brands.mInvest.name}</span>
                 </div>
               </div>
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="flex-1 text-center">
                     <YearTag year={n} color="#5b8ec9" />
@@ -160,8 +160,8 @@ export default function RevenuesView() {
             </div>
 
             {/* 4 cards */}
-            <div className="flex gap-3 items-stretch">
-              <div className="card overflow-hidden w-1/2">
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+              <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
@@ -197,7 +197,7 @@ export default function RevenuesView() {
                 </table>
               </div>
 
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {(['y1', 'y2', 'y3'] as const).map((y) => (
                   <div key={y} className="card overflow-hidden flex-1 min-w-0">
                     <table className="w-full text-[12px]">
@@ -242,14 +242,14 @@ export default function RevenuesView() {
         return (
           <div className="space-y-3">
             {/* Brand Header with year tags */}
-            <div className="flex gap-3 items-end">
-              <div className="w-1/2 flex items-center gap-4 px-1 pb-1">
+            <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+              <div className="w-full md:w-1/2 flex items-center gap-4 px-1 pb-1">
                 <BrandAvatar brand={brands.expats} size={24} />
                 <div>
                   <span className="text-[14px] font-semibold text-white/90">{brands.expats.name}</span>
                 </div>
               </div>
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="flex-1 text-center">
                     <YearTag year={n} color="#1d7ff3" />
@@ -259,8 +259,8 @@ export default function RevenuesView() {
             </div>
 
             {/* 4 cards */}
-            <div className="flex gap-3 items-stretch">
-              <div className="card overflow-hidden w-1/2">
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+              <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
@@ -281,7 +281,7 @@ export default function RevenuesView() {
                 </table>
               </div>
 
-              <div className="w-1/2 flex gap-3">
+              <div className="w-full md:w-1/2 flex gap-3 overflow-x-auto">
                 {(['y1', 'y2', 'y3'] as const).map((y) => (
                   <div key={y} className="card overflow-hidden flex-1 min-w-0">
                     <table className="w-full text-[12px]">

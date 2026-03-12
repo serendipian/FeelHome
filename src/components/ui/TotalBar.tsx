@@ -24,16 +24,16 @@ export default function TotalBar({
   };
 
   return (
-    <div className="sticky bottom-0 z-10 flex gap-3">
+    <div className="sticky bottom-0 z-10 flex flex-col md:flex-row gap-3">
       <div
-        className="w-1/2 flex items-center px-4 py-4 rounded-2xl backdrop-blur-2xl"
+        className="w-full md:w-1/2 flex items-center px-4 py-3 md:py-4 rounded-2xl backdrop-blur-2xl"
         style={bgStyle}
       >
         <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color }}>
           {label}
         </span>
       </div>
-      <div className="w-1/2 flex gap-3">
+      <div className="w-full md:w-1/2 flex gap-3">
         {values.map((v, i) => (
           <div
             key={i}

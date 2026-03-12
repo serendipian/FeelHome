@@ -1,10 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ClientLayout from './ClientLayout';
 
 export const metadata: Metadata = {
   title: 'Feel Home — Financial Simulator',
   description: 'Interactive financial model for the Feel Home ecosystem',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
