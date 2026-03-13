@@ -73,7 +73,7 @@ export default function RevenuesView() {
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rent/Mo</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Rent</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Commission</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>

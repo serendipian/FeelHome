@@ -59,11 +59,26 @@ export interface WorkflowStep {
 }
 
 export interface ConnectorConfig {
+  step1_step2?: { label: string; color: string };    // condition on merge lines → step2
   step2_step3?: { label: string; color: string };
+  step2_step3bis?: { label: string; color: string }; // fork to step3bis at COL4 bottom
   step3_step4?: { label: string; color: string };
   step4_step5Top?: { label: string; color: string };
   step4_step5Bot?: { label: string; color: string };
-  step3_step5Bot?: { label: string; color: string }; // skip connection
+  step3_step4bis?: { label: string; color: string }; // fork to step4bis at COL5 bottom
+  step4_step5?: { label: string; color: string };     // step4→step5 (inline continuation)
+  step5_step6?: { label: string; color: string };     // step5→step6 (inline continuation)
+  step5_step6bis?: { label: string; color: string };  // step5→step6bis (fork bottom)
+  step6_step7?: { label: string; color: string };     // step6→step7 (inline continuation)
+  step6_step7bis?: { label: string; color: string };  // step6→step7bis (fork bottom)
+  step7_step8?: { label: string; color: string };     // step7→step8 (inline continuation)
+  step7bis_step8bis?: { label: string; color: string }; // step7bis→step8bis
+  step8_step9?: { label: string; color: string };     // step8→step9 (inline continuation)
+  step9_endTop?: { label: string; color: string };    // step9→followup-dm (end fork top)
+  step9_endBot?: { label: string; color: string };    // step9→followup-agent (end fork bottom)
+  step6_endTop?: { label: string; color: string };    // step6→followup-dm (end fork top)
+  step6_endBot?: { label: string; color: string };    // step6→followup-agent (end fork bottom)
+  step4bis_step5bis?: { label: string; color: string }; // step4bis→step5bis (e.g. Follow Up Owner→Property Hunting)
 }
 
 export interface Workflow {
@@ -222,10 +237,19 @@ export const WORKFLOWS: Workflow[] = [
     },
     connectors: {
       step2_step3: { label: 'QUALIFIED', color: '#22c55e' },
-      step3_step4: { label: 'AVAILABLE LISTINGS', color: '#22c55e' },
-      step3_step5Bot: { label: 'NO AVAILABLE LISTING', color: '#ef4444' },
-      step4_step5Top: { label: 'INTERESTED LEAD', color: '#22c55e' },
-      step4_step5Bot: { label: 'NOT INTERESTED', color: '#ef4444' },
+      step3_step4: { label: 'IF AVAILABLE + MATCHING', color: '#22c55e' },
+      step3_step4bis: { label: 'NO MATCH', color: '#ef4444' },
+      step4_step5: { label: 'INTERESTED LEAD', color: '#22c55e' },
+      step4bis_step5bis: { label: '', color: '' },
+      step5_step6: { label: 'AVAILABLE PROPERTY + VALIDATED PROFILE', color: '#22c55e' },
+      step5_step6bis: { label: 'NOT AVAILABLE OR REFUSED PROFILE', color: '#ef4444' },
+      step6_step7: { label: 'VIEWING REQUEST', color: '#22c55e' },
+      step6_step7bis: { label: 'NOT INTERESTED', color: '#ef4444' },
+      step7_step8: { label: 'CONFIRMED', color: '#22c55e' },
+      step7bis_step8bis: { label: '', color: '' },
+      step8_step9: { label: 'VISIT DONE', color: '#22c55e' },
+      step9_endTop: { label: 'INTERESTED + OFFER', color: '#22c55e' },
+      step9_endBot: { label: 'NOT INTERESTED', color: '#ef4444' },
     },
     steps: [
       // Step 1A: Director handles if Direct Call
@@ -281,7 +305,7 @@ export const WORKFLOWS: Workflow[] = [
         responsible: 'agent',
         tasks: [
           { label: 'Fetch Available Listings', tools: ['CRM'] },
-          { label: 'Match Available Listings', tools: ['CRM'] },
+          { label: 'List Matching Properties', tools: ['CRM'] },
         ],
       },
       // Step 4: Agent — Share Matching Properties
@@ -297,19 +321,143 @@ export const WORKFLOWS: Workflow[] = [
           { label: 'Update CRM',             tools: ['CRM'] },
         ],
       },
-      // Step 5 top: Schedule Viewing — Link to workflow
+      // Step 4bis: Agent — No Match fallback
+      {
+        id: 'step-4bis',
+        stepNumber: 4,
+        title: 'No Match Follow-Up',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Inform Lead',            tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Hook Lead',              tools: ['Script'], involves: 'lead' },
+          { label: 'Schedule Follow Up',     tools: ['Google Calendar'], involves: 'lead' },
+        ],
+      },
+      // Step 5: Agent — Verify with Owner (from New Visit Request)
+      {
+        id: 'step-5',
+        stepNumber: 5,
+        title: 'Verify with Owner',
+        responsible: 'agent',
+        parallel: true,
+        tasks: [
+          { label: 'Assess Property Availability',   tools: ['CRM'], involves: 'partner' },
+          { label: 'Share Lead Profile & Interest',   tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assess Viewing Availabilities',   tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+        ],
+      },
+      // Step 5bis: Property Hunting — Link to workflow (NO MATCH path from step4bis)
+      {
+        id: 'step-5bis',
+        stepNumber: 5,
+        title: 'Property Hunting',
+        responsible: 'property-hunter',
+        tasks: [],
+        linkTo: 'property-hunting',
+      },
+      // Step 6: Agent — Confirm with Tenant
+      {
+        id: 'step-6',
+        stepNumber: 6,
+        title: 'Confirm with Tenant',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Confirm Property Availability',  tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Answer Additional Questions',     tools: ['WhatsApp'], involves: 'lead' },
+        ],
+      },
+      // Step 6bis: Follow Up - Tenant (NOT AVAILABLE OR REFUSED)
+      {
+        id: 'step-6bis',
+        stepNumber: 6,
+        title: 'Follow Up - Tenant',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Inform Lead',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Hook Lead',     tools: ['Script'], involves: 'lead' },
+        ],
+      },
+      // Step 7: Agent — Scheduling
+      {
+        id: 'step-7',
+        stepNumber: 7,
+        title: 'Scheduling',
+        responsible: 'agent',
+        parallel: true,
+        tasks: [
+          { label: 'Re-Assess Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Assess Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Coordinate with Own Calendar',     tools: ['Google Calendar'] },
+          { label: 'Propose Visit Date & Time',        tools: ['WhatsApp'], involves: ['lead', 'partner'] },
+          { label: 'Confirm with Owner',               tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Confirm with Visitor',             tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Set Calendar Event',               tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+          { label: 'Prepare Property Details',         tools: ['CRM'] },
+          { label: 'Update CRM',                      tools: ['Google Sheet'] },
+        ],
+      },
+      // Step 7bis: Follow Up - Owner (NOT INTERESTED)
+      {
+        id: 'step-7bis',
+        stepNumber: 7,
+        title: 'Follow Up - Owner',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Inform Owner',   tools: ['WhatsApp'], involves: 'partner' },
+        ],
+      },
+      // Step 8: Agent — Tenant Viewing
+      {
+        id: 'step-8',
+        stepNumber: 8,
+        title: 'Tenant Viewing',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Re-Confirm Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Confirm Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Arrive 15min in Advance' },
+          { label: 'Prepare Property',                  tools: ['Checklist'] },
+          { label: 'Present Agency',                    tools: ['Brochure', 'Business Card'] },
+          { label: 'Conduct Property Tour',             involves: 'lead' },
+          { label: 'Answer Tenant Questions',            involves: 'lead' },
+          { label: 'Collect Tenant Feedback',            tools: ['Form'], involves: 'lead' },
+          { label: 'Send Report',                       tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+        ],
+      },
+      // Step 8bis: Property Hunting — Link to workflow
+      {
+        id: 'step-8bis',
+        stepNumber: 8,
+        title: 'Property Hunting',
+        responsible: 'property-hunter',
+        tasks: [],
+        linkTo: 'property-hunting',
+      },
+      // Step 9: Agent — Post Viewing
+      {
+        id: 'step-9',
+        stepNumber: 9,
+        title: 'Post Viewing',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Update CRM',                tools: ['CRM'] },
+          { label: 'Send Summary to Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Send Thank You to Tenant',   tools: ['WhatsApp'], involves: 'lead' },
+        ],
+      },
+      // End top: Offer Management — Link to Lease Processing
       {
         id: 'followup-dm',
-        stepNumber: 5,
-        title: 'Schedule Viewing',
+        stepNumber: 10,
+        title: 'Offer Management',
         responsible: 'agent',
         tasks: [],
-        linkTo: 'schedule-viewing',
+        linkTo: 'lease-processing',
       },
-      // Step 5 bottom: Property Hunting — Link to workflow
+      // End bottom: Property Hunting — Link to workflow
       {
         id: 'followup-agent',
-        stepNumber: 5,
+        stepNumber: 10,
         title: 'Property Hunting',
         responsible: 'property-hunter',
         tasks: [],
@@ -320,12 +468,14 @@ export const WORKFLOWS: Workflow[] = [
   {
     id: 'new-visit',
     title: 'New Visit Request',
-    subtitle: 'Visit-request-to-feedback pipeline',
+    subtitle: 'Visit-request-to-viewing pipeline',
     color: '#1e293b',
     triggers: [
+      { label: 'Email',            icon: 'email',    channel: 'digital' },
       { label: 'Website Form',     icon: 'website',  channel: 'digital' },
       { label: 'WhatsApp Message', icon: 'whatsapp', channel: 'digital' },
-      { label: 'Email',            icon: 'email',    channel: 'digital' },
+      { label: 'Social Media',     icon: 'social',   channel: 'digital' },
+      { label: 'Facebook Groups',  icon: 'facebook', channel: 'digital' },
       { label: 'Phone Call',       icon: 'phone',    channel: 'direct'  },
       { label: 'WhatsApp Call',    icon: 'whatsapp', channel: 'direct'  },
     ],
@@ -335,8 +485,16 @@ export const WORKFLOWS: Workflow[] = [
       ifFalse: { responsible: 'digital-manager', label: 'Digital Manager' },
     },
     connectors: {
-      step2_step3: { label: 'CONFIRMED', color: '#22c55e' },
-      step3_step4: { label: 'VISIT DONE', color: '#22c55e' },
+      step1_step2: { label: 'VIEWING REQUEST', color: '#22c55e' },
+      step2_step3: { label: 'AVAILABLE PROPERTY + VALIDATED PROFILE', color: '#22c55e' },
+      step2_step3bis: { label: 'NOT AVAILABLE OR REFUSED PROFILE', color: '#ef4444' },
+      step3_step4: { label: 'VIEWING REQUEST', color: '#22c55e' },
+      step3_step4bis: { label: 'NOT INTERESTED', color: '#ef4444' },
+      step4_step5: { label: 'CONFIRMED', color: '#22c55e' },
+      step5_step6: { label: 'VISIT DONE', color: '#22c55e' },
+      step4bis_step5bis: { label: '', color: '' },
+      step6_endTop: { label: 'INTERESTED + OFFER', color: '#22c55e' },
+      step6_endBot: { label: 'NOT INTERESTED', color: '#ef4444' },
     },
     steps: [
       // Step 1A: Director handles if Direct Call
@@ -346,12 +504,14 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Request Intake',
         responsible: 'director',
         tasks: [
-          { label: 'Reply to Visitor',          tools: ['Script'], involves: 'lead' },
+          { label: 'Reply to Lead (Tenant)',        tools: ['Script'], involves: 'lead' },
           { label: 'Identify Property of Interest', tools: ['CRM'], involves: 'lead' },
-          { label: 'Confirm Visit Availability', tools: ['Google Calendar'] },
-          { label: 'Assign Agent',              tools: ['WhatsApp'], involves: ['lead', 'agent'] },
-          { label: 'Add Lead to CRM',           tools: ['CRM'] },
-          { label: 'Brief Digital Manager',     tools: ['Phone'], involves: 'digital-manager' },
+          { label: 'Assess Lead Profile',           tools: ['Form'], involves: 'lead' },
+          { label: 'Disclose Red Flags',            tools: ['Rules'] },
+          { label: 'Re-Confirm Lead Interest',      tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Assign Agent',                  tools: ['WhatsApp'], involves: ['lead', 'agent'] },
+          { label: 'Add Lead to CRM',               tools: ['CRM'] },
+          { label: 'Brief Digital Manager',         tools: ['Phone'], involves: 'digital-manager' },
         ],
       },
       // Step 1B: Digital Manager handles if NOT Direct Call
@@ -361,73 +521,135 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Request Intake',
         responsible: 'digital-manager',
         tasks: [
-          { label: 'Reply to Visitor',          tools: ['Script'], involves: 'lead' },
+          { label: 'Reply to Lead (Tenant)',        tools: ['Script'], involves: 'lead' },
           { label: 'Identify Property of Interest', tools: ['CRM'], involves: 'lead' },
-          { label: 'Confirm Visit Availability', tools: ['Google Calendar'] },
-          { label: 'Assign Agent',              tools: ['WhatsApp'], involves: ['lead', 'agent'] },
-          { label: 'Add Lead to CRM',           tools: ['CRM'] },
+          { label: 'Assess Lead Profile',           tools: ['Form'], involves: 'lead' },
+          { label: 'Disclose Red Flags',            tools: ['Rules'] },
+          { label: 'Re-Confirm Lead Interest',      tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Assign Agent',                  tools: ['WhatsApp'], involves: ['lead', 'agent'] },
+          { label: 'Add Lead to CRM',               tools: ['CRM'] },
         ],
       },
-      // Step 2: Agent — Preparation
+      // Step 2: Agent — Verify with Owner
       {
         id: 'step-2',
         stepNumber: 2,
-        title: 'Preparation',
+        title: 'Verify with Owner',
         responsible: 'agent',
         parallel: true,
         tasks: [
-          { label: 'Call Visitor to Confirm',   tools: ['Script'], involves: 'lead' },
-          { label: 'Verify Visitor Profile',    tools: ['Form'], involves: 'lead' },
-          { label: 'Coordinate with Owner',     tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Confirm Date & Time',       tools: ['Google Calendar'], involves: ['lead', 'partner'] },
-          { label: 'Prepare Property Details',  tools: ['CRM'] },
-          { label: 'Update CRM',               tools: ['Google Sheet'] },
+          { label: 'Assess Property Availability',   tools: ['CRM'], involves: 'partner' },
+          { label: 'Share Lead Profile & Interest',   tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assess Viewing Availabilities',   tools: ['Google Calendar'], involves: ['lead', 'partner'] },
         ],
       },
-      // Step 3: Agent — Visit
+      // Step 3: Agent — Confirm with Tenant
       {
         id: 'step-3',
         stepNumber: 3,
-        title: 'Visit',
+        title: 'Confirm with Tenant',
         responsible: 'agent',
         tasks: [
-          { label: 'Conduct Property Visit',    tools: ['Checklist'], involves: 'lead' },
-          { label: 'Answer Visitor Questions',   tools: ['Script'], involves: 'lead' },
-          { label: 'Collect Visitor Feedback',   tools: ['Form'], involves: 'lead' },
-          { label: 'Send Report',               tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+          { label: 'Confirm Property Availability',  tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Answer Additional Questions',     tools: ['WhatsApp'], involves: 'lead' },
         ],
       },
-      // Step 4: Digital Manager — Post-Visit
+      // Step 3bis: Follow Up - Tenant (NOT AVAILABLE OR REFUSED)
+      {
+        id: 'step-3bis',
+        stepNumber: 3,
+        title: 'Follow Up - Tenant',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Inform Lead',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Hook Lead',     tools: ['Script'], involves: 'lead' },
+        ],
+      },
+      // Step 4: Agent — Scheduling
       {
         id: 'step-4',
         stepNumber: 4,
-        title: 'Post-Visit',
-        responsible: 'digital-manager',
+        title: 'Scheduling',
+        responsible: 'agent',
+        parallel: true,
         tasks: [
-          { label: 'Log Visit Outcome',         tools: ['CRM'] },
-          { label: 'Send Summary to Owner',     tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Send Thank-You to Visitor', tools: ['WhatsApp'], involves: 'lead' },
-          { label: 'Flag Interested Leads',     tools: ['CRM'] },
-          { label: 'Trigger Offer Workflow',    tools: ['CRM'], involves: 'agent' },
+          { label: 'Re-Assess Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Assess Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Coordinate with Own Calendar',     tools: ['Google Calendar'] },
+          { label: 'Propose Visit Date & Time',        tools: ['WhatsApp'], involves: ['lead', 'partner'] },
+          { label: 'Confirm with Owner',               tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Confirm with Visitor',             tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Set Calendar Event',               tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+          { label: 'Prepare Property Details',         tools: ['CRM'] },
+          { label: 'Update CRM',                      tools: ['Google Sheet'] },
         ],
       },
-      // Follow-up: Digital Manager
+      // Step 4bis: Follow Up - Owner (NOT INTERESTED)
+      {
+        id: 'step-4bis',
+        stepNumber: 4,
+        title: 'Follow Up - Owner',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Inform Owner',   tools: ['WhatsApp'], involves: 'partner' },
+        ],
+      },
+      // Step 5: Agent — Tenant Viewing
+      {
+        id: 'step-5',
+        stepNumber: 5,
+        title: 'Tenant Viewing',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Re-Confirm Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Confirm Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Arrive 15min in Advance' },
+          { label: 'Prepare Property',                  tools: ['Checklist'] },
+          { label: 'Present Agency',                    tools: ['Brochure', 'Business Card'] },
+          { label: 'Conduct Property Tour',             involves: 'lead' },
+          { label: 'Answer Tenant Questions',            involves: 'lead' },
+          { label: 'Collect Tenant Feedback',            tools: ['Form'], involves: 'lead' },
+          { label: 'Send Report',                       tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+        ],
+      },
+      // Step 5bis: Property Hunting — Link to workflow (NOT INTERESTED path)
+      {
+        id: 'step-5bis',
+        stepNumber: 5,
+        title: 'Property Hunting',
+        responsible: 'property-hunter',
+        tasks: [],
+        linkTo: 'property-hunting',
+      },
+      // Step 6: Agent — Post Viewing
+      {
+        id: 'step-6',
+        stepNumber: 6,
+        title: 'Post Viewing',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Update CRM',                tools: ['CRM'] },
+          { label: 'Send Summary to Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Send Thank You to Tenant',   tools: ['WhatsApp'], involves: 'lead' },
+        ],
+      },
+      // End top: Offer Management — Link to Lease Processing
       {
         id: 'followup-dm',
-        stepNumber: 5,
-        title: 'Follow-Up',
-        responsible: 'digital-manager',
-        tasks: [],
-        recurrence: { frequency: 'Weekly', task: 'Follow up with undecided visitors & suggest alternatives', tools: ['WhatsApp', 'Email'] },
-      },
-      // Follow-up: Agent
-      {
-        id: 'followup-agent',
-        stepNumber: 5,
-        title: 'Follow-Up',
+        stepNumber: 7,
+        title: 'Offer Management',
         responsible: 'agent',
         tasks: [],
-        recurrence: { frequency: 'Bi-weekly', task: 'Re-engage warm leads with new listings', tools: ['WhatsApp', 'Phone'] },
+        linkTo: 'lease-processing',
+      },
+      // End bottom: Property Hunting — Link to workflow (NOT INTERESTED after viewing)
+      {
+        id: 'followup-agent',
+        stepNumber: 7,
+        title: 'Property Hunting',
+        responsible: 'property-hunter',
+        tasks: [],
+        linkTo: 'property-hunting',
       },
     ],
   },
@@ -562,6 +784,8 @@ export const WORKFLOWS: Workflow[] = [
     connectors: {
       step2_step3: { label: 'CONFIRMED', color: '#22c55e' },
       step3_step4: { label: 'VISIT DONE', color: '#22c55e' },
+      step4_step5Top: { label: 'INTERESTED + OFFER', color: '#22c55e' },
+      step4_step5Bot: { label: 'NOT INTERESTED', color: '#ef4444' },
     },
     steps: [
       {
@@ -570,11 +794,11 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Coordination',
         responsible: 'digital-manager',
         tasks: [
-          { label: 'Confirm Tenant Interest',   tools: ['CRM'], involves: 'lead' },
-          { label: 'Check Property Availability', tools: ['CRM'] },
-          { label: 'Coordinate with Owner',      tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Assign Agent',               tools: ['WhatsApp'], involves: 'agent' },
-          { label: 'Add to CRM',                tools: ['CRM'] },
+          { label: 'Confirm Tenant Interest',     tools: ['CRM'], involves: 'lead' },
+          { label: 'Check Property Availability',  tools: ['CRM'] },
+          { label: 'Coordinate with Owner',        tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assign Agent',                 tools: ['WhatsApp'], involves: 'agent' },
+          { label: 'Add to CRM',                  tools: ['CRM'] },
         ],
       },
       {
@@ -583,12 +807,13 @@ export const WORKFLOWS: Workflow[] = [
         title: 'Coordination',
         responsible: 'agent',
         tasks: [
-          { label: 'Confirm Tenant Interest',   tools: ['CRM'], involves: 'lead' },
-          { label: 'Check Property Availability', tools: ['CRM'] },
-          { label: 'Coordinate with Owner',      tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Add to CRM',                tools: ['CRM'] },
+          { label: 'Confirm Tenant Interest',     tools: ['CRM'], involves: 'lead' },
+          { label: 'Check Property Availability',  tools: ['CRM'] },
+          { label: 'Coordinate with Owner',        tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Add to CRM',                  tools: ['CRM'] },
         ],
       },
+      // Step 2: Agent — Scheduling
       {
         id: 'step-2',
         stepNumber: 2,
@@ -596,53 +821,64 @@ export const WORKFLOWS: Workflow[] = [
         responsible: 'agent',
         parallel: true,
         tasks: [
-          { label: 'Propose Visit Dates',       tools: ['WhatsApp'], involves: 'lead' },
-          { label: 'Confirm with Owner',        tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Set Calendar Event',        tools: ['Google Calendar'], involves: ['lead', 'partner'] },
-          { label: 'Prepare Property Brief',    tools: ['CRM'] },
-          { label: 'Update CRM',               tools: ['Google Sheet'] },
+          { label: 'Re-Assess Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Assess Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Coordinate with Own Calendar',     tools: ['Google Calendar'] },
+          { label: 'Propose Visit Date & Time',        tools: ['WhatsApp'], involves: ['lead', 'partner'] },
+          { label: 'Confirm with Owner',               tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Confirm with Visitor',             tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Set Calendar Event',               tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+          { label: 'Prepare Property Details',         tools: ['CRM'] },
+          { label: 'Update CRM',                      tools: ['Google Sheet'] },
         ],
       },
+      // Step 3: Agent — Tenant Viewing
       {
         id: 'step-3',
         stepNumber: 3,
-        title: 'Viewing',
+        title: 'Tenant Viewing',
         responsible: 'agent',
         tasks: [
-          { label: 'Conduct Property Tour',     tools: ['Checklist'], involves: 'lead' },
-          { label: 'Answer Tenant Questions',    tools: ['Script'], involves: 'lead' },
-          { label: 'Collect Tenant Feedback',    tools: ['Form'], involves: 'lead' },
-          { label: 'Send Report',               tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+          { label: 'Re-Confirm Owner Availability',    tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Re-Confirm Visitor Availability',   tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Arrive 15min in Advance' },
+          { label: 'Prepare Property',                  tools: ['Checklist'] },
+          { label: 'Present Agency',                    tools: ['Brochure', 'Business Card'] },
+          { label: 'Conduct Property Tour',             involves: 'lead' },
+          { label: 'Answer Tenant Questions',            involves: 'lead' },
+          { label: 'Collect Tenant Feedback',            tools: ['Form'], involves: 'lead' },
+          { label: 'Send Report',                       tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
         ],
       },
+      // Step 4: Agent — Post Viewing
       {
         id: 'step-4',
         stepNumber: 4,
-        title: 'Post-Viewing',
-        responsible: 'digital-manager',
+        title: 'Post Viewing',
+        responsible: 'agent',
         tasks: [
-          { label: 'Log Visit Outcome',          tools: ['CRM'] },
+          { label: 'Update CRM',                tools: ['CRM'] },
           { label: 'Send Summary to Owner',      tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Negotiate Terms if Interested', tools: ['Script'], involves: ['lead', 'partner'] },
-          { label: 'Trigger Lease Workflow',      tools: ['CRM'] },
-          { label: 'Update CRM Status',           tools: ['CRM'] },
+          { label: 'Send Thank You to Tenant',   tools: ['WhatsApp'], involves: 'lead' },
         ],
       },
+      // Step 5 top: Offer Management — Link to Lease Processing
       {
         id: 'followup-dm',
         stepNumber: 5,
-        title: 'Follow-Up',
-        responsible: 'digital-manager',
+        title: 'Offer Management',
+        responsible: 'agent',
         tasks: [],
-        recurrence: { frequency: 'Weekly', task: 'Follow up with undecided tenants & suggest alternatives', tools: ['WhatsApp', 'Email'] },
+        linkTo: 'lease-processing',
       },
+      // Step 5 bottom: Follow-Up Agent
       {
         id: 'followup-agent',
         stepNumber: 5,
         title: 'Follow-Up',
         responsible: 'agent',
         tasks: [],
-        recurrence: { frequency: 'Bi-weekly', task: 'Re-engage warm leads with new listings', tools: ['WhatsApp', 'Phone'] },
+        recurrence: { frequency: 'Bi-weekly', task: 'Re-engage undecided tenants with new options', tools: ['WhatsApp', 'Phone'] },
       },
     ],
   },

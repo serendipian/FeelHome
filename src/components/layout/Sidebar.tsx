@@ -174,7 +174,7 @@ function WorkflowIcon({ className }: { className?: string }) {
 function ToolsIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384 5.384a2.025 2.025 0 01-2.853-2.868l5.373-5.38a.5.5 0 00-.014-.707 8.003 8.003 0 01-1.963-6.59c.326-2.182 1.675-4.152 3.596-5.2a.5.5 0 01.65.12l2.646 3.2a.5.5 0 00.689.084l1.727-1.295a.5.5 0 00.181-.594l-1.37-3.653a.5.5 0 01.387-.684 8.004 8.004 0 017.633 3.738.5.5 0 01-.076.567L20.6 13.748a.5.5 0 01-.753.032l-1.1-1.1a.5.5 0 00-.757.044l-5.074 6.727a.5.5 0 01-.496.17z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
     </svg>
   );
 }

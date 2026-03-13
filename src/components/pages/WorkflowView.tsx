@@ -26,9 +26,9 @@ const COL0 = 50;                                    // Incoming Lead
 const COL1 = COL0 + TRIGGER_W + GAP_X;              // Branch cards (Message / Call)
 const COL2 = COL1 + BRANCH_W + GAP_X;               // Step 1 (DM / Director)
 const COL3 = COL2 + CARD_W + GAP_X;                 // Step 2 Qualification (Agent)
-const COL4 = COL3 + CARD_W + GAP_X * 2;             // Step 3 Meeting (Agent) — double gap for condition box
+const COL4 = COL3 + CARD_W + GAP_X * 3;             // Step 3 — triple gap for condition boxes
 const COL5 = COL4 + CARD_W + GAP_X * 2;             // Step 4 Publishing (DM) — double gap for condition box
-const COL6 = COL5 + CARD_W + GAP_X;                 // Step 5 Follow-ups
+const COL6 = COL5 + CARD_W + GAP_X * 2;             // Step 5 Follow-ups / Links — double gap for condition boxes
 
 // Initial estimated card heights
 const H_TRIGGER = 80;
@@ -43,8 +43,13 @@ const H_FOLLOW_DM = 175;
 const H_FOLLOW_AGT = 160;
 
 // Helper: center-right and center-left points of a positioned card
-const rightOf = (p: { x: number; y: number; w: number; h: number }) => ({ x: p.x + p.w, y: p.y + p.h / 2 });
-const leftOf = (p: { x: number; y: number; h: number }) => ({ x: p.x, y: p.y + p.h / 2 });
+// StepCards/LinkStepCards have paddingTop=14 for the role sticker, so their
+// visual center is 7px lower than the geometric center of the DOM element.
+const STEP_PAD_OFFSET = 7;
+const rightOf = (p: { x: number; y: number; w: number; h: number }, isStep = false) =>
+  ({ x: p.x + p.w, y: p.y + p.h / 2 + (isStep ? STEP_PAD_OFFSET : 0) });
+const leftOf = (p: { x: number; y: number; h: number }, isStep = false) =>
+  ({ x: p.x, y: p.y + p.h / 2 + (isStep ? STEP_PAD_OFFSET : 0) });
 
 // ── Trigger Icons ────────────────────────────────────────────────
 
@@ -273,13 +278,17 @@ function StepCard({ step, isDark }: {
 
 // ── Link Step Card (links to another workflow) ──────────────────
 
-function LinkStepCard({ step, isDark }: { step: WorkflowStep; isDark: boolean }) {
+function LinkStepCard({ step, isDark, onNavigate }: { step: WorkflowStep; isDark: boolean; onNavigate?: (workflowId: string) => void }) {
   const meta = ROLE_META[step.responsible];
   const targetWorkflow = WORKFLOWS.find(w => w.id === step.linkTo);
   const targetTitle = targetWorkflow?.title || step.linkTo || '';
 
   return (
-    <div className="relative" style={{ width: CARD_W, paddingTop: 14 }}>
+    <div
+      className="relative cursor-pointer group"
+      style={{ width: CARD_W, paddingTop: 14 }}
+      onClick={() => step.linkTo && onNavigate?.(step.linkTo)}
+    >
       {/* Role sticker tag */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 py-0.5 rounded-t-md text-[11px] font-bold tracking-wide whitespace-nowrap"
@@ -289,7 +298,7 @@ function LinkStepCard({ step, isDark }: { step: WorkflowStep; isDark: boolean })
       </div>
 
       <div
-        className="card overflow-hidden"
+        className="card overflow-hidden transition-all duration-200 group-hover:scale-[1.02]"
         style={{
           width: CARD_W,
           borderTop: `3px solid ${meta.color}`,
@@ -313,7 +322,7 @@ function LinkStepCard({ step, isDark }: { step: WorkflowStep; isDark: boolean })
               <span className="text-sm font-extrabold uppercase tracking-wide block" style={{ color: isDark ? '#fff' : '#1e293b' }}>
                 {step.title}
               </span>
-              <span className="text-[9px] font-medium block mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)' }}>
+              <span className="text-[9px] font-medium block mt-0.5 group-hover:underline" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)' }}>
                 Go to workflow: {targetTitle}
               </span>
             </div>
@@ -393,22 +402,53 @@ function ZoomControls({ isDark }: { isDark: boolean }) {
 
 // ── Dynamic position computation ────────────────────────────────
 
-type CardKey = 'trigger' | 'branchTop' | 'branchBot' | 'step1Top' | 'step1Bot' | 'step2' | 'step3' | 'step4' | 'step5Top' | 'step5Bot';
+type CardKey = 'trigger' | 'branchTop' | 'branchBot' | 'step1Top' | 'step1Bot' | 'step2' | 'step3' | 'step3bis' | 'step4' | 'step4bis' | 'step5' | 'step5bis' | 'step6' | 'step6bis' | 'step7' | 'step7bis' | 'step8' | 'step8bis' | 'step9' | 'step5Top' | 'step5Bot';
 
 interface CardPos { x: number; y: number; w: number; h: number }
 
 function computePositions(heights: Record<CardKey, number>): Record<CardKey, CardPos> {
   const ht = heights;
+  const hasStep3bis = ht.step3bis > 0;
+  const hasStep4bis = ht.step4bis > 0;
+  const hasStep5 = ht.step5 > 0;
+  const hasStep5bis = ht.step5bis > 0;
+  const hasStep6 = ht.step6 > 0;
+  const hasStep6bis = ht.step6bis > 0;
+  const hasStep7 = ht.step7 > 0;
+  const hasStep7bis = ht.step7bis > 0;
+  const hasStep8 = ht.step8 > 0;
+  const hasStep8bis = ht.step8bis > 0;
+  const hasStep9 = ht.step9 > 0;
+  const hasEnd = ht.step5Top > 0 || ht.step5Bot > 0;
+
+  // Dynamic column positions for step5+
+  const COL_STEP5 = COL5 + CARD_W + GAP_X * 2;
+  const COL_STEP6 = COL_STEP5 + CARD_W + GAP_X * 2;
+  const COL_STEP7 = COL_STEP6 + CARD_W + GAP_X * 2;
+  const COL_STEP8 = COL_STEP7 + CARD_W + GAP_X * 2;
+  const COL_STEP9 = COL_STEP8 + CARD_W + GAP_X * 2;
+  // End column shifts right based on which steps exist
+  const COL_END = hasStep9 ? COL_STEP9 + CARD_W + GAP_X * 2
+    : hasStep8 ? COL_STEP8 + CARD_W + GAP_X * 2
+    : hasStep7 ? COL_STEP7 + CARD_W + GAP_X * 2
+    : hasStep6 ? COL_STEP6 + CARD_W + GAP_X * 2
+    : hasStep5 ? COL_STEP5 + CARD_W + GAP_X * 2
+    : COL6;
 
   // Find the tallest column to determine CENTER_Y
   const col0H = ht.trigger;
   const col1H = ht.branchTop + BRANCH_GAP + ht.branchBot;
   const col2H = ht.step1Top + BRANCH_GAP + ht.step1Bot;
   const col3H = ht.step2;
-  const col4H = ht.step3;
-  const col5H = ht.step4;
-  const col6H = ht.step5Top + BRANCH_GAP + ht.step5Bot;
-  const maxH = Math.max(col0H, col1H, col2H, col3H, col4H, col5H, col6H);
+  const col4H = hasStep3bis ? ht.step3 + BRANCH_GAP + ht.step3bis : ht.step3;
+  const col5H = hasStep4bis ? ht.step4 + BRANCH_GAP + ht.step4bis : ht.step4;
+  const col6H = hasStep5bis ? ht.step5 + BRANCH_GAP + ht.step5bis : (hasStep5 ? ht.step5 : 0);
+  const col7H = hasStep6bis ? ht.step6 + BRANCH_GAP + ht.step6bis : (hasStep6 ? ht.step6 : 0);
+  const col8H = hasStep7bis ? ht.step7 + BRANCH_GAP + ht.step7bis : (hasStep7 ? ht.step7 : 0);
+  const col9H = hasStep8bis ? ht.step8 + BRANCH_GAP + ht.step8bis : (hasStep8 ? ht.step8 : 0);
+  const col10H = hasStep9 ? ht.step9 : 0;
+  const colEndH = hasEnd ? ht.step5Top + BRANCH_GAP + ht.step5Bot : 0;
+  const maxH = Math.max(col0H, col1H, col2H, col3H, col4H, col5H, col6H, col7H, col8H, col9H, col10H, colEndH);
   const cy = maxH / 2 + 40;
 
   const single = (h: number) => cy - h / 2;
@@ -420,7 +460,20 @@ function computePositions(heights: Record<CardKey, number>): Record<CardKey, Car
 
   const br = pair(ht.branchTop, ht.branchBot);
   const s1 = pair(ht.step1Top, ht.step1Bot);
-  const s5 = pair(ht.step5Top, ht.step5Bot);
+  const sEnd = hasEnd ? pair(ht.step5Top, ht.step5Bot) : { topY: 0, botY: 0 };
+
+  // Step3 and step3bis: pair if step3bis exists, otherwise single
+  const s3 = hasStep3bis ? pair(ht.step3, ht.step3bis) : null;
+  // Step4 and step4bis: pair if step4bis exists, otherwise single
+  const s4 = hasStep4bis ? pair(ht.step4, ht.step4bis) : null;
+  // Step5 and step5bis: pair if step5bis exists, otherwise single
+  const s5inline = hasStep5bis ? pair(ht.step5, ht.step5bis) : null;
+  // Step6 and step6bis: pair if step6bis exists, otherwise single
+  const s6 = hasStep6bis ? pair(ht.step6, ht.step6bis) : null;
+  // Step7 and step7bis: pair if step7bis exists, otherwise single
+  const s7 = hasStep7bis ? pair(ht.step7, ht.step7bis) : null;
+  // Step8 and step8bis: pair if step8bis exists, otherwise single
+  const s8 = hasStep8bis ? pair(ht.step8, ht.step8bis) : null;
 
   return {
     trigger:   { x: COL0, y: single(ht.trigger), w: TRIGGER_W, h: ht.trigger },
@@ -429,10 +482,21 @@ function computePositions(heights: Record<CardKey, number>): Record<CardKey, Car
     step1Top:  { x: COL2, y: s1.topY, w: CARD_W, h: ht.step1Top },
     step1Bot:  { x: COL2, y: s1.botY, w: CARD_W, h: ht.step1Bot },
     step2:     { x: COL3, y: single(ht.step2), w: CARD_W, h: ht.step2 },
-    step3:     { x: COL4, y: single(ht.step3), w: CARD_W, h: ht.step3 },
-    step4:     { x: COL5, y: single(ht.step4), w: CARD_W, h: ht.step4 },
-    step5Top:  { x: COL6, y: s5.topY, w: CARD_W, h: ht.step5Top },
-    step5Bot:  { x: COL6, y: s5.botY, w: CARD_W, h: ht.step5Bot },
+    step3:     { x: COL4, y: s3 ? s3.topY : single(ht.step3), w: CARD_W, h: ht.step3 },
+    step3bis:  { x: COL4, y: s3 ? s3.botY : single(0), w: CARD_W, h: ht.step3bis },
+    step4:     { x: COL5, y: s4 ? s4.topY : single(ht.step4), w: CARD_W, h: ht.step4 },
+    step4bis:  { x: COL5, y: s4 ? s4.botY : single(0), w: CARD_W, h: ht.step4bis },
+    step5:     { x: COL_STEP5, y: s5inline ? s5inline.topY : (hasStep5 ? single(ht.step5) : single(0)), w: CARD_W, h: ht.step5 },
+    step5bis:  { x: COL_STEP5, y: s5inline ? s5inline.botY : single(0), w: CARD_W, h: ht.step5bis },
+    step6:     { x: COL_STEP6, y: s6 ? s6.topY : (hasStep6 ? single(ht.step6) : single(0)), w: CARD_W, h: ht.step6 },
+    step6bis:  { x: COL_STEP6, y: s6 ? s6.botY : single(0), w: CARD_W, h: ht.step6bis },
+    step7:     { x: COL_STEP7, y: s7 ? s7.topY : (hasStep7 ? single(ht.step7) : single(0)), w: CARD_W, h: ht.step7 },
+    step7bis:  { x: COL_STEP7, y: s7 ? s7.botY : single(0), w: CARD_W, h: ht.step7bis },
+    step8:     { x: COL_STEP8, y: s8 ? s8.topY : (hasStep8 ? single(ht.step8) : single(0)), w: CARD_W, h: ht.step8 },
+    step8bis:  { x: COL_STEP8, y: s8 ? s8.botY : single(0), w: CARD_W, h: ht.step8bis },
+    step9:     { x: COL_STEP9, y: hasStep9 ? single(ht.step9) : single(0), w: CARD_W, h: ht.step9 },
+    step5Top:  { x: COL_END, y: sEnd.topY, w: CARD_W, h: ht.step5Top },
+    step5Bot:  { x: COL_END, y: sEnd.botY, w: CARD_W, h: ht.step5Bot },
   };
 }
 
@@ -441,19 +505,50 @@ function computePositions(heights: Record<CardKey, number>): Record<CardKey, Car
 function ConditionBox({ x, y, label, borderColor, isDark, stroke }: {
   x: number; y: number; label: string; borderColor: string; isDark: boolean; stroke: string;
 }) {
-  const boxW = Math.max(label.length * 8 + 20, 60);
-  const boxH = 22;
+  // Split into 2 lines if label is long
+  const MAX_SINGLE_LINE = 14;
+  const needsWrap = label.length > MAX_SINGLE_LINE;
+  let line1 = label;
+  let line2 = '';
+  if (needsWrap) {
+    const mid = Math.floor(label.length / 2);
+    const spaceAfter = label.indexOf(' ', mid);
+    const spaceBefore = label.lastIndexOf(' ', mid);
+    const splitAt = spaceAfter !== -1 ? spaceAfter
+      : spaceBefore !== -1 ? spaceBefore
+      : mid;
+    line1 = label.slice(0, splitAt);
+    line2 = label.slice(splitAt + 1);
+  }
+
+  const longestLine = needsWrap ? Math.max(line1.length, line2.length) : label.length;
+  const boxW = Math.max(longestLine * 8 + 24, 60);
+  const boxH = needsWrap ? 32 : 22;
+  const textFill = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)';
+
   return (
     <>
       <rect x={x - boxW / 2} y={y - boxH / 2} width={boxW} height={boxH} rx={6}
         fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
       <line x1={x - boxW / 2 + 6} y1={y - boxH / 2} x2={x + boxW / 2 - 6} y2={y - boxH / 2}
         stroke={borderColor} strokeWidth={2.5} />
-      <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
-        fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'}
-        fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">
-        {label}
-      </text>
+      {needsWrap ? (
+        <>
+          <text x={x} y={y - 4} textAnchor="middle" dominantBaseline="middle"
+            fill={textFill} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">
+            {line1}
+          </text>
+          <text x={x} y={y + 8} textAnchor="middle" dominantBaseline="middle"
+            fill={textFill} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">
+            {line2}
+          </text>
+        </>
+      ) : (
+        <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
+          fill={textFill} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">
+          {label}
+        </text>
+      )}
     </>
   );
 }
@@ -469,18 +564,40 @@ function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, Car
   const brTopR = rightOf(pos.branchTop);
   const brBotL = leftOf(pos.branchBot);
   const brBotR = rightOf(pos.branchBot);
-  const s1TopL = leftOf(pos.step1Top);
-  const s1TopR = rightOf(pos.step1Top);
-  const s1BotL = leftOf(pos.step1Bot);
-  const s1BotR = rightOf(pos.step1Bot);
-  const s2L = leftOf(pos.step2);
-  const s2R = rightOf(pos.step2);
-  const s3L = leftOf(pos.step3);
-  const s3R = rightOf(pos.step3);
-  const s4L = leftOf(pos.step4);
-  const s4R = rightOf(pos.step4);
-  const s5TopL = leftOf(pos.step5Top);
-  const s5BotL = leftOf(pos.step5Bot);
+  const s1TopL = leftOf(pos.step1Top, true);
+  const s1TopR = rightOf(pos.step1Top, true);
+  const s1BotL = leftOf(pos.step1Bot, true);
+  const s1BotR = rightOf(pos.step1Bot, true);
+  const s2L = leftOf(pos.step2, true);
+  const s2R = rightOf(pos.step2, true);
+  const s3L = leftOf(pos.step3, true);
+  const s3R = rightOf(pos.step3, true);
+  const s3bisL = leftOf(pos.step3bis, true);
+  const s3bisR = rightOf(pos.step3bis, true);
+  const s4L = leftOf(pos.step4, true);
+  const s4R = rightOf(pos.step4, true);
+  const s4bisL = leftOf(pos.step4bis, true);
+  const s4bisR = rightOf(pos.step4bis, true);
+  const s5L = leftOf(pos.step5, true);
+  const s5R = rightOf(pos.step5, true);
+  const s5bisL = leftOf(pos.step5bis, true);
+  const s5bisR = rightOf(pos.step5bis, true);
+  const s6L = leftOf(pos.step6, true);
+  const s6R = rightOf(pos.step6, true);
+  const s6bisL = leftOf(pos.step6bis, true);
+  const s6bisR = rightOf(pos.step6bis, true);
+  const s7L = leftOf(pos.step7, true);
+  const s7R = rightOf(pos.step7, true);
+  const s7bisL = leftOf(pos.step7bis, true);
+  const s7bisR = rightOf(pos.step7bis, true);
+  const s8L = leftOf(pos.step8, true);
+  const s8R = rightOf(pos.step8, true);
+  const s8bisL = leftOf(pos.step8bis, true);
+  const s8bisR = rightOf(pos.step8bis, true);
+  const s9L = leftOf(pos.step9, true);
+  const s9R = rightOf(pos.step9, true);
+  const s5TopL = leftOf(pos.step5Top, true);
+  const s5BotL = leftOf(pos.step5Bot, true);
 
   const mid01 = (trigR.x + brTopL.x) / 2;
   const mid23 = (s1TopR.x + s2L.x) / 2;
@@ -488,9 +605,12 @@ function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, Car
   const maxX = Math.max(...Object.values(pos).map(p => p.x + p.w)) + 60;
   const maxY = Math.max(...Object.values(pos).map(p => p.y + p.h)) + 60;
 
-  // Determine if this workflow has conditional forking at step4→step5
+  // Determine branching patterns
   const hasConditionalFork = !!(conn.step4_step5Top || conn.step4_step5Bot);
-  const hasSkipConnection = !!conn.step3_step5Bot;
+  const hasStep3bis = !!(conn.step2_step3bis);
+  const hasStep4bis = !!(conn.step3_step4bis);
+  const step4IsLink = !!workflow.steps.find(s => s.id === 'step-4')?.linkTo;
+  const hasStep1_step2 = !!(conn.step1_step2);
 
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ width: maxX, height: maxY }}>
@@ -541,9 +661,20 @@ function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, Car
         );
       })()}
 
-      {/* Step 1 → Step 2 (merging = dashed) */}
-      <path d={`M ${s1TopR.x} ${s1TopR.y} C ${mid23} ${s1TopR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
-      <path d={`M ${s1BotR.x} ${s1BotR.y} C ${mid23} ${s1BotR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+      {/* Step 1 → Step 2 (merging = dashed) + optional condition box */}
+      {(() => {
+        const midX = (s1TopR.x + s2L.x) / 2;
+        const midY = s2L.y;
+        return (
+          <>
+            <path d={`M ${s1TopR.x} ${s1TopR.y} C ${mid23} ${s1TopR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <path d={`M ${s1BotR.x} ${s1BotR.y} C ${mid23} ${s1BotR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            {hasStep1_step2 && (
+              <ConditionBox x={midX} y={midY} label={conn.step1_step2!.label} borderColor={conn.step1_step2!.color} isDark={isDark} stroke={stroke} />
+            )}
+          </>
+        );
+      })()}
 
       {/* Step 2 → Step 3 with configurable condition box */}
       {(() => {
@@ -558,42 +689,68 @@ function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, Car
         );
       })()}
 
-      {/* Step 3 → Step 4 with configurable condition box */}
-      {(() => {
-        const c = conn.step3_step4 || { label: 'SIGNED MANDATE', color: '#22c55e' };
-        const midX = (s3R.x + s4L.x) / 2;
-        const midY = (s3R.y + s4L.y) / 2;
+      {/* Step 2 → Step 3bis (e.g. "NOT AVAILABLE OR REFUSED") — grey line, red condition box border */}
+      {hasStep3bis && (() => {
+        const c = conn.step2_step3bis!;
+        const midX = (s2R.x + s3bisL.x) / 2;
+        const midY = (s2R.y + s3bisL.y) / 2;
         return (
           <>
-            <line x1={s3R.x} y1={s3R.y} x2={s4L.x} y2={s4L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <path d={`M ${s2R.x} ${s2R.y} C ${midX} ${s2R.y}, ${midX} ${s3bisL.y}, ${s3bisL.x} ${s3bisL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
             <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
 
-      {/* Step 3 → Step 5 Bot (skip connection, e.g. "NO AVAILABLE LISTING") */}
-      {hasSkipConnection && (() => {
-        const c = conn.step3_step5Bot!;
-        // Curved path going below step 4 to reach step 5 bot
-        const startX = s3R.x;
-        const startY = pos.step3.y + pos.step3.h - 20;
-        const endX = s5BotL.x;
-        const endY = s5BotL.y;
-        const midX = (startX + endX) / 2;
-        const belowY = Math.max(pos.step4.y + pos.step4.h, pos.step5Bot.y + pos.step5Bot.h) + 40;
+      {/* Step 3 → Step 4 with optional condition box */}
+      {(() => {
+        const c = conn.step3_step4;
+        const midX = (s3R.x + s4L.x) / 2;
+        const midY = (s3R.y + s4L.y) / 2;
         return (
           <>
-            <path
-              d={`M ${startX} ${startY} C ${startX + 60} ${startY}, ${startX + 60} ${belowY}, ${midX} ${belowY} C ${endX - 60} ${belowY}, ${endX - 60} ${endY}, ${endX} ${endY}`}
-              stroke={c.color} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)"
-            />
-            <ConditionBox x={midX} y={belowY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+            <line x1={s3R.x} y1={s3R.y} x2={s4L.x} y2={s4L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            {c && <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />}
           </>
         );
       })()}
 
-      {/* Step 4 → Step 5 (forking or conditional) */}
-      {hasConditionalFork ? (
+      {/* Step 3 → Step 4bis (e.g. "NO MATCH") — grey line, red condition box border */}
+      {hasStep4bis && (() => {
+        const c = conn.step3_step4bis!;
+        const midX = (s3R.x + s4bisL.x) / 2;
+        const midY = (s3R.y + s4bisL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s3R.x} ${s3R.y} C ${midX} ${s3R.y}, ${midX} ${s4bisL.y}, ${s4bisL.x} ${s4bisL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 4bis → Step 5bis (e.g. Follow Up Owner → Property Hunting) */}
+      {conn.step4bis_step5bis && pos.step5bis.h > 0 && (() => {
+        const mid = (s4bisR.x + s5bisL.x) / 2;
+        return (
+          <path d={`M ${s4bisR.x} ${s4bisR.y} C ${mid} ${s4bisR.y}, ${mid} ${s5bisL.y}, ${s5bisL.x} ${s5bisL.y}`}
+            stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+        );
+      })()}
+
+      {/* Step 4bis → End cards (only if no step5bis exists) */}
+      {hasStep4bis && !conn.step4bis_step5bis && (pos.step5Bot.h > 0 || pos.step5Top.h > 0) && (() => {
+        const target = pos.step5Bot.h > 0 ? s5BotL : s5TopL;
+        const mid = (s4bisR.x + target.x) / 2;
+        return (
+          <path d={`M ${s4bisR.x} ${s4bisR.y} C ${mid} ${s4bisR.y}, ${mid} ${target.y}, ${target.x} ${target.y}`}
+            stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+        );
+      })()}
+
+      {/* Step 4 → Step 5 (forking or conditional) — skip if step4 is a link or no step5 cards */}
+      {step4IsLink || !!conn.step4_step5 || (pos.step5Top.h === 0 && pos.step5Bot.h === 0) ? null : hasConditionalFork ? (
         <>
           {/* Step 4 → Step 5 Top with condition */}
           {conn.step4_step5Top && (() => {
@@ -636,6 +793,164 @@ function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, Car
           })()}
         </>
       )}
+
+      {/* Step 4 → Step 5 (inline continuation, e.g. Scheduling→Tenant Viewing) */}
+      {conn.step4_step5 && pos.step5.h > 0 && (() => {
+        const c = conn.step4_step5!;
+        const midX = (s4R.x + s5L.x) / 2;
+        const midY = (s4R.y + s5L.y) / 2;
+        return (
+          <>
+            <line x1={s4R.x} y1={s4R.y} x2={s5L.x} y2={s5L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 5 → Step 6 (inline continuation, e.g. Tenant Viewing→Post Viewing) */}
+      {conn.step5_step6 && pos.step5.h > 0 && pos.step6.h > 0 && (() => {
+        const c = conn.step5_step6!;
+        const midX = (s5R.x + s6L.x) / 2;
+        const midY = (s5R.y + s6L.y) / 2;
+        return (
+          <>
+            <line x1={s5R.x} y1={s5R.y} x2={s6L.x} y2={s6L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 6 → End Top (e.g. Post Viewing→Offer Management) */}
+      {conn.step6_endTop && pos.step6.h > 0 && pos.step5Top.h > 0 && (() => {
+        const c = conn.step6_endTop!;
+        const midX = (s6R.x + s5TopL.x) / 2;
+        const midY = (s6R.y + s5TopL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s6R.x} ${s6R.y} C ${midX} ${s6R.y}, ${midX} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 6 → End Bot (e.g. Post Viewing→Follow-Up) */}
+      {conn.step6_endBot && pos.step6.h > 0 && pos.step5Bot.h > 0 && (() => {
+        const c = conn.step6_endBot!;
+        const midX = (s6R.x + s5BotL.x) / 2;
+        const midY = (s6R.y + s5BotL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s6R.x} ${s6R.y} C ${midX} ${s6R.y}, ${midX} ${s5BotL.y}, ${s5BotL.x} ${s5BotL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 5 → Step 6bis (fork bottom, e.g. NOT AVAILABLE OR REFUSED PROFILE) */}
+      {conn.step5_step6bis && pos.step5.h > 0 && pos.step6bis.h > 0 && (() => {
+        const c = conn.step5_step6bis!;
+        const midX = (s5R.x + s6bisL.x) / 2;
+        const midY = (s5R.y + s6bisL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s5R.x} ${s5R.y} C ${midX} ${s5R.y}, ${midX} ${s6bisL.y}, ${s6bisL.x} ${s6bisL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 6 → Step 7 (inline continuation, e.g. Confirm with Tenant→Scheduling) */}
+      {conn.step6_step7 && pos.step6.h > 0 && pos.step7.h > 0 && (() => {
+        const c = conn.step6_step7!;
+        const midX = (s6R.x + s7L.x) / 2;
+        const midY = (s6R.y + s7L.y) / 2;
+        return (
+          <>
+            <line x1={s6R.x} y1={s6R.y} x2={s7L.x} y2={s7L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 6 → Step 7bis (fork bottom, e.g. NOT INTERESTED) */}
+      {conn.step6_step7bis && pos.step6.h > 0 && pos.step7bis.h > 0 && (() => {
+        const c = conn.step6_step7bis!;
+        const midX = (s6R.x + s7bisL.x) / 2;
+        const midY = (s6R.y + s7bisL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s6R.x} ${s6R.y} C ${midX} ${s6R.y}, ${midX} ${s7bisL.y}, ${s7bisL.x} ${s7bisL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 7 → Step 8 (inline continuation, e.g. Scheduling→Tenant Viewing) */}
+      {conn.step7_step8 && pos.step7.h > 0 && pos.step8.h > 0 && (() => {
+        const c = conn.step7_step8!;
+        const midX = (s7R.x + s8L.x) / 2;
+        const midY = (s7R.y + s8L.y) / 2;
+        return (
+          <>
+            <line x1={s7R.x} y1={s7R.y} x2={s8L.x} y2={s8L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 7bis → Step 8bis (e.g. Follow Up Owner → Property Hunting) */}
+      {conn.step7bis_step8bis && pos.step7bis.h > 0 && pos.step8bis.h > 0 && (() => {
+        const mid = (s7bisR.x + s8bisL.x) / 2;
+        return (
+          <path d={`M ${s7bisR.x} ${s7bisR.y} C ${mid} ${s7bisR.y}, ${mid} ${s8bisL.y}, ${s8bisL.x} ${s8bisL.y}`}
+            stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+        );
+      })()}
+
+      {/* Step 8 → Step 9 (inline continuation, e.g. Tenant Viewing→Post Viewing) */}
+      {conn.step8_step9 && pos.step8.h > 0 && pos.step9.h > 0 && (() => {
+        const c = conn.step8_step9!;
+        const midX = (s8R.x + s9L.x) / 2;
+        const midY = (s8R.y + s9L.y) / 2;
+        return (
+          <>
+            <line x1={s8R.x} y1={s8R.y} x2={s9L.x} y2={s9L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 9 → End Top (e.g. Post Viewing→Offer Management) */}
+      {conn.step9_endTop && pos.step9.h > 0 && pos.step5Top.h > 0 && (() => {
+        const c = conn.step9_endTop!;
+        const midX = (s9R.x + s5TopL.x) / 2;
+        const midY = (s9R.y + s5TopL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s9R.x} ${s9R.y} C ${midX} ${s9R.y}, ${midX} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 9 → End Bot (e.g. Post Viewing→Property Hunting) */}
+      {conn.step9_endBot && pos.step9.h > 0 && pos.step5Bot.h > 0 && (() => {
+        const c = conn.step9_endBot!;
+        const midX = (s9R.x + s5BotL.x) / 2;
+        const midY = (s9R.y + s5BotL.y) / 2;
+        return (
+          <>
+            <path d={`M ${s9R.x} ${s9R.y} C ${midX} ${s9R.y}, ${midX} ${s5BotL.y}, ${s5BotL.x} ${s5BotL.y}`}
+              stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
     </svg>
   );
 }
@@ -653,16 +968,32 @@ function useIsMobile() {
   return isMobile;
 }
 
-function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: boolean }) {
+function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; isDark: boolean; onNavigate?: (workflowId: string) => void }) {
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
   const [initialScale, setInitialScale] = useState(isMobile ? 0.25 : 0.42);
+  const hasFollowupDm = !!workflow.steps.find(s => s.id === 'followup-dm');
+  const hasFollowupAgent = !!workflow.steps.find(s => s.id === 'followup-agent');
+  const hasInlineStep5 = !!workflow.steps.find(s => s.id === 'step-5');
+  const hasInlineStep5bis = !!workflow.steps.find(s => s.id === 'step-5bis');
+  const hasInlineStep6 = !!workflow.steps.find(s => s.id === 'step-6');
+  const hasInlineStep6bis = !!workflow.steps.find(s => s.id === 'step-6bis');
+  const hasInlineStep7 = !!workflow.steps.find(s => s.id === 'step-7');
+  const hasInlineStep7bis = !!workflow.steps.find(s => s.id === 'step-7bis');
+  const hasInlineStep8 = !!workflow.steps.find(s => s.id === 'step-8');
+  const hasInlineStep8bis = !!workflow.steps.find(s => s.id === 'step-8bis');
+  const hasInlineStep9 = !!workflow.steps.find(s => s.id === 'step-9');
   const [pos, setPos] = useState<Record<CardKey, CardPos>>(() =>
     computePositions({
       trigger: H_TRIGGER, branchTop: H_BRANCH_TOP, branchBot: H_BRANCH_BOT,
       step1Top: H_STEP1_DM, step1Bot: H_STEP1_DIR,
-      step2: H_STEP2, step3: H_STEP3, step4: H_STEP4,
-      step5Top: H_FOLLOW_DM, step5Bot: H_FOLLOW_AGT,
+      step2: H_STEP2, step3: H_STEP3, step3bis: 0, step4: H_STEP4, step4bis: 0,
+      step5: hasInlineStep5 ? H_STEP4 : 0, step5bis: hasInlineStep5bis ? H_FOLLOW_DM : 0,
+      step6: hasInlineStep6 ? H_STEP3 : 0, step6bis: hasInlineStep6bis ? H_STEP3 : 0,
+      step7: hasInlineStep7 ? H_STEP4 : 0, step7bis: hasInlineStep7bis ? H_FOLLOW_AGT : 0,
+      step8: hasInlineStep8 ? H_STEP4 : 0, step8bis: hasInlineStep8bis ? H_FOLLOW_DM : 0,
+      step9: hasInlineStep9 ? H_STEP3 : 0,
+      step5Top: hasFollowupDm ? H_FOLLOW_DM : 0, step5Bot: hasFollowupAgent ? H_FOLLOW_AGT : 0,
     })
   );
 
@@ -674,11 +1005,23 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
     step1Bot: useRef<HTMLDivElement>(null),
     step2: useRef<HTMLDivElement>(null),
     step3: useRef<HTMLDivElement>(null),
+    step3bis: useRef<HTMLDivElement>(null),
     step4: useRef<HTMLDivElement>(null),
+    step4bis: useRef<HTMLDivElement>(null),
+    step5: useRef<HTMLDivElement>(null),
+    step5bis: useRef<HTMLDivElement>(null),
+    step6: useRef<HTMLDivElement>(null),
+    step6bis: useRef<HTMLDivElement>(null),
+    step7: useRef<HTMLDivElement>(null),
+    step7bis: useRef<HTMLDivElement>(null),
+    step8: useRef<HTMLDivElement>(null),
+    step8bis: useRef<HTMLDivElement>(null),
+    step9: useRef<HTMLDivElement>(null),
     step5Top: useRef<HTMLDivElement>(null),
     step5Bot: useRef<HTMLDivElement>(null),
   };
 
+  // Re-measure card heights when workflow changes (different cards have different sizes)
   useEffect(() => {
     const timer = setTimeout(() => {
       const heights: Record<CardKey, number> = {
@@ -689,14 +1032,25 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
         step1Bot: refs.step1Bot.current?.offsetHeight || H_STEP1_DIR,
         step2: refs.step2.current?.offsetHeight || H_STEP2,
         step3: refs.step3.current?.offsetHeight || H_STEP3,
+        step3bis: refs.step3bis.current?.offsetHeight || 0,
         step4: refs.step4.current?.offsetHeight || H_STEP4,
-        step5Top: refs.step5Top.current?.offsetHeight || H_FOLLOW_DM,
-        step5Bot: refs.step5Bot.current?.offsetHeight || H_FOLLOW_AGT,
+        step4bis: refs.step4bis.current?.offsetHeight || 0,
+        step5: refs.step5.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-5') ? H_STEP4 : 0),
+        step5bis: refs.step5bis.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-5bis') ? H_FOLLOW_DM : 0),
+        step6: refs.step6.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-6') ? H_STEP3 : 0),
+        step6bis: refs.step6bis.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-6bis') ? H_STEP3 : 0),
+        step7: refs.step7.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-7') ? H_STEP4 : 0),
+        step7bis: refs.step7bis.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-7bis') ? H_FOLLOW_AGT : 0),
+        step8: refs.step8.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-8') ? H_STEP4 : 0),
+        step8bis: refs.step8bis.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-8bis') ? H_FOLLOW_DM : 0),
+        step9: refs.step9.current?.offsetHeight || (workflow.steps.find(s => s.id === 'step-9') ? H_STEP3 : 0),
+        step5Top: refs.step5Top.current?.offsetHeight || (workflow.steps.find(s => s.id === 'followup-dm') ? H_FOLLOW_DM : 0),
+        step5Bot: refs.step5Bot.current?.offsetHeight || (workflow.steps.find(s => s.id === 'followup-agent') ? H_FOLLOW_AGT : 0),
       };
       setPos(computePositions(heights));
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [workflow.id]);
 
   const find = (id: string) => workflow.steps.find(s => s.id === id)!;
 
@@ -737,7 +1091,7 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
         backgroundSize: '20px 20px',
       }} />
 
-      <TransformWrapper key={initialScale} initialScale={initialScale} minScale={0.15} maxScale={2.5} initialPositionX={isMobile ? 5 : 15} initialPositionY={isMobile ? 5 : 15} limitToBounds={false} panning={{ velocityDisabled: true }}>
+      <TransformWrapper key={`${initialScale}-${workflow.id}`} initialScale={initialScale} minScale={0.15} maxScale={2.5} centerOnInit limitToBounds={false} panning={{ velocityDisabled: true }}>
         <ZoomControls isDark={isDark} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 
@@ -773,31 +1127,124 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
             <StepCard step={find('step-2')} isDark={isDark} />
           </div>
 
-          {/* COL 4: Agent Meeting */}
+          {/* COL 4 top: Step 3 */}
           <div ref={refs.step3} className="absolute" style={{ left: pos.step3.x, top: pos.step3.y }}>
             <StepCard step={find('step-3')} isDark={isDark} />
           </div>
 
-          {/* COL 5: DM Publishing */}
+          {/* COL 4 bottom: Step 3bis (conditional, only for some workflows) */}
+          {workflow.steps.find(s => s.id === 'step-3bis') && (
+            <div ref={refs.step3bis} className="absolute" style={{ left: pos.step3bis.x, top: pos.step3bis.y }}>
+              <StepCard step={find('step-3bis')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* COL 5 top: Step 4 (or Link if linkTo) */}
           <div ref={refs.step4} className="absolute" style={{ left: pos.step4.x, top: pos.step4.y }}>
-            <StepCard step={find('step-4')} isDark={isDark} />
-          </div>
-
-          {/* COL 6 top: Follow-Up or Link */}
-          <div ref={refs.step5Top} className="absolute" style={{ left: pos.step5Top.x, top: pos.step5Top.y }}>
-            {find('followup-dm').linkTo
-              ? <LinkStepCard step={find('followup-dm')} isDark={isDark} />
-              : <StepCard step={find('followup-dm')} isDark={isDark} />
+            {find('step-4').linkTo
+              ? <LinkStepCard step={find('step-4')} isDark={isDark} onNavigate={onNavigate} />
+              : <StepCard step={find('step-4')} isDark={isDark} />
             }
           </div>
 
-          {/* COL 6 bottom: Follow-Up or Link */}
-          <div ref={refs.step5Bot} className="absolute" style={{ left: pos.step5Bot.x, top: pos.step5Bot.y }}>
-            {find('followup-agent').linkTo
-              ? <LinkStepCard step={find('followup-agent')} isDark={isDark} />
-              : <StepCard step={find('followup-agent')} isDark={isDark} />
-            }
-          </div>
+          {/* COL 5 bottom: Step 4bis (conditional, only for some workflows) */}
+          {workflow.steps.find(s => s.id === 'step-4bis') && (
+            <div ref={refs.step4bis} className="absolute" style={{ left: pos.step4bis.x, top: pos.step4bis.y }}>
+              {find('step-4bis').linkTo
+                ? <LinkStepCard step={find('step-4bis')} isDark={isDark} onNavigate={onNavigate} />
+                : <StepCard step={find('step-4bis')} isDark={isDark} />
+              }
+            </div>
+          )}
+
+          {/* Step 5 (inline, e.g. Tenant Viewing) */}
+          {workflow.steps.find(s => s.id === 'step-5') && (
+            <div ref={refs.step5} className="absolute" style={{ left: pos.step5.x, top: pos.step5.y }}>
+              <StepCard step={find('step-5')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 5bis (e.g. Property Hunting link, under Step 5) */}
+          {workflow.steps.find(s => s.id === 'step-5bis') && (
+            <div ref={refs.step5bis} className="absolute" style={{ left: pos.step5bis.x, top: pos.step5bis.y }}>
+              {find('step-5bis').linkTo
+                ? <LinkStepCard step={find('step-5bis')} isDark={isDark} onNavigate={onNavigate} />
+                : <StepCard step={find('step-5bis')} isDark={isDark} />
+              }
+            </div>
+          )}
+
+          {/* Step 6 (inline, e.g. Confirm with Tenant) */}
+          {workflow.steps.find(s => s.id === 'step-6') && (
+            <div ref={refs.step6} className="absolute" style={{ left: pos.step6.x, top: pos.step6.y }}>
+              <StepCard step={find('step-6')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 6bis (e.g. Follow Up - Tenant) */}
+          {workflow.steps.find(s => s.id === 'step-6bis') && (
+            <div ref={refs.step6bis} className="absolute" style={{ left: pos.step6bis.x, top: pos.step6bis.y }}>
+              <StepCard step={find('step-6bis')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 7 (inline, e.g. Scheduling) */}
+          {workflow.steps.find(s => s.id === 'step-7') && (
+            <div ref={refs.step7} className="absolute" style={{ left: pos.step7.x, top: pos.step7.y }}>
+              <StepCard step={find('step-7')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 7bis (e.g. Follow Up - Owner) */}
+          {workflow.steps.find(s => s.id === 'step-7bis') && (
+            <div ref={refs.step7bis} className="absolute" style={{ left: pos.step7bis.x, top: pos.step7bis.y }}>
+              <StepCard step={find('step-7bis')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 8 (inline, e.g. Tenant Viewing) */}
+          {workflow.steps.find(s => s.id === 'step-8') && (
+            <div ref={refs.step8} className="absolute" style={{ left: pos.step8.x, top: pos.step8.y }}>
+              <StepCard step={find('step-8')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* Step 8bis (e.g. Property Hunting link) */}
+          {workflow.steps.find(s => s.id === 'step-8bis') && (
+            <div ref={refs.step8bis} className="absolute" style={{ left: pos.step8bis.x, top: pos.step8bis.y }}>
+              {find('step-8bis').linkTo
+                ? <LinkStepCard step={find('step-8bis')} isDark={isDark} onNavigate={onNavigate} />
+                : <StepCard step={find('step-8bis')} isDark={isDark} />
+              }
+            </div>
+          )}
+
+          {/* Step 9 (inline, e.g. Post Viewing) */}
+          {workflow.steps.find(s => s.id === 'step-9') && (
+            <div ref={refs.step9} className="absolute" style={{ left: pos.step9.x, top: pos.step9.y }}>
+              <StepCard step={find('step-9')} isDark={isDark} />
+            </div>
+          )}
+
+          {/* End column top: Follow-Up or Link (conditional) */}
+          {workflow.steps.find(s => s.id === 'followup-dm') && (
+            <div ref={refs.step5Top} className="absolute" style={{ left: pos.step5Top.x, top: pos.step5Top.y }}>
+              {find('followup-dm').linkTo
+                ? <LinkStepCard step={find('followup-dm')} isDark={isDark} onNavigate={onNavigate} />
+                : <StepCard step={find('followup-dm')} isDark={isDark} />
+              }
+            </div>
+          )}
+
+          {/* COL 6 bottom: Follow-Up or Link (conditional) */}
+          {workflow.steps.find(s => s.id === 'followup-agent') && (
+            <div ref={refs.step5Bot} className="absolute" style={{ left: pos.step5Bot.x, top: pos.step5Bot.y }}>
+              {find('followup-agent').linkTo
+                ? <LinkStepCard step={find('followup-agent')} isDark={isDark} onNavigate={onNavigate} />
+                : <StepCard step={find('followup-agent')} isDark={isDark} />
+              }
+            </div>
+          )}
 
         </TransformComponent>
       </TransformWrapper>
@@ -866,7 +1313,7 @@ export default function WorkflowView() {
           })}
         </div>
       </div>
-      <WorkflowCanvas workflow={activeWorkflow} isDark={isDark} />
+      <WorkflowCanvas workflow={activeWorkflow} isDark={isDark} onNavigate={setActiveWorkflowId} />
     </div>
   );
 }

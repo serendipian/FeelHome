@@ -515,7 +515,7 @@ export default function ToolsAccessView() {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const categories: ToolCategory[] = ['Communication', 'Website', 'Social Media', 'Communities', 'Ads', 'SaaS', 'MLS'];
+  const categories: ToolCategory[] = ['Communication', 'Website', 'SaaS', 'MLS', 'Social Media', 'Communities', 'Ads'];
 
   const filteredTools = useMemo(() => {
     let result = tools;
@@ -943,7 +943,7 @@ export default function ToolsAccessView() {
                   background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.03)',
                 }}
               >
-                {['', 'Tool', 'Description', 'Status', 'Responsible', 'Other Users', 'Cost/mo', 'Cur.', 'Username', 'Password', ''].map((h, i) => (
+                {['', 'Tool', 'Description', 'Status', 'Administrator', 'Other Users', 'Cost/mo', 'Cur.', 'Username', 'Password', ''].map((h, i) => (
                   <th
                     key={h + i}
                     className={`py-3.5 text-[10px] font-semibold uppercase tracking-[0.15em] whitespace-nowrap ${i === 0 ? 'pl-3 pr-0 w-[28px]' : 'px-4'}`}

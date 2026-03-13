@@ -38,11 +38,9 @@ export function ToolsAccessProvider({ children }: { children: React.ReactNode })
     didHydrate.current = true;
     (async () => {
       const loaded = await loadFromSupabase<ToolItem[]>('toolsAccess', DEFAULT_TOOLS);
-      const byId = new Map(loaded.map(t => [t.id, t]));
-      const merged = DEFAULT_TOOLS.map(d => byId.get(d.id) ?? d);
-      const defaultIds = new Set(DEFAULT_TOOLS.map(d => d.id));
-      const custom = loaded.filter(t => !defaultIds.has(t.id));
-      setTools([...merged, ...custom]);
+      const loadedIds = new Set(loaded.map(t => t.id));
+      const newDefaults = DEFAULT_TOOLS.filter(d => !loadedIds.has(d.id));
+      setTools([...loaded, ...newDefaults]);
       setTimeout(() => { readyToSave.current = true; }, 0);
     })();
   }, []);

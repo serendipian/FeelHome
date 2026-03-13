@@ -1,4 +1,4 @@
-export type ToolCategory = 'Communication' | 'Website' | 'Social Media' | 'Communities' | 'Ads' | 'SaaS' | 'MLS';
+export type ToolCategory = 'Communication' | 'Website' | 'SaaS' | 'MLS' | 'Social Media' | 'Communities' | 'Ads';
 
 export type ToolStatus = 'active' | 'inactive' | 'pending';
 export type Currency = 'MAD' | 'USD' | 'EUR';
@@ -28,11 +28,11 @@ export const TEAM_ROLES = [
 export const CATEGORY_COLORS: Record<ToolCategory, string> = {
   Communication: '#3b82f6',
   Website: '#8b5cf6',
+  SaaS: '#10b981',
+  MLS: '#ef4444',
   'Social Media': '#ec4899',
   Communities: '#06b6d4',
   Ads: '#f59e0b',
-  SaaS: '#10b981',
-  MLS: '#ef4444',
 };
 
 export const DEFAULT_TOOLS: ToolItem[] = [
@@ -51,6 +51,18 @@ export const DEFAULT_TOOLS: ToolItem[] = [
   { id: 'analytics', category: 'Website', name: 'Google Analytics', description: 'Website traffic & analytics', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
   { id: 'search-console', category: 'Website', name: 'Search Console', description: 'Search performance & indexing', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
 
+  // ── SaaS ──
+  { id: 'google-drive', category: 'SaaS', name: 'Google Drive', description: 'File storage & organisation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
+  { id: 'notion', category: 'SaaS', name: 'Notion', description: 'CRM & project management', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
+  { id: 'openai', category: 'SaaS', name: 'OpenAI (ChatGPT)', description: 'AI assistant & content generation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
+  { id: 'autoenhance', category: 'SaaS', name: 'AutoEnhance', description: 'AI-powered photo enhancement', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
+  { id: 'n8n', category: 'SaaS', name: 'N8n', description: 'Workflow automation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
+  { id: 'canva', category: 'SaaS', name: 'Canva', description: 'Graphic design & templates', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
+
+  // ── MLS ──
+  { id: 'mubawab', category: 'MLS', name: 'Mubawab', description: 'Property listing platform', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
+  { id: 'avito', category: 'MLS', name: 'Avito', description: 'Classifieds & property listings', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
+
   // ── Social Media ──
   { id: 'facebook', category: 'Social Media', name: 'Facebook', description: 'Groups & page management', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
   { id: 'instagram', category: 'Social Media', name: 'Instagram', description: 'Visual content & stories', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
@@ -68,16 +80,4 @@ export const DEFAULT_TOOLS: ToolItem[] = [
   // ── Ads ──
   { id: 'fb-business', category: 'Ads', name: 'Facebook Business Manager', description: 'Facebook & Instagram ad campaigns', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
   { id: 'google-ads', category: 'Ads', name: 'Google Ads', description: 'Search & display advertising', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
-
-  // ── SaaS ──
-  { id: 'google-drive', category: 'SaaS', name: 'Google Drive', description: 'File storage & organisation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
-  { id: 'notion', category: 'SaaS', name: 'Notion', description: 'CRM & project management', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
-  { id: 'openai', category: 'SaaS', name: 'OpenAI (ChatGPT)', description: 'AI assistant & content generation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
-  { id: 'autoenhance', category: 'SaaS', name: 'AutoEnhance', description: 'AI-powered photo enhancement', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
-  { id: 'n8n', category: 'SaaS', name: 'N8n', description: 'Workflow automation', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
-  { id: 'canva', category: 'SaaS', name: 'Canva', description: 'Graphic design & templates', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'USD', username: '', password: '', status: 'active' },
-
-  // ── MLS ──
-  { id: 'mubawab', category: 'MLS', name: 'Mubawab', description: 'Property listing platform', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
-  { id: 'avito', category: 'MLS', name: 'Avito', description: 'Classifieds & property listings', responsible: '', otherUsers: [], monthlyCost: 0, currency: 'MAD', username: '', password: '', status: 'active' },
 ];
