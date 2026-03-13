@@ -55,6 +55,15 @@ export interface WorkflowStep {
   parallel?: boolean;
   handoff?: WorkflowHandoff;
   gateCondition?: string;
+  linkTo?: string;  // If set, this step is a link to another workflow (by id)
+}
+
+export interface ConnectorConfig {
+  step2_step3?: { label: string; color: string };
+  step3_step4?: { label: string; color: string };
+  step4_step5Top?: { label: string; color: string };
+  step4_step5Bot?: { label: string; color: string };
+  step3_step5Bot?: { label: string; color: string }; // skip connection
 }
 
 export interface Workflow {
@@ -65,6 +74,7 @@ export interface Workflow {
   triggers: WorkflowTrigger[];
   triggerCondition?: WorkflowCondition;
   steps: WorkflowStep[];
+  connectors?: ConnectorConfig;
 }
 
 // ─── Workflow data ───────────────────────────────────────────────
@@ -74,7 +84,7 @@ export const WORKFLOWS: Workflow[] = [
     id: 'new-property',
     title: 'New Property',
     subtitle: 'Lead-to-listing pipeline',
-    color: '#d4a853',
+    color: '#1e293b',
     triggers: [
       { label: 'Email',            icon: 'email',    channel: 'digital' },
       { label: 'Website Form',     icon: 'website',  channel: 'digital' },
@@ -88,6 +98,10 @@ export const WORKFLOWS: Workflow[] = [
       condition: 'Direct Call',
       ifTrue:  { responsible: 'director',        label: 'Director' },
       ifFalse: { responsible: 'digital-manager', label: 'Digital Manager' },
+    },
+    connectors: {
+      step2_step3: { label: 'QUALIFIED', color: '#22c55e' },
+      step3_step4: { label: 'SIGNED MANDATE', color: '#22c55e' },
     },
     steps: [
       // Step 1A: Director handles if Direct Call
@@ -191,7 +205,7 @@ export const WORKFLOWS: Workflow[] = [
     id: 'new-tenant',
     title: 'New Tenant',
     subtitle: 'Tenant-to-lease pipeline',
-    color: '#2dd4bf',
+    color: '#1e293b',
     triggers: [
       { label: 'Email',            icon: 'email',    channel: 'digital' },
       { label: 'Website Form',     icon: 'website',  channel: 'digital' },
@@ -205,6 +219,13 @@ export const WORKFLOWS: Workflow[] = [
       condition: 'Direct Call',
       ifTrue:  { responsible: 'director',        label: 'Director' },
       ifFalse: { responsible: 'digital-manager', label: 'Digital Manager' },
+    },
+    connectors: {
+      step2_step3: { label: 'QUALIFIED', color: '#22c55e' },
+      step3_step4: { label: 'AVAILABLE LISTINGS', color: '#22c55e' },
+      step3_step5Bot: { label: 'NO AVAILABLE LISTING', color: '#ef4444' },
+      step4_step5Top: { label: 'INTERESTED LEAD', color: '#22c55e' },
+      step4_step5Bot: { label: 'NOT INTERESTED', color: '#ef4444' },
     },
     steps: [
       // Step 1A: Director handles if Direct Call
@@ -247,57 +268,52 @@ export const WORKFLOWS: Workflow[] = [
           { label: 'Call Lead',               tools: ['Script'], involves: 'lead' },
           { label: 'Qualify Tenant Profile',  tools: ['Form'], involves: 'lead' },
           { label: 'Confirm Budget & Dates',  tools: ['Form'], involves: 'lead' },
-          { label: 'Match Available Listings', tools: ['CRM'] },
-          { label: 'Schedule Viewings',       tools: ['Google Calendar'], involves: 'lead' },
+          { label: 'Discuss Conditions',      tools: ['Script'], involves: 'lead' },
           { label: 'Update CRM',             tools: ['Google Sheet'] },
           { label: 'Brief Digital Manager',   tools: ['Phone'], involves: 'digital-manager' },
         ],
       },
-      // Step 3: Agent — Viewings
+      // Step 3: Agent — Property Matching
       {
         id: 'step-3',
         stepNumber: 3,
-        title: 'Viewings',
+        title: 'Property Matching',
         responsible: 'agent',
         tasks: [
-          { label: 'Conduct Property Tours',  tools: ['Checklist'], involves: 'lead' },
-          { label: 'Collect Tenant Feedback',  tools: ['Form'], involves: 'lead' },
-          { label: 'Negotiate Terms',          tools: ['Script'], involves: 'lead' },
-          { label: 'Send Report',              tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+          { label: 'Fetch Available Listings', tools: ['CRM'] },
+          { label: 'Match Available Listings', tools: ['CRM'] },
         ],
       },
-      // Step 4: Digital Manager — Lease Processing
+      // Step 4: Agent — Share Matching Properties
       {
         id: 'step-4',
         stepNumber: 4,
-        title: 'Lease Processing',
-        responsible: 'digital-manager',
+        title: 'Share Matching Properties',
+        responsible: 'agent',
         tasks: [
-          { label: 'Prepare Lease Agreement',  tools: ['Template'] },
-          { label: 'Verify Tenant Documents',  tools: ['Checklist'], involves: 'lead' },
-          { label: 'Coordinate with Owner',    tools: ['WhatsApp'], involves: 'partner' },
-          { label: 'Schedule Signing',         tools: ['Google Calendar'], involves: ['lead', 'partner'] },
-          { label: 'Process Payment',          tools: ['Banking'], involves: 'lead' },
-          { label: 'Update CRM',              tools: ['CRM'] },
+          { label: 'Send Photos',            tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Share Description',       tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Collect Feedback',        tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Update CRM',             tools: ['CRM'] },
         ],
       },
-      // Follow-up: Digital Manager
+      // Step 5 top: Schedule Viewing — Link to workflow
       {
         id: 'followup-dm',
         stepNumber: 5,
-        title: 'Follow-Up',
-        responsible: 'digital-manager',
+        title: 'Schedule Viewing',
+        responsible: 'agent',
         tasks: [],
-        recurrence: { frequency: 'Monthly', task: 'Check-in with Tenant for satisfaction & issues', tools: ['WhatsApp', 'Email'] },
+        linkTo: 'schedule-viewing',
       },
-      // Follow-up: Agent
+      // Step 5 bottom: Property Hunting — Link to workflow
       {
         id: 'followup-agent',
         stepNumber: 5,
-        title: 'Follow-Up',
-        responsible: 'agent',
+        title: 'Property Hunting',
+        responsible: 'property-hunter',
         tasks: [],
-        recurrence: { frequency: 'Quarterly', task: 'Review lease renewal & tenant retention', tools: ['WhatsApp', 'Phone'] },
+        linkTo: 'property-hunting',
       },
     ],
   },
@@ -305,7 +321,7 @@ export const WORKFLOWS: Workflow[] = [
     id: 'new-visit',
     title: 'New Visit Request',
     subtitle: 'Visit-request-to-feedback pipeline',
-    color: '#1d7ff3',
+    color: '#1e293b',
     triggers: [
       { label: 'Website Form',     icon: 'website',  channel: 'digital' },
       { label: 'WhatsApp Message', icon: 'whatsapp', channel: 'digital' },
@@ -317,6 +333,10 @@ export const WORKFLOWS: Workflow[] = [
       condition: 'Direct Call',
       ifTrue:  { responsible: 'director',        label: 'Director' },
       ifFalse: { responsible: 'digital-manager', label: 'Digital Manager' },
+    },
+    connectors: {
+      step2_step3: { label: 'CONFIRMED', color: '#22c55e' },
+      step3_step4: { label: 'VISIT DONE', color: '#22c55e' },
     },
     steps: [
       // Step 1A: Director handles if Direct Call
@@ -415,7 +435,7 @@ export const WORKFLOWS: Workflow[] = [
     id: 'property-hunting',
     title: 'Property Hunting',
     subtitle: 'Tenant request-to-match pipeline',
-    color: '#06b6d4',
+    color: '#1e293b',
     triggers: [
       { label: 'Open Tenant Request', icon: 'crm',      channel: 'internal' },
       { label: 'Agent Referral',      icon: 'whatsapp',  channel: 'direct' },
@@ -425,6 +445,10 @@ export const WORKFLOWS: Workflow[] = [
       condition: 'Internal Request',
       ifTrue:  { responsible: 'digital-manager', label: 'Digital Manager' },
       ifFalse: { responsible: 'property-hunter', label: 'Property Hunter' },
+    },
+    connectors: {
+      step2_step3: { label: 'SHORTLISTED', color: '#22c55e' },
+      step3_step4: { label: 'VALIDATED', color: '#22c55e' },
     },
     steps: [
       // Step 1A: Property Hunter handles direct sourcing
@@ -517,6 +541,212 @@ export const WORKFLOWS: Workflow[] = [
         responsible: 'agent',
         tasks: [],
         recurrence: { frequency: 'Bi-weekly', task: 'Re-check tenant interest & adjust criteria if needed', tools: ['WhatsApp', 'Phone'] },
+      },
+    ],
+  },
+  {
+    id: 'schedule-viewing',
+    title: 'Schedule Viewing',
+    subtitle: 'Viewing coordination pipeline',
+    color: '#1e293b',
+    triggers: [
+      { label: 'Tenant Interest',   icon: 'crm',      channel: 'internal' },
+      { label: 'WhatsApp Message',   icon: 'whatsapp', channel: 'digital' },
+      { label: 'Phone Call',         icon: 'phone',    channel: 'direct'  },
+    ],
+    triggerCondition: {
+      condition: 'Internal Request',
+      ifTrue:  { responsible: 'digital-manager', label: 'Digital Manager' },
+      ifFalse: { responsible: 'agent',           label: 'Agent' },
+    },
+    connectors: {
+      step2_step3: { label: 'CONFIRMED', color: '#22c55e' },
+      step3_step4: { label: 'VISIT DONE', color: '#22c55e' },
+    },
+    steps: [
+      {
+        id: 'step-1a',
+        stepNumber: 1,
+        title: 'Coordination',
+        responsible: 'digital-manager',
+        tasks: [
+          { label: 'Confirm Tenant Interest',   tools: ['CRM'], involves: 'lead' },
+          { label: 'Check Property Availability', tools: ['CRM'] },
+          { label: 'Coordinate with Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assign Agent',               tools: ['WhatsApp'], involves: 'agent' },
+          { label: 'Add to CRM',                tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'step-1b',
+        stepNumber: 1,
+        title: 'Coordination',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Confirm Tenant Interest',   tools: ['CRM'], involves: 'lead' },
+          { label: 'Check Property Availability', tools: ['CRM'] },
+          { label: 'Coordinate with Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Add to CRM',                tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'step-2',
+        stepNumber: 2,
+        title: 'Scheduling',
+        responsible: 'agent',
+        parallel: true,
+        tasks: [
+          { label: 'Propose Visit Dates',       tools: ['WhatsApp'], involves: 'lead' },
+          { label: 'Confirm with Owner',        tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Set Calendar Event',        tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+          { label: 'Prepare Property Brief',    tools: ['CRM'] },
+          { label: 'Update CRM',               tools: ['Google Sheet'] },
+        ],
+      },
+      {
+        id: 'step-3',
+        stepNumber: 3,
+        title: 'Viewing',
+        responsible: 'agent',
+        tasks: [
+          { label: 'Conduct Property Tour',     tools: ['Checklist'], involves: 'lead' },
+          { label: 'Answer Tenant Questions',    tools: ['Script'], involves: 'lead' },
+          { label: 'Collect Tenant Feedback',    tools: ['Form'], involves: 'lead' },
+          { label: 'Send Report',               tools: ['WhatsApp'], involves: ['director', 'digital-manager'] },
+        ],
+      },
+      {
+        id: 'step-4',
+        stepNumber: 4,
+        title: 'Post-Viewing',
+        responsible: 'digital-manager',
+        tasks: [
+          { label: 'Log Visit Outcome',          tools: ['CRM'] },
+          { label: 'Send Summary to Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Negotiate Terms if Interested', tools: ['Script'], involves: ['lead', 'partner'] },
+          { label: 'Trigger Lease Workflow',      tools: ['CRM'] },
+          { label: 'Update CRM Status',           tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'followup-dm',
+        stepNumber: 5,
+        title: 'Follow-Up',
+        responsible: 'digital-manager',
+        tasks: [],
+        recurrence: { frequency: 'Weekly', task: 'Follow up with undecided tenants & suggest alternatives', tools: ['WhatsApp', 'Email'] },
+      },
+      {
+        id: 'followup-agent',
+        stepNumber: 5,
+        title: 'Follow-Up',
+        responsible: 'agent',
+        tasks: [],
+        recurrence: { frequency: 'Bi-weekly', task: 'Re-engage warm leads with new listings', tools: ['WhatsApp', 'Phone'] },
+      },
+    ],
+  },
+  {
+    id: 'lease-processing',
+    title: 'Lease Processing',
+    subtitle: 'Lease negotiation-to-signing pipeline',
+    color: '#1e293b',
+    triggers: [
+      { label: 'Viewing Outcome',   icon: 'crm',      channel: 'internal' },
+      { label: 'Direct Agreement',   icon: 'whatsapp', channel: 'digital' },
+      { label: 'Phone Call',         icon: 'phone',    channel: 'direct'  },
+    ],
+    triggerCondition: {
+      condition: 'Internal Request',
+      ifTrue:  { responsible: 'digital-manager', label: 'Digital Manager' },
+      ifFalse: { responsible: 'director',        label: 'Director' },
+    },
+    connectors: {
+      step2_step3: { label: 'TERMS AGREED', color: '#22c55e' },
+      step3_step4: { label: 'SIGNED', color: '#22c55e' },
+    },
+    steps: [
+      {
+        id: 'step-1a',
+        stepNumber: 1,
+        title: 'Intake',
+        responsible: 'digital-manager',
+        tasks: [
+          { label: 'Confirm Tenant Selection',   tools: ['CRM'], involves: 'lead' },
+          { label: 'Verify Property Status',     tools: ['CRM'] },
+          { label: 'Notify Owner',              tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assign Agent',               tools: ['WhatsApp'], involves: 'agent' },
+          { label: 'Add to CRM',                tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'step-1b',
+        stepNumber: 1,
+        title: 'Intake',
+        responsible: 'director',
+        tasks: [
+          { label: 'Confirm Tenant Selection',   tools: ['CRM'], involves: 'lead' },
+          { label: 'Verify Property Status',     tools: ['CRM'] },
+          { label: 'Notify Owner',              tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Assign Agent',               tools: ['WhatsApp'], involves: 'agent' },
+          { label: 'Brief Digital Manager',      tools: ['Phone'], involves: 'digital-manager' },
+          { label: 'Add to CRM',                tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'step-2',
+        stepNumber: 2,
+        title: 'Negotiation',
+        responsible: 'agent',
+        parallel: true,
+        tasks: [
+          { label: 'Discuss Lease Terms',        tools: ['Script'], involves: ['lead', 'partner'] },
+          { label: 'Negotiate Price & Duration', tools: ['Script'], involves: ['lead', 'partner'] },
+          { label: 'Confirm Final Conditions',   tools: ['WhatsApp'], involves: ['lead', 'partner'] },
+          { label: 'Update CRM',               tools: ['Google Sheet'] },
+          { label: 'Brief Digital Manager',      tools: ['Phone'], involves: 'digital-manager' },
+        ],
+      },
+      {
+        id: 'step-3',
+        stepNumber: 3,
+        title: 'Documentation',
+        responsible: 'digital-manager',
+        tasks: [
+          { label: 'Prepare Lease Agreement',    tools: ['Template'] },
+          { label: 'Verify Tenant Documents',    tools: ['Checklist'], involves: 'lead' },
+          { label: 'Coordinate with Owner',      tools: ['WhatsApp'], involves: 'partner' },
+          { label: 'Schedule Signing',           tools: ['Google Calendar'], involves: ['lead', 'partner'] },
+        ],
+      },
+      {
+        id: 'step-4',
+        stepNumber: 4,
+        title: 'Closing',
+        responsible: 'digital-manager',
+        tasks: [
+          { label: 'Lease Signing',              tools: ['Template'], involves: ['lead', 'partner'] },
+          { label: 'Process Payment',            tools: ['Banking'], involves: 'lead' },
+          { label: 'Key Handover',               tools: ['Checklist'], involves: ['lead', 'partner'] },
+          { label: 'Send Welcome Pack',          tools: ['Email'], involves: 'lead' },
+          { label: 'Update CRM Status',          tools: ['CRM'] },
+        ],
+      },
+      {
+        id: 'followup-dm',
+        stepNumber: 5,
+        title: 'Follow-Up',
+        responsible: 'digital-manager',
+        tasks: [],
+        recurrence: { frequency: 'Monthly', task: 'Check-in with tenant for satisfaction & issues', tools: ['WhatsApp', 'Email'] },
+      },
+      {
+        id: 'followup-agent',
+        stepNumber: 5,
+        title: 'Follow-Up',
+        responsible: 'agent',
+        tasks: [],
+        recurrence: { frequency: 'Quarterly', task: 'Review lease renewal & tenant retention', tools: ['WhatsApp', 'Phone'] },
       },
     ],
   },

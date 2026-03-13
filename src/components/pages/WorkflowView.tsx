@@ -10,6 +10,7 @@ import {
   type WorkflowStep,
   type WorkflowTask,
   type RoleId,
+  type ConnectorConfig,
 } from '@/data/workflows';
 
 // ── Layout constants ─────────────────────────────────────────────
@@ -270,6 +271,59 @@ function StepCard({ step, isDark }: {
   );
 }
 
+// ── Link Step Card (links to another workflow) ──────────────────
+
+function LinkStepCard({ step, isDark }: { step: WorkflowStep; isDark: boolean }) {
+  const meta = ROLE_META[step.responsible];
+  const targetWorkflow = WORKFLOWS.find(w => w.id === step.linkTo);
+  const targetTitle = targetWorkflow?.title || step.linkTo || '';
+
+  return (
+    <div className="relative" style={{ width: CARD_W, paddingTop: 14 }}>
+      {/* Role sticker tag */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 py-0.5 rounded-t-md text-[11px] font-bold tracking-wide whitespace-nowrap"
+        style={{ background: meta.color, color: '#fff' }}
+      >
+        {meta.label}
+      </div>
+
+      <div
+        className="card overflow-hidden"
+        style={{
+          width: CARD_W,
+          borderTop: `3px solid ${meta.color}`,
+          border: `2px dashed ${isDark ? 'rgba(255,255,255,0.15)' : 'rgba(15,23,42,0.15)'}`,
+          borderTopWidth: 3,
+          borderTopStyle: 'solid',
+          borderTopColor: meta.color,
+        }}
+      >
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: `${meta.color}20`, color: meta.color }}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-extrabold uppercase tracking-wide block" style={{ color: isDark ? '#fff' : '#1e293b' }}>
+                {step.title}
+              </span>
+              <span className="text-[9px] font-medium block mt-0.5" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(15,23,42,0.35)' }}>
+                Go to workflow: {targetTitle}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Trigger Node (just "Incoming Lead" label) ───────────────────
 
 function TriggerNode({ workflow, isDark }: { workflow: Workflow; isDark: boolean }) {
@@ -384,9 +438,31 @@ function computePositions(heights: Record<CardKey, number>): Record<CardKey, Car
 
 // ── Dynamic Connectors ──────────────────────────────────────────
 
-function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isDark: boolean }) {
+function ConditionBox({ x, y, label, borderColor, isDark, stroke }: {
+  x: number; y: number; label: string; borderColor: string; isDark: boolean; stroke: string;
+}) {
+  const boxW = Math.max(label.length * 8 + 20, 60);
+  const boxH = 22;
+  return (
+    <>
+      <rect x={x - boxW / 2} y={y - boxH / 2} width={boxW} height={boxH} rx={6}
+        fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
+      <line x1={x - boxW / 2 + 6} y1={y - boxH / 2} x2={x + boxW / 2 - 6} y2={y - boxH / 2}
+        stroke={borderColor} strokeWidth={2.5} />
+      <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="middle"
+        fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'}
+        fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">
+        {label}
+      </text>
+    </>
+  );
+}
+
+function DynamicConnectors({ pos, isDark, workflow }: { pos: Record<CardKey, CardPos>; isDark: boolean; workflow: Workflow }) {
   const stroke = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.2)';
   const arrow = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.4)';
+  const neutralBorder = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)';
+  const conn = workflow.connectors || {};
 
   const trigR = rightOf(pos.trigger);
   const brTopL = leftOf(pos.branchTop);
@@ -408,10 +484,13 @@ function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isD
 
   const mid01 = (trigR.x + brTopL.x) / 2;
   const mid23 = (s1TopR.x + s2L.x) / 2;
-  const mid56 = (s4R.x + s5TopL.x) / 2;
 
   const maxX = Math.max(...Object.values(pos).map(p => p.x + p.w)) + 60;
   const maxY = Math.max(...Object.values(pos).map(p => p.y + p.h)) + 60;
+
+  // Determine if this workflow has conditional forking at step4→step5
+  const hasConditionalFork = !!(conn.step4_step5Top || conn.step4_step5Bot);
+  const hasSkipConnection = !!conn.step3_step5Bot;
 
   return (
     <svg className="absolute inset-0 pointer-events-none" style={{ width: maxX, height: maxY }}>
@@ -425,54 +504,39 @@ function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isD
       <path d={`M ${trigR.x} ${trigR.y} C ${mid01} ${trigR.y}, ${mid01} ${brTopL.y}, ${brTopL.x} ${brTopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
       <path d={`M ${trigR.x} ${trigR.y} C ${mid01} ${trigR.y}, ${mid01} ${brBotL.y}, ${brBotL.x} ${brBotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
 
-      {/* Branch top → Step 1 top (Message → DM) with "REGULAR" condition box — dashed + curved */}
+      {/* Branch top → Step 1 top (Message → DM) */}
       {(() => {
         const midBr = (brTopR.x + s1TopL.x) / 2;
         const midX = midBr;
         const midY = (brTopR.y + s1TopL.y) / 2;
-        const boxW = 68;
-        const boxH = 22;
-        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)';
         return (
           <>
             <path d={`M ${brTopR.x} ${brTopR.y} C ${midBr} ${brTopR.y}, ${midBr} ${s1TopL.y}, ${s1TopL.x} ${s1TopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
-            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
-            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
-            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">REGULAR</text>
+            <ConditionBox x={midX} y={midY} label="REGULAR" borderColor={neutralBorder} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
-      {/* Branch top → Step 1 bottom (VIP path: Message → Director) with condition box */}
+      {/* Branch top → Step 1 bottom (VIP) */}
       {(() => {
         const midBr = (brTopR.x + s1BotL.x) / 2;
         const midX = midBr;
         const midY = (brTopR.y + s1BotL.y) / 2;
-        const boxW = 42;
-        const boxH = 22;
-        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)'; // grey = neutral
         return (
           <>
             <path d={`M ${brTopR.x} ${brTopR.y} C ${midBr} ${brTopR.y}, ${midBr} ${s1BotL.y}, ${s1BotL.x} ${s1BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
-            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
-            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
-            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">VIP</text>
+            <ConditionBox x={midX} y={midY} label="VIP" borderColor={neutralBorder} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
-      {/* Branch bottom → Step 1 bottom (Call → Director) with "ALL" condition box — curved */}
+      {/* Branch bottom → Step 1 bottom (Call → Director) */}
       {(() => {
         const midBr = (brBotR.x + s1BotL.x) / 2;
         const midX = midBr;
         const midY = (brBotR.y + s1BotL.y) / 2;
-        const boxW = 42;
-        const boxH = 22;
-        const borderColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.25)';
         return (
           <>
             <path d={`M ${brBotR.x} ${brBotR.y} C ${midBr} ${brBotR.y}, ${midBr} ${s1BotL.y}, ${s1BotL.x} ${s1BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
-            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
-            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
-            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={700} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">ALL</text>
+            <ConditionBox x={midX} y={midY} label="ALL" borderColor={neutralBorder} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
@@ -481,45 +545,97 @@ function DynamicConnectors({ pos, isDark }: { pos: Record<CardKey, CardPos>; isD
       <path d={`M ${s1TopR.x} ${s1TopR.y} C ${mid23} ${s1TopR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
       <path d={`M ${s1BotR.x} ${s1BotR.y} C ${mid23} ${s1BotR.y}, ${mid23} ${s2L.y}, ${s2L.x} ${s2L.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
 
-      {/* Step 2 → Step 3 Meeting with "Qualified" condition box */}
+      {/* Step 2 → Step 3 with configurable condition box */}
       {(() => {
+        const c = conn.step2_step3 || { label: 'QUALIFIED', color: '#22c55e' };
         const midX = (s2R.x + s3L.x) / 2;
         const midY = (s2R.y + s3L.y) / 2;
-        const boxW = 76;
-        const boxH = 22;
-        const borderColor = '#22c55e'; // green = positive condition
         return (
           <>
-            {/* Full line underneath */}
             <line x1={s2R.x} y1={s2R.y} x2={s3L.x} y2={s3L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
-            {/* Box on top of line */}
-            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
-            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
-            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">QUALIFIED</text>
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
 
-      {/* Step 3 Meeting → Step 4 Publishing with "SIGNED MANDATE" condition box */}
+      {/* Step 3 → Step 4 with configurable condition box */}
       {(() => {
+        const c = conn.step3_step4 || { label: 'SIGNED MANDATE', color: '#22c55e' };
         const midX = (s3R.x + s4L.x) / 2;
         const midY = (s3R.y + s4L.y) / 2;
-        const boxW = 116;
-        const boxH = 22;
-        const borderColor = '#22c55e'; // green = positive condition
         return (
           <>
             <line x1={s3R.x} y1={s3R.y} x2={s4L.x} y2={s4L.y} stroke={stroke} strokeWidth={1.5} markerEnd="url(#arr)" />
-            <rect x={midX - boxW / 2} y={midY - boxH / 2} width={boxW} height={boxH} rx={6} fill={isDark ? 'rgba(6,7,10,0.9)' : 'rgba(255,255,255,0.9)'} stroke={stroke} strokeWidth={1} />
-            <line x1={midX - boxW / 2 + 6} y1={midY - boxH / 2} x2={midX + boxW / 2 - 6} y2={midY - boxH / 2} stroke={borderColor} strokeWidth={2.5} />
-            <text x={midX} y={midY + 1} textAnchor="middle" dominantBaseline="middle" fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.5)'} fontSize={9} fontWeight={600} fontFamily="system-ui, sans-serif" letterSpacing="0.05em">SIGNED MANDATE</text>
+            <ConditionBox x={midX} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
           </>
         );
       })()}
 
-      {/* Step 4 Publishing → Step 5 Follow-ups (forking = dashed) */}
-      <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
-      <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5BotL.y}, ${s5BotL.x} ${s5BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+      {/* Step 3 → Step 5 Bot (skip connection, e.g. "NO AVAILABLE LISTING") */}
+      {hasSkipConnection && (() => {
+        const c = conn.step3_step5Bot!;
+        // Curved path going below step 4 to reach step 5 bot
+        const startX = s3R.x;
+        const startY = pos.step3.y + pos.step3.h - 20;
+        const endX = s5BotL.x;
+        const endY = s5BotL.y;
+        const midX = (startX + endX) / 2;
+        const belowY = Math.max(pos.step4.y + pos.step4.h, pos.step5Bot.y + pos.step5Bot.h) + 40;
+        return (
+          <>
+            <path
+              d={`M ${startX} ${startY} C ${startX + 60} ${startY}, ${startX + 60} ${belowY}, ${midX} ${belowY} C ${endX - 60} ${belowY}, ${endX - 60} ${endY}, ${endX} ${endY}`}
+              stroke={c.color} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)"
+            />
+            <ConditionBox x={midX} y={belowY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+          </>
+        );
+      })()}
+
+      {/* Step 4 → Step 5 (forking or conditional) */}
+      {hasConditionalFork ? (
+        <>
+          {/* Step 4 → Step 5 Top with condition */}
+          {conn.step4_step5Top && (() => {
+            const c = conn.step4_step5Top!;
+            const mid56 = (s4R.x + s5TopL.x) / 2;
+            const midY = (s4R.y + s5TopL.y) / 2;
+            return (
+              <>
+                <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`}
+                  stroke={stroke} strokeWidth={1.5} fill="none" markerEnd="url(#arr)" />
+                <ConditionBox x={mid56} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+              </>
+            );
+          })()}
+          {/* Step 4 → Step 5 Bot with condition */}
+          {conn.step4_step5Bot && (() => {
+            const c = conn.step4_step5Bot!;
+            const mid56 = (s4R.x + s5BotL.x) / 2;
+            const midY = (s4R.y + s5BotL.y) / 2;
+            return (
+              <>
+                <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5BotL.y}, ${s5BotL.x} ${s5BotL.y}`}
+                  stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+                <ConditionBox x={mid56} y={midY} label={c.label} borderColor={c.color} isDark={isDark} stroke={stroke} />
+              </>
+            );
+          })()}
+        </>
+      ) : (
+        <>
+          {/* Default: plain forking dashed lines */}
+          {(() => {
+            const mid56 = (s4R.x + s5TopL.x) / 2;
+            return (
+              <>
+                <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5TopL.y}, ${s5TopL.x} ${s5TopL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+                <path d={`M ${s4R.x} ${s4R.y} C ${mid56} ${s4R.y}, ${mid56} ${s5BotL.y}, ${s5BotL.x} ${s5BotL.y}`} stroke={stroke} strokeWidth={1.5} fill="none" strokeDasharray="6 4" markerEnd="url(#arr)" />
+              </>
+            );
+          })()}
+        </>
+      )}
     </svg>
   );
 }
@@ -625,7 +741,7 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
         <ZoomControls isDark={isDark} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 
-          <DynamicConnectors pos={pos} isDark={isDark} />
+          <DynamicConnectors pos={pos} isDark={isDark} workflow={workflow} />
 
           {/* COL 0: Trigger */}
           <div ref={refs.trigger} className="absolute" style={{ left: pos.trigger.x, top: pos.trigger.y }}>
@@ -667,14 +783,20 @@ function WorkflowCanvas({ workflow, isDark }: { workflow: Workflow; isDark: bool
             <StepCard step={find('step-4')} isDark={isDark} />
           </div>
 
-          {/* COL 6 top: DM Follow-Up */}
+          {/* COL 6 top: Follow-Up or Link */}
           <div ref={refs.step5Top} className="absolute" style={{ left: pos.step5Top.x, top: pos.step5Top.y }}>
-            <StepCard step={find('followup-dm')} isDark={isDark} />
+            {find('followup-dm').linkTo
+              ? <LinkStepCard step={find('followup-dm')} isDark={isDark} />
+              : <StepCard step={find('followup-dm')} isDark={isDark} />
+            }
           </div>
 
-          {/* COL 6 bottom: Agent Follow-Up */}
+          {/* COL 6 bottom: Follow-Up or Link */}
           <div ref={refs.step5Bot} className="absolute" style={{ left: pos.step5Bot.x, top: pos.step5Bot.y }}>
-            <StepCard step={find('followup-agent')} isDark={isDark} />
+            {find('followup-agent').linkTo
+              ? <LinkStepCard step={find('followup-agent')} isDark={isDark} />
+              : <StepCard step={find('followup-agent')} isDark={isDark} />
+            }
           </div>
 
         </TransformComponent>

@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import { MobileNavProvider } from '@/context/MobileNavContext';
 import { TeamProvider } from '@/context/TeamContext';
+import { ToolsAccessProvider } from '@/context/ToolsAccessContext';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import RightPanel from '@/components/layout/RightPanel';
@@ -16,6 +17,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     <CurrencyProvider>
     <FinancialProvider>
     <TeamProvider>
+    <ToolsAccessProvider>
     <MobileNavProvider>
       <div className="flex min-h-screen">
         <Sidebar />
@@ -29,6 +31,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         </div>
       </div>
     </MobileNavProvider>
+    </ToolsAccessProvider>
     </TeamProvider>
     </FinancialProvider>
     </CurrencyProvider>

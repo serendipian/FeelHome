@@ -12,6 +12,7 @@ const navItems = [
   { href: '/investment', label: 'Investment', icon: DollarIcon },
   { href: '/team', label: 'Team', icon: TeamIcon },
   { href: '/workflow', label: 'Workflow', icon: WorkflowIcon },
+  { href: '/tools-access', label: 'Tools Access', icon: ToolsIcon },
 ];
 
 export default function Sidebar() {
@@ -166,6 +167,14 @@ function WorkflowIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+    </svg>
+  );
+}
+
+function ToolsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384 5.384a2.025 2.025 0 01-2.853-2.868l5.373-5.38a.5.5 0 00-.014-.707 8.003 8.003 0 01-1.963-6.59c.326-2.182 1.675-4.152 3.596-5.2a.5.5 0 01.65.12l2.646 3.2a.5.5 0 00.689.084l1.727-1.295a.5.5 0 00.181-.594l-1.37-3.653a.5.5 0 01.387-.684 8.004 8.004 0 017.633 3.738.5.5 0 01-.076.567L20.6 13.748a.5.5 0 01-.753.032l-1.1-1.1a.5.5 0 00-.757.044l-5.074 6.727a.5.5 0 01-.496.17z" />
     </svg>
   );
 }
