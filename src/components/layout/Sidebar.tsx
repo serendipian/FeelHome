@@ -46,22 +46,39 @@ export default function Sidebar() {
           boxShadow: isDark ? 'none' : '2px 0 12px rgba(15,23,42,0.04)',
         }}
       >
-        <div className="flex items-center gap-3 px-5 h-[72px]">
-          <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #d4a853, #d4875a)',
-              boxShadow: '0 4px 12px rgba(212, 168, 83, 0.25)',
-            }}
-          >
-            FH
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-[13px] font-bold tracking-tight" style={{ color: isDark ? '#fff' : '#1e293b' }}>Feel Home</span>
-              <span className="text-[10px] font-medium tracking-wider uppercase" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.3)' }}>Ecosystem</span>
+        <div className="flex items-center justify-between px-5 h-[72px]">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-xs shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #d4a853, #d4875a)',
+                boxShadow: '0 4px 12px rgba(212, 168, 83, 0.25)',
+              }}
+            >
+              FH
             </div>
-          )}
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="text-[13px] font-bold tracking-tight" style={{ color: isDark ? '#fff' : '#1e293b' }}>Feel Home</span>
+                <span className="text-[10px] font-medium tracking-wider uppercase" style={{ color: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.3)' }}>Ecosystem</span>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden md:flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-200 cursor-pointer"
+            style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.25)' }}
+          >
+            <svg
+              className={`w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${collapsed ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
 
         <div className="mx-4 h-px" style={{
@@ -104,28 +121,6 @@ export default function Sidebar() {
           })}
         </nav>
 
-        <div className="px-3 pb-3 hidden md:block">
-          <div className="mx-1 mb-3 h-px" style={{
-            background: isDark
-              ? 'linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent)'
-              : 'linear-gradient(to right, transparent, rgba(15,23,42,0.06), transparent)',
-          }} />
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center h-9 rounded-xl transition-all duration-200 cursor-pointer"
-            style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.25)' }}
-          >
-            <svg
-              className={`w-4 h-4 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${collapsed ? 'rotate-180' : ''}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
       </aside>
     </>
   );

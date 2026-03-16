@@ -82,18 +82,18 @@ export default function RightPanel() {
       {/* Mobile backdrop */}
       {panelOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={closePanel}
         />
       )}
     <div
       className={`
         fixed right-0 top-0 h-screen z-50 w-[85vw] max-w-[340px]
-        md:static md:h-auto md:z-auto md:w-[340px]
+        lg:static lg:h-auto lg:z-auto lg:w-[340px]
         shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto
         transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
-        md:translate-x-0
+        lg:translate-x-0
       `}
       style={{
         background: isDark
@@ -103,7 +103,7 @@ export default function RightPanel() {
       }}
     >
       {/* Mobile-only: close button + currency toggle */}
-      <div className="md:hidden flex items-center justify-between mb-2">
+      <div className="lg:hidden flex items-center justify-between mb-2">
         <span className="text-[12px] font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>Settings</span>
         <div className="flex items-center gap-2">
           <button
