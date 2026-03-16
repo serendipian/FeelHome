@@ -3,7 +3,7 @@ import { ExpenseItem } from '@/types';
 export const defaultExpenses: ExpenseItem[] = [
   // ── SALARIES ──────────────────────────────────────
   {
-    label: 'General Manager (Operations + HR)',
+    label: 'General Manager',
     category: 'salaries',
     variableCost: 0,
     y1: 24000,
@@ -12,16 +12,7 @@ export const defaultExpenses: ExpenseItem[] = [
     brands: ['feelHome', 'mInvest', 'expats'],
   },
   {
-    label: 'Marketing Manager (Branding + Partnerships)',
-    category: 'salaries',
-    variableCost: 0,
-    y1: 0,
-    y2: 20000,
-    y3: 20000,
-    brands: ['feelHome', 'mInvest', 'expats'],
-  },
-  {
-    label: 'Digital Coordinator - Community Manager',
+    label: 'Digital Coordinator',
     category: 'salaries',
     variableCost: 0,
     y1: 14000,
@@ -30,13 +21,40 @@ export const defaultExpenses: ExpenseItem[] = [
     brands: ['expats'],
   },
   {
-    label: 'Property Hunter - Customer Service',
+    label: 'Community Manager',
+    category: 'salaries',
+    variableCost: 0,
+    y1: 0,
+    y2: 8000,
+    y3: 8000,
+    brands: ['expats'],
+  },
+  {
+    label: 'Property Hunter',
     category: 'salaries',
     variableCost: 0,
     y1: 10000,
     y2: 12000,
     y3: 12000,
     brands: ['feelHome', 'mInvest'],
+  },
+  {
+    label: 'Customer Service',
+    category: 'salaries',
+    variableCost: 0,
+    y1: 0,
+    y2: 8000,
+    y3: 8000,
+    brands: ['feelHome', 'mInvest', 'expats'],
+  },
+  {
+    label: 'Marketing Manager',
+    category: 'salaries',
+    variableCost: 0,
+    y1: 0,
+    y2: 20000,
+    y3: 20000,
+    brands: ['feelHome', 'mInvest', 'expats'],
   },
   {
     label: 'Agent Casablanca #1',
