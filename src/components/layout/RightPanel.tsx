@@ -53,7 +53,7 @@ export default function RightPanel() {
   const pathname = usePathname();
   const { isDark } = useTheme();
   const { fNum, currency } = useCurrencyFormatters();
-  const { panelOpen, closePanel } = useMobileNav();
+  const { panelOpen, closePanel, panelCollapsed } = useMobileNav();
   const { isUSD, toggleCurrency, currency: currLabel } = useCurrency();
   const {
     activeBrands,
@@ -89,17 +89,18 @@ export default function RightPanel() {
     <div
       className={`
         fixed right-0 top-0 h-screen z-50 w-[85vw] max-w-[340px]
-        lg:static lg:h-auto lg:z-auto lg:w-[280px]
-        shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto
-        transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
+        lg:static lg:h-auto lg:z-auto
+        shrink-0 flex flex-col gap-5 overflow-y-auto
+        transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
         lg:translate-x-0
+        ${panelCollapsed ? 'lg:w-0 lg:px-0 lg:py-0 lg:overflow-hidden lg:border-0' : 'lg:w-[280px] px-4 py-6'}
       `}
       style={{
-        background: isDark
+        background: panelCollapsed ? 'transparent' : (isDark
           ? 'linear-gradient(180deg, rgba(6, 7, 10, 0.98) 0%, rgba(6, 7, 10, 0.99) 100%)'
-          : 'linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.99) 100%)',
-        borderLeft: isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)',
+          : 'linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.99) 100%)'),
+        borderLeft: panelCollapsed ? 'none' : (isDark ? '1px solid rgba(255,255,255,0.04)' : '1px solid rgba(15,23,42,0.06)'),
       }}
     >
       {/* Mobile-only: close button + currency toggle */}
