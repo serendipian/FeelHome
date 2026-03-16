@@ -40,9 +40,11 @@ export default function TeamView() {
   // Merge persisted data with static display props
   const members = teamData.map(mergeTeamMember);
   const directorM = members.find(m => m.id === 'director')!;
-  const communityManagerM = members.find(m => m.id === 'community-manager');
+  const marketingManagerM = members.find(m => m.id === 'community-manager');
+  const communityMgrM = members.find(m => m.id === 'community-mgr');
   const digitalManagerM = members.find(m => m.id === 'digital-manager')!;
   const propertyHunterM = members.find(m => m.id === 'property-hunter')!;
+  const customerServiceM = members.find(m => m.id === 'customer-service');
 
   // Filter agents by active markets
   const agents = members.filter(m => m.id.startsWith('agent-'));
@@ -57,8 +59,10 @@ export default function TeamView() {
     updateTeamMember(id, { commission: { ...teamData.find(m => m.id === id)!.commission, type } });
 
   // Summary counts
-  const managementCount = [directorM, communityManagerM].filter(m => m && (!m.brands || m.brands.every(b => activeBrands[b]))).length;
-  const backofficeCount = [digitalManagerM, propertyHunterM].filter(Boolean).length;
+  const managementMembers = [directorM, marketingManagerM, communityMgrM].filter(m => m && (!m.brands || m.brands.some(b => activeBrands[b])));
+  const backofficeMembers = [digitalManagerM, propertyHunterM, customerServiceM].filter(Boolean);
+  const managementCount = managementMembers.length;
+  const backofficeCount = backofficeMembers.length;
   const frontofficeCount = visibleAgents.length;
   const totalCount = managementCount + backofficeCount + frontofficeCount;
 
@@ -102,25 +106,37 @@ export default function TeamView() {
       {/* ━━━ View Mode ━━━ */}
       {!isEditMode && <>
 
-      {/* ━━━ Director + Community Manager ━━━ */}
+      {/* ━━━ Management: Director + Marketing Manager + Community Manager ━━━ */}
       <div className="flex flex-col md:flex-row">
         <SectionLabel label="Management" />
         <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-0">
-          <div className="w-full md:w-1/3 min-w-0">
+          <div className="flex-1 min-w-0">
             <DirectorCard
               member={directorM}
               onCommissionRateChange={(r) => updateCommissionRate(directorM.id, r)}
               onCommissionTypeChange={(t) => updateCommissionType(directorM.id, t)}
             />
           </div>
-          {communityManagerM && activeBrands.expats && (
+          {marketingManagerM && (
             <>
               <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
-              <div className="w-full md:w-1/3 min-w-0">
+              <div className="flex-1 min-w-0">
                 <MemberCard
-                  member={communityManagerM}
-                  onCommissionRateChange={(r) => updateCommissionRate(communityManagerM.id, r)}
-                  onCommissionTypeChange={(t) => updateCommissionType(communityManagerM.id, t)}
+                  member={marketingManagerM}
+                  onCommissionRateChange={(r) => updateCommissionRate(marketingManagerM.id, r)}
+                  onCommissionTypeChange={(t) => updateCommissionType(marketingManagerM.id, t)}
+                />
+              </div>
+            </>
+          )}
+          {communityMgrM && activeBrands.expats && (
+            <>
+              <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+              <div className="flex-1 min-w-0">
+                <MemberCard
+                  member={communityMgrM}
+                  onCommissionRateChange={(r) => updateCommissionRate(communityMgrM.id, r)}
+                  onCommissionTypeChange={(t) => updateCommissionType(communityMgrM.id, t)}
                 />
               </div>
             </>
@@ -133,13 +149,14 @@ export default function TeamView() {
         <div className="w-8 shrink-0 mr-3" />
         <div className="flex-1 relative" style={{ height: 48 }}>
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
-            <FlowLine id="d-dm" x1={250} y1={0} x2={250} y2={48} isDark={isDark} dur={6} delay={0} />
-            <FlowLine id="d-ph" x1={250} y1={0} x2={750} y2={48} isDark={isDark} dur={7} delay={1} />
+            <FlowLine id="d-dm" x1={167} y1={0} x2={167} y2={48} isDark={isDark} dur={6} delay={0} />
+            <FlowLine id="d-ph" x1={167} y1={0} x2={500} y2={48} isDark={isDark} dur={7} delay={0.5} />
+            <FlowLine id="d-cs" x1={167} y1={0} x2={833} y2={48} isDark={isDark} dur={7.5} delay={1} />
           </svg>
         </div>
       </div>
 
-      {/* ━━━ Backoffice ━━━ */}
+      {/* ━━━ Backoffice: Digital Coordinator + Property Hunter + Customer Service ━━━ */}
       <div className="flex flex-col md:flex-row">
         <SectionLabel label="Backoffice" />
         <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-0">
@@ -158,6 +175,18 @@ export default function TeamView() {
               onCommissionTypeChange={(t) => updateCommissionType(propertyHunterM.id, t)}
             />
           </div>
+          {customerServiceM && (
+            <>
+              <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+              <div className="flex-1 min-w-0">
+                <MemberCard
+                  member={customerServiceM}
+                  onCommissionRateChange={(r) => updateCommissionRate(customerServiceM.id, r)}
+                  onCommissionTypeChange={(t) => updateCommissionType(customerServiceM.id, t)}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -167,11 +196,17 @@ export default function TeamView() {
           <div className="w-8 shrink-0 mr-3" />
           <div className="flex-1 relative" style={{ height: 48 }}>
             <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 48" preserveAspectRatio="none" fill="none">
+              {/* Digital Coordinator → All Agents */}
               {agentXPositions.map((ax, i) => (
-                <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={250} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 1} />
+                <FlowLine key={`dm-${i}`} id={`dm-a${i}`} x1={167} y1={0} x2={ax} y2={48} isDark={isDark} dur={6 + i * 0.8} delay={i * 0.8} />
               ))}
+              {/* Property Hunter → All Agents */}
               {agentXPositions.map((ax, i) => (
-                <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={750} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.6 + i * 0.8} />
+                <FlowLine key={`ph-${i}`} id={`ph-a${i}`} x1={500} y1={0} x2={ax} y2={48} isDark={isDark} dur={6.5 + i * 0.6} delay={0.4 + i * 0.8} />
+              ))}
+              {/* Customer Service → All Agents */}
+              {agentXPositions.map((ax, i) => (
+                <FlowLine key={`cs-${i}`} id={`cs-a${i}`} x1={833} y1={0} x2={ax} y2={48} isDark={isDark} dur={7 + i * 0.5} delay={0.8 + i * 0.8} />
               ))}
             </svg>
           </div>

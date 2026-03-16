@@ -73,7 +73,7 @@ export default function RightPanel() {
   } = useFinancial();
 
   // Hide panel on pages that don't need financial controls
-  const hiddenPages = ['/workflow', '/team'];
+  const hiddenPages = ['/workflow'];
   const isHidden = hiddenPages.includes(pathname);
   if (isHidden) return null;
 
