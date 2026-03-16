@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
@@ -16,10 +15,9 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const { isDark } = useTheme();
-  const { sidebarOpen, closeSidebar } = useMobileNav();
+  const { sidebarOpen, closeSidebar, sidebarCollapsed: collapsed, toggleSidebarCollapsed } = useMobileNav();
 
   return (
     <>
@@ -65,7 +63,7 @@ export default function Sidebar() {
             )}
           </div>
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleSidebarCollapsed}
             className="hidden md:flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-200 cursor-pointer"
             style={{ color: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.25)' }}
           >

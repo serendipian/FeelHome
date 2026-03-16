@@ -89,7 +89,7 @@ export default function RightPanel() {
     <div
       className={`
         fixed right-0 top-0 h-screen z-50 w-[85vw] max-w-[340px]
-        lg:static lg:h-auto lg:z-auto lg:w-[340px]
+        lg:static lg:h-auto lg:z-auto lg:w-[280px]
         shrink-0 flex flex-col gap-5 px-4 py-6 overflow-y-auto
         transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
         ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
