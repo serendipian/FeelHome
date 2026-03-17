@@ -1,0 +1,344 @@
+<h2>Final Design — Team Org Chart Page</h2>
+<p class="subtitle">New route /org — existing /team page stays 100% untouched</p>
+
+<div style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Full Page Mockup — /org</div>
+    <div class="mockup-body" style="background: #06070a; padding: 0; min-height: 600px; position: relative; overflow: hidden;">
+
+      <!-- Sidebar hint -->
+      <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 56px; background: rgba(255,255,255,0.02); border-right: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; align-items: center; padding-top: 16px; gap: 20px;">
+        <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04);"></div>
+        <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04);"></div>
+        <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(212,168,83,0.15); border: 1px solid rgba(212,168,83,0.3);"></div>
+        <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.04);"></div>
+      </div>
+
+      <!-- Main content area -->
+      <div style="margin-left: 56px; padding: 24px 32px; position: relative;">
+
+        <!-- Page header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+          <div>
+            <h3 style="color: white; font-size: 18px; font-weight: 700; margin: 0;">Organization</h3>
+            <p style="color: rgba(255,255,255,0.4); font-size: 12px; margin-top: 4px;">Team structure & hierarchy — 10 members</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(212,168,83,0.08); border: 1px solid rgba(212,168,83,0.2); border-radius: 8px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #d4a853;"></div>
+              <span style="color: rgba(212,168,83,0.7); font-size: 10px;">Command</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(45,212,191,0.06); border: 1px solid rgba(45,212,191,0.15); border-radius: 8px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #2dd4bf;"></div>
+              <span style="color: rgba(45,212,191,0.7); font-size: 10px;">Collaboration</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.15); border-radius: 8px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></div>
+              <span style="color: rgba(245,158,11,0.7); font-size: 10px;">Oversight</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIER: Leadership -->
+        <div style="margin-bottom: 8px;">
+          <span style="color: rgba(212,168,83,0.3); font-size: 9px; font-weight: 700; letter-spacing: 3px;">LEADERSHIP</span>
+        </div>
+        <div style="border-bottom: 1px solid rgba(212,168,83,0.06); padding-bottom: 20px; margin-bottom: 16px;">
+          <div style="display: flex; gap: 16px; justify-content: center;">
+            <!-- Director card -->
+            <div style="background: rgba(212,168,83,0.05); border: 1px solid rgba(212,168,83,0.3); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 20px rgba(212,168,83,0.05);" onmouseover="this.style.borderColor='rgba(212,168,83,0.6)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(212,168,83,0.3)'; this.style.transform='translateY(0)'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(212,168,83,0.15); border: 2px solid #d4a853; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #d4a853; font-size: 11px; font-weight: 700;">DIR</span>
+              </div>
+              <div>
+                <div style="color: #d4a853; font-size: 13px; font-weight: 600;">Director</div>
+                <span style="background: rgba(239,68,68,0.12); color: #f87171; padding: 1px 8px; border-radius: 99px; font-size: 9px;">CDI</span>
+              </div>
+            </div>
+            <!-- Dashed link -->
+            <div style="display: flex; align-items: center;">
+              <div style="width: 40px; border-top: 1.5px dashed rgba(212,168,83,0.25);"></div>
+            </div>
+            <!-- Marketing Mgr card -->
+            <div style="background: rgba(245,158,11,0.04); border: 1px solid rgba(245,158,11,0.25); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(245,158,11,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(245,158,11,0.25)'; this.style.transform='translateY(0)'">
+              <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(245,158,11,0.12); border: 2px solid #f59e0b; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #f59e0b; font-size: 11px; font-weight: 700;">MK</span>
+              </div>
+              <div>
+                <div style="color: #f59e0b; font-size: 13px; font-weight: 600;">Marketing Mgr</div>
+                <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 8px; border-radius: 99px; font-size: 9px;">Freelance</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vertical connector lines (simplified) -->
+        <div style="display: flex; justify-content: center; gap: 120px; margin-bottom: 4px; padding: 0 40px;">
+          <div style="width: 1px; height: 24px; background: linear-gradient(to bottom, rgba(212,168,83,0.3), rgba(212,168,83,0.05));"></div>
+          <div style="width: 1px; height: 24px; background: linear-gradient(to bottom, rgba(245,158,11,0.25), rgba(245,158,11,0.05));"></div>
+        </div>
+
+        <!-- TIER: Backoffice -->
+        <div style="margin-bottom: 8px;">
+          <span style="color: rgba(45,212,191,0.3); font-size: 9px; font-weight: 700; letter-spacing: 3px;">BACKOFFICE</span>
+        </div>
+        <div style="border-bottom: 1px solid rgba(45,212,191,0.06); padding-bottom: 20px; margin-bottom: 16px;">
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <!-- Digital Coord -->
+            <div style="background: rgba(154,107,58,0.04); border: 1px solid rgba(154,107,58,0.25); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(154,107,58,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(154,107,58,0.25)'; this.style.transform='translateY(0)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(154,107,58,0.12); border: 1.5px solid #9a6b3a; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #9a6b3a; font-size: 10px; font-weight: 700;">DC</span>
+              </div>
+              <div>
+                <div style="color: #9a6b3a; font-size: 12px; font-weight: 600;">Digital Coord.</div>
+                <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+              </div>
+            </div>
+            <!-- Property Hunter -->
+            <div style="background: rgba(6,182,212,0.04); border: 1px solid rgba(6,182,212,0.25); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(6,182,212,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(6,182,212,0.25)'; this.style.transform='translateY(0)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(6,182,212,0.12); border: 1.5px solid #06b6d4; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #06b6d4; font-size: 10px; font-weight: 700;">PH</span>
+              </div>
+              <div>
+                <div style="color: #06b6d4; font-size: 12px; font-weight: 600;">Property Hunter</div>
+                <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+              </div>
+            </div>
+            <!-- Customer Service -->
+            <div style="background: rgba(139,92,246,0.04); border: 1px solid rgba(139,92,246,0.25); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(139,92,246,0.25)'; this.style.transform='translateY(0)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(139,92,246,0.12); border: 1.5px solid #8b5cf6; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #8b5cf6; font-size: 10px; font-weight: 700;">CS</span>
+              </div>
+              <div>
+                <div style="color: #8b5cf6; font-size: 12px; font-weight: 600;">Customer Service</div>
+                <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+              </div>
+            </div>
+            <!-- Community Mgr -->
+            <div style="background: rgba(236,72,153,0.04); border: 1px solid rgba(236,72,153,0.25); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(236,72,153,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(236,72,153,0.25)'; this.style.transform='translateY(0)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(236,72,153,0.12); border: 1.5px solid #ec4899; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #ec4899; font-size: 10px; font-weight: 700;">CM</span>
+              </div>
+              <div>
+                <div style="color: #ec4899; font-size: 12px; font-weight: 600;">Community Mgr</div>
+                <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collaboration zone hint -->
+        <div style="margin: 8px 40px 8px; padding: 6px; border: 1px dashed rgba(45,212,191,0.12); border-radius: 10px; text-align: center;">
+          <span style="color: rgba(45,212,191,0.3); font-size: 9px; letter-spacing: 2px; font-weight: 600;">↕ BIDIRECTIONAL COLLABORATION ↕</span>
+        </div>
+
+        <!-- TIER: Field Agents -->
+        <div style="margin-bottom: 8px; margin-top: 12px;">
+          <span style="color: rgba(29,127,243,0.3); font-size: 9px; font-weight: 700; letter-spacing: 3px;">FIELD AGENTS</span>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <!-- Agent Casa -->
+          <div style="background: rgba(29,127,243,0.04); border: 1px solid rgba(29,127,243,0.2); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(29,127,243,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(29,127,243,0.2)'; this.style.transform='translateY(0)'">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(29,127,243,0.12); border: 1.5px solid #1d7ff3; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #1d7ff3; font-size: 10px; font-weight: 700;">CA</span>
+            </div>
+            <div>
+              <div style="color: #1d7ff3; font-size: 12px; font-weight: 600;">Casablanca</div>
+              <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+            </div>
+          </div>
+          <!-- Agent Marrakech -->
+          <div style="background: rgba(29,127,243,0.04); border: 1px solid rgba(29,127,243,0.2); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(29,127,243,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(29,127,243,0.2)'; this.style.transform='translateY(0)'">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(29,127,243,0.12); border: 1.5px solid #1d7ff3; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #1d7ff3; font-size: 10px; font-weight: 700;">MK</span>
+            </div>
+            <div>
+              <div style="color: #1d7ff3; font-size: 12px; font-weight: 600;">Marrakech</div>
+              <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+            </div>
+          </div>
+          <!-- Agent Rabat -->
+          <div style="background: rgba(29,127,243,0.04); border: 1px solid rgba(29,127,243,0.2); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(29,127,243,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(29,127,243,0.2)'; this.style.transform='translateY(0)'">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(29,127,243,0.12); border: 1.5px solid #1d7ff3; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #1d7ff3; font-size: 10px; font-weight: 700;">RA</span>
+            </div>
+            <div>
+              <div style="color: #1d7ff3; font-size: 12px; font-weight: 600;">Rabat</div>
+              <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+            </div>
+          </div>
+          <!-- Agent Other -->
+          <div style="background: rgba(29,127,243,0.04); border: 1px solid rgba(29,127,243,0.2); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(29,127,243,0.5)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(29,127,243,0.2)'; this.style.transform='translateY(0)'">
+            <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(29,127,243,0.12); border: 1.5px solid #1d7ff3; display: flex; align-items: center; justify-content: center;">
+              <span style="color: #1d7ff3; font-size: 10px; font-weight: 700;">OT</span>
+            </div>
+            <div>
+              <div style="color: #1d7ff3; font-size: 12px; font-weight: 600;">Other Cities</div>
+              <span style="background: rgba(29,127,243,0.12); color: #60a5fa; padding: 1px 7px; border-radius: 99px; font-size: 9px;">Freelance</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LATERAL MODAL (slide-in from right) -->
+      <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 340px; background: rgba(10,12,20,0.97); border-left: 1px solid rgba(6,182,212,0.2); backdrop-filter: blur(20px); padding: 24px; overflow-y: auto; box-shadow: -20px 0 60px rgba(0,0,0,0.5);">
+
+        <!-- Close button -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <span style="color: rgba(255,255,255,0.4); font-size: 14px;">✕</span>
+          </div>
+        </div>
+
+        <!-- Section 1: Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(6,182,212,0.12); border: 2px solid #06b6d4; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+            <span style="color: #06b6d4; font-size: 18px; font-weight: 700;">PH</span>
+          </div>
+          <div style="color: #06b6d4; font-size: 16px; font-weight: 700;">Property Hunter</div>
+          <div style="color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 4px;">Sourcing</div>
+          <div style="display: flex; justify-content: center; gap: 6px; margin-top: 8px;">
+            <span style="font-size: 14px;">🇫🇷</span>
+            <span style="font-size: 14px;">🇲🇦</span>
+          </div>
+        </div>
+
+        <!-- Section 2: Schedule -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">SCHEDULE</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;">
+              <div style="color: rgba(255,255,255,0.35); font-size: 9px;">Contract</div>
+              <div style="color: white; font-size: 12px; font-weight: 600; margin-top: 2px;">Freelance</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;">
+              <div style="color: rgba(255,255,255,0.35); font-size: 9px;">Start</div>
+              <div style="color: white; font-size: 12px; font-weight: 600; margin-top: 2px;">Month 1</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;">
+              <div style="color: rgba(255,255,255,0.35); font-size: 9px;">Status</div>
+              <div style="color: white; font-size: 12px; font-weight: 600; margin-top: 2px;">Full-time</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px 10px;">
+              <div style="color: rgba(255,255,255,0.35); font-size: 9px;">Hours</div>
+              <div style="color: white; font-size: 12px; font-weight: 600; margin-top: 2px;">9h-18h</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Responsibilities -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">RESPONSIBILITIES</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(6,182,212,0.04); border-radius: 6px;">
+              <span style="color: #06b6d4; font-size: 12px;">🔍</span>
+              <span style="color: rgba(255,255,255,0.7); font-size: 11px;">Property sourcing</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(6,182,212,0.04); border-radius: 6px;">
+              <span style="color: #06b6d4; font-size: 12px;">📞</span>
+              <span style="color: rgba(255,255,255,0.7); font-size: 11px;">Owner outreach</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(6,182,212,0.04); border-radius: 6px;">
+              <span style="color: #06b6d4; font-size: 12px;">📥</span>
+              <span style="color: rgba(255,255,255,0.7); font-size: 11px;">Inbound calls & msgs</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px;">
+              <span style="color: rgba(6,182,212,0.5); font-size: 10px;">+3 more</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Compensation -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">COMPENSATION</div>
+          <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(255,255,255,0.4); font-size: 11px;">Base Salary</span>
+              <span style="color: white; font-size: 11px; font-weight: 600; font-family: monospace;">6,000 MAD</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: rgba(255,255,255,0.4); font-size: 11px;">Commission</span>
+              <span style="color: #06b6d4; font-size: 11px; font-weight: 600;">10% Linked Deals</span>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; margin-top: 4px; display: flex; justify-content: space-between;">
+              <span style="color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 600;">Total Cost</span>
+              <span style="color: #d4a853; font-size: 12px; font-weight: 700; font-family: monospace;">6,000 MAD</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Skills & Tools -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">SKILLS</div>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span style="background: rgba(6,182,212,0.08); color: rgba(6,182,212,0.7); padding: 3px 8px; border-radius: 6px; font-size: 10px;">Cold Calling</span>
+            <span style="background: rgba(6,182,212,0.08); color: rgba(6,182,212,0.7); padding: 3px 8px; border-radius: 6px; font-size: 10px;">Market Knowledge</span>
+            <span style="background: rgba(6,182,212,0.08); color: rgba(6,182,212,0.7); padding: 3px 8px; border-radius: 6px; font-size: 10px;">Negotiation</span>
+            <span style="background: rgba(6,182,212,0.08); color: rgba(6,182,212,0.7); padding: 3px 8px; border-radius: 6px; font-size: 10px;">CRM</span>
+          </div>
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 6px; margin-top: 12px;">TOOLS</div>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <span style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); padding: 3px 8px; border-radius: 6px; font-size: 10px;">WhatsApp</span>
+            <span style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); padding: 3px 8px; border-radius: 6px; font-size: 10px;">Google Maps</span>
+            <span style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); padding: 3px 8px; border-radius: 6px; font-size: 10px;">CRM</span>
+            <span style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); padding: 3px 8px; border-radius: 6px; font-size: 10px;">Phone</span>
+          </div>
+        </div>
+
+        <!-- Section 6: KPIs -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">KPIs</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+              <span style="color: rgba(255,255,255,0.6); font-size: 11px;">Listings</span>
+              <span style="color: #2dd4bf; font-size: 11px; font-weight: 600; font-family: monospace;">20/mo</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+              <span style="color: rgba(255,255,255,0.6); font-size: 11px;">Owner Response</span>
+              <span style="color: #2dd4bf; font-size: 11px; font-weight: 600; font-family: monospace;">60%/mo</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+              <span style="color: rgba(255,255,255,0.6); font-size: 11px;">DB Accuracy</span>
+              <span style="color: #2dd4bf; font-size: 11px; font-weight: 600; font-family: monospace;">95%/mo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 7: Brand Affiliation -->
+        <div>
+          <div style="color: rgba(255,255,255,0.3); font-size: 9px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">BRANDS</div>
+          <div style="display: flex; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(212,168,83,0.06); border: 1px solid rgba(212,168,83,0.15); border-radius: 8px;">
+              <div style="width: 18px; height: 18px; border-radius: 4px; background: rgba(212,168,83,0.2); display: flex; align-items: center; justify-content: center;">
+                <span style="color: #d4a853; font-size: 8px; font-weight: 700;">FH</span>
+              </div>
+              <span style="color: rgba(212,168,83,0.7); font-size: 10px;">Feel Home</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: rgba(29,127,243,0.06); border: 1px solid rgba(29,127,243,0.15); border-radius: 8px;">
+              <div style="width: 18px; height: 18px; border-radius: 4px; background: rgba(29,127,243,0.2); display: flex; align-items: center; justify-content: center;">
+                <span style="color: #1d7ff3; font-size: 8px; font-weight: 700;">MI</span>
+              </div>
+              <span style="color: rgba(29,127,243,0.7); font-size: 10px;">M Invest</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 24px; padding: 16px; background: rgba(45,212,191,0.04); border-radius: 10px; border: 1px solid rgba(45,212,191,0.12);">
+  <h3 style="margin-bottom: 8px; color: #2dd4bf;">Design Summary</h3>
+  <ul style="font-size: 13px; opacity: 0.8; line-height: 2; padding-left: 16px;">
+    <li><strong>New route:</strong> <code>/org</code> — new page + new nav item in Sidebar</li>
+    <li><strong>Existing /team page:</strong> 100% untouched</li>
+    <li><strong>Cards:</strong> Avatar + Title + Contract badge (minimal)</li>
+    <li><strong>SVG connection lines</strong> with animated particles between tiers</li>
+    <li><strong>Click any card → lateral modal</strong> slides in from right (all 7 sections)</li>
+    <li><strong>3 relationship types:</strong> Gold command, Teal collab, Amber oversight</li>
+    <li><strong>Read-only view</strong> — no editing, pure investor presentation</li>
+  </ul>
+</div>

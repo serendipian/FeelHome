@@ -1,0 +1,95 @@
+<h2>Lateral Modal — What info to display?</h2>
+<p class="subtitle">Click a card → side panel slides in. What sections should it contain?</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+
+  <!-- LEFT: The minimal card preview -->
+  <div>
+    <h3 style="margin-bottom: 16px; opacity: 0.5; font-size: 12px; letter-spacing: 2px;">THE CARD (what the investor sees)</h3>
+    <div style="background: rgba(6,182,212,0.04); border: 1px solid rgba(6,182,212,0.25); border-radius: 12px; padding: 20px; width: 200px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(6,182,212,0.5)'; this.style.transform='scale(1.03)'" onmouseout="this.style.borderColor='rgba(6,182,212,0.25)'; this.style.transform='scale(1)'">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(6,182,212,0.15); border: 1.5px solid #06b6d4; display: flex; align-items: center; justify-content: center;">
+        <span style="color: #06b6d4; font-size: 12px; font-weight: 700;">PH</span>
+      </div>
+      <div>
+        <div style="color: #06b6d4; font-size: 13px; font-weight: 600;">Property Hunter</div>
+        <div style="margin-top: 3px;">
+          <span style="background: rgba(29,127,243,0.15); color: #60a5fa; padding: 1px 8px; border-radius: 99px; font-size: 10px; font-weight: 500;">Freelance</span>
+        </div>
+      </div>
+    </div>
+    <p style="opacity: 0.4; font-size: 11px; margin-top: 12px;">→ Click to expand lateral modal</p>
+  </div>
+
+  <!-- RIGHT: The modal sections to choose from -->
+  <div>
+    <h3 style="margin-bottom: 16px; opacity: 0.5; font-size: 12px; letter-spacing: 2px;">POSSIBLE MODAL SECTIONS</h3>
+    <p style="font-size: 13px; opacity: 0.7; margin-bottom: 16px;">Select which sections the modal should include:</p>
+
+    <div class="options" data-multiselect style="display: flex; flex-direction: column; gap: 10px;">
+
+      <div class="option" data-choice="header" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">1</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Header — Avatar, Title, Scope, Languages</h3>
+          <p style="font-size:12px;">Big avatar, role title, scope tag, language flags</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="schedule" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">2</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Schedule — Contract, Start Month, Hours</h3>
+          <p style="font-size:12px;">CDI/CDD/Freelance, start date, full-time/part-time, work hours</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="responsibilities" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">3</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Responsibilities — Icon + Label list</h3>
+          <p style="font-size:12px;">6 key responsibilities with icons (e.g. HR Management, Lead Qualification...)</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="compensation" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">4</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Compensation — Salary, Commission, Total Cost</h3>
+          <p style="font-size:12px;">Base salary, CNSS contributions, commission rate & type, total monthly cost</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="skills" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">5</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Skills & Tools — Tag clouds</h3>
+          <p style="font-size:12px;">Skills tags (Negotiation, CRM...) + Tools tags (WhatsApp, Canva...)</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="kpis" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">6</div>
+        <div class="content">
+          <h3 style="font-size:14px;">KPIs — Targets & Metrics</h3>
+          <p style="font-size:12px;">Revenue targets, conversion rates, response times... with target values</p>
+        </div>
+      </div>
+
+      <div class="option" data-choice="brands" onclick="toggleSelect(this)" style="padding: 12px 16px; cursor:pointer;">
+        <div class="letter" style="font-size:11px;">7</div>
+        <div class="content">
+          <h3 style="font-size:14px;">Brand Affiliation — Which brands they serve</h3>
+          <p style="font-size:12px;">Feel Home, M Invest, Expats.ma — with brand avatars/colors</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 28px; padding: 16px; background: rgba(212,168,83,0.04); border-radius: 10px; border: 1px solid rgba(212,168,83,0.12);">
+  <p style="font-size: 13px; color: #d4a853;">
+    <strong>My recommendation:</strong> For an investor, include all 7 sections but organized as a scrollable panel. The header + responsibilities give the "what does this person do" answer in 2 seconds. KPIs show accountability. Compensation shows cost structure. Skills/tools show professionalism. Keep it all read-only — no editing in this view.
+  </p>
+</div>

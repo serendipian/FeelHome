@@ -200,9 +200,17 @@ export default function PnlView() {
     <div className="space-y-8 animate-fadeIn">
       {/* ─── REVENUES SECTION ─── */}
       <div className="space-y-4">
-        <div className="flex items-center gap-3 px-1">
-          <div className="w-2 h-2 rounded-full bg-[#d4a853]" />
-          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Revenues</span>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2.5 px-4 py-2 rounded-xl"
+            style={{ background: 'rgba(45,212,191,0.06)', border: '1px solid rgba(45,212,191,0.12)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+              <polyline points="16 7 22 7 22 13" />
+            </svg>
+            <span className="text-[12px] font-bold text-[#2dd4bf] uppercase tracking-[0.12em]">Revenues</span>
+          </div>
         </div>
 
         {/* Feel Home */}
@@ -409,9 +417,17 @@ export default function PnlView() {
 
       {/* ─── EXPENSES SECTION ─── */}
       <div className="space-y-4">
-        <div className="flex items-center gap-3 px-1">
-          <div className="w-2 h-2 rounded-full bg-[#f43f5e]" />
-          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Expenses</span>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2.5 px-4 py-2 rounded-xl"
+            style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.12)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+              <polyline points="16 17 22 17 22 11" />
+            </svg>
+            <span className="text-[12px] font-bold text-[#f43f5e] uppercase tracking-[0.12em]">Expenses</span>
+          </div>
         </div>
 
         {(['salaries', 'fixed', 'marketing'] as const).map((cat) => {
@@ -518,12 +534,17 @@ export default function PnlView() {
 
       {/* ─── BOTTOM LINE ─── */}
       <div className="space-y-5">
-        <div className="flex items-center gap-3 px-1">
-          <div className="relative w-2.5 h-2.5">
-            <div className="absolute inset-0 rounded-full bg-[#2dd4bf] animate-ping opacity-30" />
-            <div className="relative w-2.5 h-2.5 rounded-full bg-[#2dd4bf]" />
+        <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-2.5 px-4 py-2 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span className="text-[12px] font-bold text-white/70 uppercase tracking-[0.12em]">Bottom Line</span>
           </div>
-          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Bottom Line</span>
         </div>
 
         {/* All bottom line rows — uniform style */}
