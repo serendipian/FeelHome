@@ -64,23 +64,27 @@ export default function ExpensesView() {
     updateTeamMember(info.id, { commission: { rate: newRate, type: newType } });
   }, [teamByLabel, updateTeamMember]);
 
-  // Calculate revenues by market for each year (for commission amounts)
+  // Calculate revenues by market for each year (brand-aware)
   const revenueByMarketYear = useMemo(() => {
     const years = ['y1', 'y2', 'y3'] as const;
     const result: Record<string, { y1: number; y2: number; y3: number }> = {};
 
-    for (const sale of saleRevenues) {
-      const key = sale.label.toLowerCase();
-      if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
-      for (const y of years) result[key][y] += sale[y].total;
+    if (activeBrands.mInvest) {
+      for (const sale of saleRevenues) {
+        const key = sale.label.toLowerCase();
+        if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
+        for (const y of years) result[key][y] += sale[y].total;
+      }
     }
-    for (const rental of rentalRevenues) {
-      const key = rental.label.toLowerCase();
-      if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
-      for (const y of years) result[key][y] += rental[y].total;
+    if (activeBrands.feelHome) {
+      for (const rental of rentalRevenues) {
+        const key = rental.label.toLowerCase();
+        if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
+        for (const y of years) result[key][y] += rental[y].total;
+      }
     }
     return result;
-  }, [saleRevenues, rentalRevenues]);
+  }, [activeBrands, saleRevenues, rentalRevenues]);
 
   // Total revenues per year (FH + MI + Expats)
   const totalRevenueYear = useMemo(() => {
