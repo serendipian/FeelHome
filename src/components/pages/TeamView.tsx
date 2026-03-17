@@ -34,8 +34,9 @@ function formatMADShort(n: number, currency: 'MAD' | 'USD' = 'MAD') {
 export default function TeamView() {
   const { isDark } = useTheme();
   const { activeBrands, activeMarkets } = useFinancial();
-  const { teamData, updateTeamMember } = useTeam();
+  const { teamData, updateTeamMember, updateKPI } = useTeam();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>('overview');
 
   // Merge persisted data with static display props
   const members = teamData.map(mergeTeamMember);
@@ -106,6 +107,23 @@ export default function TeamView() {
       {/* ━━━ View Mode ━━━ */}
       {!isEditMode && <>
 
+      {/* ━━━ Global Tab Bar ━━━ */}
+      <div className={`flex mb-6 rounded-lg p-0.5 max-w-md ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 text-[9px] font-semibold uppercase tracking-[0.1em] py-2 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
+              activeTab === tab.key
+                ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
+                : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* ━━━ Management: Director + Marketing Manager + Community Manager ━━━ */}
       <div className="flex flex-col md:flex-row">
         <SectionLabel label="Management" />
@@ -113,8 +131,10 @@ export default function TeamView() {
           <div className="flex-1 min-w-0">
             <DirectorCard
               member={directorM}
+              activeTab={activeTab}
               onCommissionRateChange={(r) => updateCommissionRate(directorM.id, r)}
               onCommissionTypeChange={(t) => updateCommissionType(directorM.id, t)}
+              onKPIChange={(i, f, v) => updateKPI(directorM.id, i, f, v)}
             />
           </div>
           {marketingManagerM && (
@@ -123,8 +143,10 @@ export default function TeamView() {
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={marketingManagerM}
+                  activeTab={activeTab}
                   onCommissionRateChange={(r) => updateCommissionRate(marketingManagerM.id, r)}
                   onCommissionTypeChange={(t) => updateCommissionType(marketingManagerM.id, t)}
+                  onKPIChange={(i, f, v) => updateKPI(marketingManagerM.id, i, f, v)}
                 />
               </div>
             </>
@@ -135,8 +157,10 @@ export default function TeamView() {
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={communityMgrM}
+                  activeTab={activeTab}
                   onCommissionRateChange={(r) => updateCommissionRate(communityMgrM.id, r)}
                   onCommissionTypeChange={(t) => updateCommissionType(communityMgrM.id, t)}
+                  onKPIChange={(i, f, v) => updateKPI(communityMgrM.id, i, f, v)}
                 />
               </div>
             </>
@@ -163,16 +187,20 @@ export default function TeamView() {
           <div className="flex-1 min-w-0">
             <MemberCard
               member={digitalManagerM}
+              activeTab={activeTab}
               onCommissionRateChange={(r) => updateCommissionRate(digitalManagerM.id, r)}
               onCommissionTypeChange={(t) => updateCommissionType(digitalManagerM.id, t)}
+              onKPIChange={(i, f, v) => updateKPI(digitalManagerM.id, i, f, v)}
             />
           </div>
           <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
           <div className="flex-1 min-w-0">
             <MemberCard
               member={propertyHunterM}
+              activeTab={activeTab}
               onCommissionRateChange={(r) => updateCommissionRate(propertyHunterM.id, r)}
               onCommissionTypeChange={(t) => updateCommissionType(propertyHunterM.id, t)}
+              onKPIChange={(i, f, v) => updateKPI(propertyHunterM.id, i, f, v)}
             />
           </div>
           {customerServiceM && (
@@ -181,8 +209,10 @@ export default function TeamView() {
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={customerServiceM}
+                  activeTab={activeTab}
                   onCommissionRateChange={(r) => updateCommissionRate(customerServiceM.id, r)}
                   onCommissionTypeChange={(t) => updateCommissionType(customerServiceM.id, t)}
+                  onKPIChange={(i, f, v) => updateKPI(customerServiceM.id, i, f, v)}
                 />
               </div>
             </>
@@ -222,8 +252,10 @@ export default function TeamView() {
               <MemberCard
                 key={member.id}
                 member={member}
+                activeTab={activeTab}
                 onCommissionRateChange={(r) => updateCommissionRate(member.id, r)}
                 onCommissionTypeChange={(t) => updateCommissionType(member.id, t)}
+                onKPIChange={(i, f, v) => updateKPI(member.id, i, f, v)}
               />
             ))}
           </div>
@@ -345,15 +377,18 @@ function HorizontalConnector({ isDark }: { isDark: boolean }) {
 
 function DirectorCard({
   member,
+  activeTab,
   onCommissionRateChange,
   onCommissionTypeChange,
+  onKPIChange,
 }: {
   member: MergedTeamMember;
+  activeTab: TabKey;
   onCommissionRateChange: (rate: number) => void;
   onCommissionTypeChange: (type: CommissionType) => void;
+  onKPIChange: (index: number, field: 'label' | 'target', value: string) => void;
 }) {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const textPrimary = isDark ? 'text-white/90' : 'text-slate-800';
   const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
   const borderSub = isDark ? 'border-white/[0.04]' : 'border-slate-100';
@@ -421,31 +456,16 @@ function DirectorCard({
           </div>
         </div>
 
-        {/* Always-open tabbed content */}
+        {/* Tab content */}
         <div className="px-7 pb-6">
           <div className={`border-t ${borderSub} pt-4`}>
-            {/* Tab bar */}
-            <div className={`flex mb-4 rounded-lg p-0.5 ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
-              {TABS.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 text-[8px] font-semibold uppercase tracking-[0.1em] py-1.5 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
-                    activeTab === tab.key
-                      ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
-                      : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
             <TabContent
               member={member}
               tab={activeTab}
               color={member.color}
               onCommissionRateChange={onCommissionRateChange}
               onCommissionTypeChange={onCommissionTypeChange}
+              onKPIChange={onKPIChange}
             />
           </div>
         </div>
@@ -458,15 +478,18 @@ function DirectorCard({
 
 function MemberCard({
   member,
+  activeTab,
   onCommissionRateChange,
   onCommissionTypeChange,
+  onKPIChange,
 }: {
   member: MergedTeamMember;
+  activeTab: TabKey;
   onCommissionRateChange: (rate: number) => void;
   onCommissionTypeChange: (type: CommissionType) => void;
+  onKPIChange: (index: number, field: 'label' | 'target', value: string) => void;
 }) {
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const textPrimary = isDark ? 'text-white/85' : 'text-slate-800';
   const textTertiary = isDark ? 'text-white/30' : 'text-slate-400';
   const borderSub = isDark ? 'border-white/[0.04]' : 'border-slate-100';
@@ -514,30 +537,16 @@ function MemberCard({
         </div>
       </div>
 
-      {/* Always-open tabbed content */}
+      {/* Tab content */}
       <div className="px-5 pb-5">
         <div className={`border-t ${borderSub} pt-4`}>
-          <div className={`flex mb-4 rounded-lg p-0.5 ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-1 text-[8px] font-semibold uppercase tracking-[0.1em] py-1.5 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
-                  activeTab === tab.key
-                    ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
-                    : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
           <TabContent
             member={member}
             tab={activeTab}
             color={member.color}
             onCommissionRateChange={onCommissionRateChange}
             onCommissionTypeChange={onCommissionTypeChange}
+            onKPIChange={onKPIChange}
           />
         </div>
       </div>
@@ -547,10 +556,11 @@ function MemberCard({
 
 // ── Tab Content ─────────────────────────────────────────────────────────
 
-function TabContent({ member, tab, color, onCommissionRateChange, onCommissionTypeChange }: {
+function TabContent({ member, tab, color, onCommissionRateChange, onCommissionTypeChange, onKPIChange }: {
   member: MergedTeamMember; tab: TabKey; color: string;
   onCommissionRateChange: (rate: number) => void;
   onCommissionTypeChange: (type: CommissionType) => void;
+  onKPIChange: (index: number, field: 'label' | 'target', value: string) => void;
 }) {
   const { isDark } = useTheme();
   const { expenseItems } = useFinancial();
@@ -722,16 +732,23 @@ function TabContent({ member, tab, color, onCommissionRateChange, onCommissionTy
   if (tab === 'kpis') {
     return (
       <div className="space-y-2">
-        {member.kpis.map((k) => (
+        {member.kpis.map((k, i) => (
           <div
-            key={k.label}
+            key={i}
             className="flex items-center justify-between rounded-lg px-3 py-2"
             style={{ background: pillBg, border: pillBorder }}
           >
             <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{k.label}</span>
-            <span className="text-[11px] font-bold font-mono" style={{ color: `${color}cc` }}>
-              {k.target}
-            </span>
+            <input
+              type="text"
+              value={k.target}
+              onChange={(e) => onKPIChange(i, 'target', e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-24 text-right text-[11px] font-bold font-mono bg-transparent border-b outline-none ${
+                isDark ? 'border-white/10 focus:border-white/30' : 'border-slate-200 focus:border-slate-400'
+              }`}
+              style={{ color: `${color}cc` }}
+            />
           </div>
         ))}
       </div>
