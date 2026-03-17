@@ -526,138 +526,69 @@ export default function PnlView() {
           <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Bottom Line</span>
         </div>
 
-        {/* Summary rows as stacked cards */}
+        {/* All bottom line rows — uniform style */}
         <div className="space-y-2">
           {(() => {
+            const cumulativeValues: [number, number, number] = [0, 0, 0];
+            for (let yi = 0; yi < 3; yi++) {
+              for (let i = 0; i <= yi; i++) cumulativeValues[yi] += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
+            }
+            const cumulativeDisplay: [number, number, number] = isYearly
+              ? cumulativeValues
+              : [cumulativeValues[0] / 12, cumulativeValues[1] / 12, cumulativeValues[2] / 12];
+
             const bottomRows = [
-              { label: 'Total Revenues', icon: '↗', values: [revTotals[0] * m, revTotals[1] * m, revTotals[2] * m], color: '#2dd4bf' },
-              { label: 'Total Expenses', icon: '↘', values: [expTotals[0] * m, expTotals[1] * m, expTotals[2] * m], color: '#f43f5e' },
-              { label: 'Commissions', icon: '⊘', values: [commTotals[0] * m, commTotals[1] * m, commTotals[2] * m], color: '#f97316' },
+              { label: 'Total Revenues', icon: '↗', values: [revTotals[0] * m, revTotals[1] * m, revTotals[2] * m] as [number, number, number], color: '#2dd4bf' },
+              { label: 'Total Expenses', icon: '↘', values: [expTotals[0] * m, expTotals[1] * m, expTotals[2] * m] as [number, number, number], color: '#f43f5e' },
+              { label: 'Commissions', icon: '⊘', values: [commTotals[0] * m, commTotals[1] * m, commTotals[2] * m] as [number, number, number], color: '#f97316' },
+              { label: 'Net Profit', icon: '⊕', values: [netTotals[0] * m, netTotals[1] * m, netTotals[2] * m] as [number, number, number], color: 'auto' },
+              { label: 'Cumulative P&L', icon: 'Σ', values: cumulativeDisplay, color: 'auto' },
             ];
             return bottomRows.map((row) => {
-              const r = parseInt(row.color.slice(1, 3), 16);
-              const g = parseInt(row.color.slice(3, 5), 16);
-              const b = parseInt(row.color.slice(5, 7), 16);
+              const isAuto = row.color === 'auto';
+              // For auto-color rows, use the sign of Y3 to determine the label color
+              const labelColor = isAuto
+                ? (row.values[2] >= 0 ? '#22c55e' : '#f43f5e')
+                : row.color;
+              const lr = parseInt(labelColor.slice(1, 3), 16);
+              const lg = parseInt(labelColor.slice(3, 5), 16);
+              const lb = parseInt(labelColor.slice(5, 7), 16);
               return (
                 <div key={row.label} className="flex flex-col md:flex-row gap-2">
                   <div
                     className="w-full md:w-1/2 flex items-center gap-3 px-5 py-3.5 rounded-2xl"
                     style={{
-                      background: `rgba(${r},${g},${b},0.04)`,
-                      border: `1px solid rgba(${r},${g},${b},0.10)`,
+                      background: `rgba(${lr},${lg},${lb},0.04)`,
+                      border: `1px solid rgba(${lr},${lg},${lb},0.10)`,
                     }}
                   >
                     <span className="text-[14px] opacity-50">{row.icon}</span>
-                    <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: row.color }}>{row.label}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: labelColor }}>{row.label}</span>
                   </div>
                   <div className="w-full md:w-1/2 flex gap-2">
-                    {row.values.map((v, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 flex items-center justify-center py-3.5 rounded-2xl"
-                        style={{
-                          background: `rgba(${r},${g},${b},0.04)`,
-                          border: `1px solid rgba(${r},${g},${b},0.10)`,
-                        }}
-                      >
-                        <span className="font-mono text-[13px] font-bold" style={{ color: row.color }}>{fNum(Math.round(v))}</span>
-                      </div>
-                    ))}
+                    {row.values.map((v, i) => {
+                      const cellColor = isAuto ? (v >= 0 ? '#22c55e' : '#f43f5e') : row.color;
+                      const cr = parseInt(cellColor.slice(1, 3), 16);
+                      const cg = parseInt(cellColor.slice(3, 5), 16);
+                      const cb = parseInt(cellColor.slice(5, 7), 16);
+                      return (
+                        <div
+                          key={i}
+                          className="flex-1 flex items-center justify-center py-3.5 rounded-2xl"
+                          style={{
+                            background: `rgba(${cr},${cg},${cb},0.04)`,
+                            border: `1px solid rgba(${cr},${cg},${cb},0.10)`,
+                          }}
+                        >
+                          <span className="font-mono text-[13px] font-bold" style={{ color: cellColor }}>{fNum(Math.round(v))}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
             });
           })()}
-        </div>
-
-        {/* Net Profit — hero card */}
-        <div
-          className="relative overflow-hidden rounded-3xl p-[1px]"
-          style={{
-            background: `linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03))`,
-          }}
-        >
-          <div className="rounded-3xl px-6 py-5 backdrop-blur-2xl" style={{ background: 'rgba(6,7,10,0.85)' }}>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-1/2 flex flex-col justify-center gap-1">
-                <span className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.15em]">Result</span>
-                <span className="text-[16px] font-black text-white/90 tracking-tight">Net Profit</span>
-              </div>
-              <div className="w-full md:w-1/2 flex gap-3">
-                {([0, 1, 2] as const).map((yi) => {
-                  const val = netTotals[yi] * m;
-                  const isPositive = val >= 0;
-                  const color = isPositive ? '#22c55e' : '#f43f5e';
-                  const r = isPositive ? 34 : 244;
-                  const g = isPositive ? 197 : 63;
-                  const b = isPositive ? 94 : 94;
-                  return (
-                    <div
-                      key={yi}
-                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 rounded-2xl"
-                      style={{
-                        background: `rgba(${r},${g},${b},0.06)`,
-                        border: `1px solid rgba(${r},${g},${b},0.15)`,
-                        boxShadow: `0 0 20px rgba(${r},${g},${b},0.08)`,
-                      }}
-                    >
-                      <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: `rgba(${r},${g},${b},0.5)` }}>Y{yi + 1}</span>
-                      <span className="font-mono text-[15px] font-black" style={{ color }}>{fNum(Math.round(val))}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Cumulative P&L — accent bar */}
-        <div
-          className="relative overflow-hidden rounded-3xl p-[1px]"
-          style={{
-            background: (() => {
-              let total = 0;
-              for (let i = 0; i < 3; i++) total += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
-              return total >= 0
-                ? 'linear-gradient(135deg, rgba(34,197,94,0.25), rgba(34,197,94,0.05))'
-                : 'linear-gradient(135deg, rgba(244,63,94,0.25), rgba(244,63,94,0.05))';
-            })(),
-          }}
-        >
-          <div className="rounded-3xl px-6 py-5 backdrop-blur-2xl" style={{ background: 'rgba(6,7,10,0.85)' }}>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="w-full md:w-1/2 flex flex-col justify-center gap-1">
-                <span className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.15em]">Accumulated</span>
-                <span className="text-[16px] font-black text-white/90 tracking-tight">Cumulative P&L</span>
-              </div>
-              <div className="w-full md:w-1/2 flex gap-3">
-                {([0, 1, 2] as const).map((yi) => {
-                  let cumulative = 0;
-                  for (let i = 0; i <= yi; i++) cumulative += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
-                  const val = isYearly ? cumulative : cumulative / 12;
-                  const isPositive = val >= 0;
-                  const color = isPositive ? '#22c55e' : '#f43f5e';
-                  const r = isPositive ? 34 : 244;
-                  const g = isPositive ? 197 : 63;
-                  const b = isPositive ? 94 : 94;
-                  return (
-                    <div
-                      key={yi}
-                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 rounded-2xl"
-                      style={{
-                        background: `rgba(${r},${g},${b},0.06)`,
-                        border: `1px solid rgba(${r},${g},${b},0.15)`,
-                        boxShadow: `0 0 20px rgba(${r},${g},${b},0.08)`,
-                      }}
-                    >
-                      <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: `rgba(${r},${g},${b},0.5)` }}>Y{yi + 1}</span>
-                      <span className="font-mono text-[15px] font-black" style={{ color }}>{fNum(Math.round(val))}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

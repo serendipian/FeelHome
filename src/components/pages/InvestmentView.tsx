@@ -292,13 +292,13 @@ export default function InvestmentView() {
                 const rowRev = tableMonths.reduce((s, m) => s + (sim.rentalConvs[idx]?.[m - 1] ?? 0) * item.revPerConv, 0);
                 return (
                   <tr key={`rental-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-20'}`}>
-                    <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                    <td className="pl-10 pr-3 py-1 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                     {tableMonths.map((m, mIdx) => {
                       const mi = m - 1;
                       const conv = sim.rentalConvs[idx]?.[mi] ?? 0;
                       const total = conv * item.revPerConv;
                       return (
-                        <td key={m} className={`px-2 py-2 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
+                        <td key={m} className={`px-2 py-1 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
                           <div className="flex items-center justify-center gap-1.5">
                             <EditableCell
                               value={conv}
@@ -338,13 +338,13 @@ export default function InvestmentView() {
                 const rowRev = tableMonths.reduce((s, m) => s + (sim.saleConvs[idx]?.[m - 1] ?? 0) * item.revPerConv, 0);
                 return (
                   <tr key={`sale-${idx}`} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-20'}`}>
-                    <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                    <td className="pl-10 pr-3 py-1 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                     {tableMonths.map((m, mIdx) => {
                       const mi = m - 1;
                       const conv = sim.saleConvs[idx]?.[mi] ?? 0;
                       const total = conv * item.revPerConv;
                       return (
-                        <td key={m} className={`px-2 py-2 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
+                        <td key={m} className={`px-2 py-1 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
                           <div className="flex items-center justify-center gap-1.5">
                             <EditableCell
                               value={conv}
@@ -383,13 +383,13 @@ export default function InvestmentView() {
                 const rowRev = tableMonths.reduce((s, m) => s + (sim.mediaConvs[idx]?.[m - 1] ?? 0) * item.unitPrice, 0);
                 return (
                   <tr key={`media-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
-                    <td className="pl-10 pr-3 py-2 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
+                    <td className="pl-10 pr-3 py-1 text-[10px] text-white/35 whitespace-nowrap">{item.label}</td>
                     {tableMonths.map((m, mIdx) => {
                       const mi = m - 1;
                       const conv = sim.mediaConvs[idx]?.[mi] ?? 0;
                       const total = conv * item.unitPrice;
                       return (
-                        <td key={m} className={`px-2 py-2 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
+                        <td key={m} className={`px-2 py-1 text-center font-mono text-[11px] ${mIdx > 0 ? 'border-l border-white/[0.04]' : ''}`}>
                           <div className="flex items-center justify-center gap-1.5">
                             <EditableCell
                               value={conv}
