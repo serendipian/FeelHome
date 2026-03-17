@@ -110,10 +110,10 @@ export default function OrgView() {
       <ConnectionLines isDark={isDark} />
 
       {/* ═══ BACKOFFICE TIER ═══ */}
-      <TierLabel label="BACKOFFICE" color="rgba(45,212,191,0.3)" />
+      <TierLabel label="BACKOFFICE" color="rgba(154,107,58,0.5)" />
       <div
         className="pb-5 mb-1"
-        style={{ borderBottom: isDark ? '1px solid rgba(45,212,191,0.06)' : '1px solid rgba(45,212,191,0.1)' }}
+        style={{ borderBottom: isDark ? '1px solid rgba(154,107,58,0.1)' : '1px solid rgba(154,107,58,0.15)' }}
       >
         <div className="flex justify-center gap-3 flex-wrap">
           {ORG_TIERS.backoffice.map(id => {

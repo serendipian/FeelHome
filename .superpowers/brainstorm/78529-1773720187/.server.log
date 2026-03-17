@@ -19,3 +19,4 @@
 {"source":"user-event","type":"click","text":"6\n        \n          KPIs — Targets & Metrics\n          Revenue targets, conversion rates, response times... with target values","choice":"kpis","id":null,"timestamp":1773721820343}
 {"source":"user-event","type":"click","text":"7\n        \n          Brand Affiliation — Which brands they serve\n          Feel Home, M Invest, Expats.ma — with brand avatars/colors","choice":"brands","id":null,"timestamp":1773721820959}
 {"type":"screen-added","file":"/Users/sims/Desktop/PROJETS/PROJETS IMMOBILIER/PIIXEL/Feel Home/.superpowers/brainstorm/78529-1773720187/final-design.html"}
+{"type":"server-stopped","reason":"idle timeout"}
