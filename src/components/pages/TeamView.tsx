@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useFinancial } from '@/context/FinancialContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useTeam } from '@/context/TeamContext';
-import { TEAM_DISPLAY, getIcon, mergeTeamMember } from '@/data/team';
+import { getIcon, mergeTeamMember } from '@/data/team';
 import type { MergedTeamMember } from '@/data/team';
 import type { CommissionType } from '@/types/team';
 import TeamEditTable from '@/components/pages/TeamEditTable';
@@ -14,12 +14,12 @@ import TeamEditTable from '@/components/pages/TeamEditTable';
 
 type TabKey = 'overview' | 'schedule' | 'compensation' | 'skills' | 'kpis';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'overview', label: 'Main Tasks' },
-  { key: 'schedule', label: 'Contract' },
-  { key: 'compensation', label: 'Compensation' },
-  { key: 'skills', label: 'Skills' },
-  { key: 'kpis', label: 'KPIs' },
+const TABS: { key: TabKey; label: string; icon: string }[] = [
+  { key: 'overview', label: 'Tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+  { key: 'schedule', label: 'Contract', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+  { key: 'compensation', label: 'Pay', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { key: 'skills', label: 'Skills', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+  { key: 'kpis', label: 'KPIs', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
 ];
 
 // ── Format helpers ───────────────────────────────────────────────────────
@@ -75,6 +75,11 @@ export default function TeamView() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes tabContentIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-content-enter { animation: tabContentIn 0.35s ease-out; }
       `}</style>
 
       {/* ━━━ View / Edit Toggle ━━━ */}
@@ -108,21 +113,7 @@ export default function TeamView() {
       {!isEditMode && <>
 
       {/* ━━━ Global Tab Bar ━━━ */}
-      <div className={`flex mb-6 rounded-lg p-0.5 max-w-md ${isDark ? 'bg-white/[0.03]' : 'bg-slate-100/80'}`}>
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 text-[9px] font-semibold uppercase tracking-[0.1em] py-2 rounded-md transition-all duration-200 text-center whitespace-nowrap ${
-              activeTab === tab.key
-                ? (isDark ? 'bg-white/[0.08] text-white/90 shadow-sm' : 'bg-white text-slate-700 shadow-sm')
-                : (isDark ? 'text-white/25 hover:text-white/40' : 'text-slate-400 hover:text-slate-500')
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <GlobalTabBar activeTab={activeTab} onTabChange={setActiveTab} isDark={isDark} />
 
       {/* ━━━ Management: Director + Marketing Manager + Community Manager ━━━ */}
       <div className="flex flex-col md:flex-row">
@@ -295,6 +286,157 @@ export default function TeamView() {
   );
 }
 
+// ── Global Tab Bar (animated sliding pill) ───────────────────────────────
+
+function GlobalTabBar({
+  activeTab,
+  onTabChange,
+  isDark,
+}: {
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
+  isDark: boolean;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Map<TabKey, HTMLButtonElement>>(new Map());
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+
+  const measure = useCallback(() => {
+    const btn = tabRefs.current.get(activeTab);
+    const container = containerRef.current;
+    if (!btn || !container) return;
+    const cRect = container.getBoundingClientRect();
+    const bRect = btn.getBoundingClientRect();
+    setPill({ left: bRect.left - cRect.left, width: bRect.width });
+  }, [activeTab]);
+
+  useLayoutEffect(measure, [measure]);
+  useEffect(() => {
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
+
+  const activeIndex = TABS.findIndex(t => t.key === activeTab);
+
+  return (
+    <div className="mb-8">
+      <div
+        ref={containerRef}
+        className="relative inline-flex items-center gap-0.5 rounded-2xl p-1"
+        style={{
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+            : 'linear-gradient(135deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.02) 100%)',
+          border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(15,23,42,0.08)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
+      >
+        {/* Sliding pill indicator */}
+        <div
+          className="absolute top-1 rounded-xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{
+            left: pill.left,
+            width: pill.width,
+            height: 'calc(100% - 8px)',
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(212,168,83,0.15) 0%, rgba(212,168,83,0.06) 100%)'
+              : 'linear-gradient(135deg, rgba(212,168,83,0.12) 0%, rgba(212,168,83,0.04) 100%)',
+            border: '1px solid rgba(212,168,83,0.25)',
+            boxShadow: '0 0 20px rgba(212,168,83,0.15), 0 0 40px rgba(212,168,83,0.05), inset 0 1px 0 rgba(255,255,255,0.05)',
+          }}
+        />
+
+        {/* Glow under active pill */}
+        <div
+          className="absolute bottom-0 h-[2px] rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{
+            left: pill.left + pill.width * 0.2,
+            width: pill.width * 0.6,
+            background: 'linear-gradient(90deg, transparent, rgba(212,168,83,0.6), transparent)',
+            filter: 'blur(1px)',
+          }}
+        />
+
+        {TABS.map((tab, i) => {
+          const isActive = tab.key === activeTab;
+          return (
+            <button
+              key={tab.key}
+              ref={(el) => { if (el) tabRefs.current.set(tab.key, el); }}
+              onClick={() => onTabChange(tab.key)}
+              className="relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 group/tab"
+              style={{ minWidth: 0 }}
+            >
+              {/* Tab icon */}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0 transition-all duration-300"
+                style={{
+                  stroke: isActive
+                    ? '#d4a853'
+                    : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(15,23,42,0.25)',
+                  filter: isActive ? 'drop-shadow(0 0 4px rgba(212,168,83,0.4))' : 'none',
+                  transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                }}
+              >
+                <path d={tab.icon} />
+              </svg>
+
+              {/* Tab label */}
+              <span
+                className="text-[10px] font-semibold uppercase tracking-[0.08em] whitespace-nowrap transition-all duration-300"
+                style={{
+                  color: isActive
+                    ? (isDark ? 'rgba(212,168,83,0.95)' : 'rgba(154,107,58,0.95)')
+                    : (isDark ? 'rgba(255,255,255,0.25)' : 'rgba(15,23,42,0.35)'),
+                  textShadow: isActive ? '0 0 12px rgba(212,168,83,0.3)' : 'none',
+                }}
+              >
+                {tab.label}
+              </span>
+
+              {/* Active dot */}
+              <div
+                className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full transition-all duration-300"
+                style={{
+                  background: '#d4a853',
+                  opacity: isActive ? 1 : 0,
+                  transform: `translateX(-50%) scale(${isActive ? 1 : 0})`,
+                  boxShadow: '0 0 6px rgba(212,168,83,0.6)',
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Progress line under tabs */}
+      <div
+        className="mt-2 h-px rounded-full overflow-hidden"
+        style={{
+          background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(15,23,42,0.06)',
+          maxWidth: containerRef.current?.offsetWidth || 500,
+        }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{
+            width: `${((activeIndex + 1) / TABS.length) * 100}%`,
+            background: 'linear-gradient(90deg, rgba(212,168,83,0.1), rgba(212,168,83,0.5), rgba(212,168,83,0.2))',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Section Label (vertical, left side) ─────────────────────────────────
 
 function SectionLabel({ label }: { label: string }) {
@@ -458,7 +600,7 @@ function DirectorCard({
 
         {/* Tab content */}
         <div className="px-7 pb-6">
-          <div className={`border-t ${borderSub} pt-4`}>
+          <div className={`border-t ${borderSub} pt-4 tab-content-enter`} key={activeTab}>
             <TabContent
               member={member}
               tab={activeTab}
@@ -738,7 +880,15 @@ function TabContent({ member, tab, color, onCommissionRateChange, onCommissionTy
             className="flex items-center justify-between rounded-lg px-3 py-2"
             style={{ background: pillBg, border: pillBorder }}
           >
-            <span className={`text-[10px] font-medium uppercase tracking-[0.1em] ${textTertiary}`}>{k.label}</span>
+            <input
+              type="text"
+              value={k.label}
+              onChange={(e) => onKPIChange(i, 'label', e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className={`text-[10px] font-medium uppercase tracking-[0.1em] bg-transparent border-b outline-none ${
+                isDark ? 'border-white/10 focus:border-white/30' : 'border-slate-200 focus:border-slate-400'
+              } ${textTertiary}`}
+            />
             <input
               type="text"
               value={k.target}
