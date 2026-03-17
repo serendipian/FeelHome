@@ -389,7 +389,7 @@ function ZoomControls({ isDark, canvasW, canvasH, containerRef }: {
   canvasH: number;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const { zoomIn, zoomOut, centerView } = useControls();
+  const { zoomIn, zoomOut, setTransform } = useControls();
   const s = {
     background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.9)',
     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.15)'}`,
@@ -398,17 +398,17 @@ function ZoomControls({ isDark, canvasW, canvasH, containerRef }: {
   };
 
   const handleFit = () => {
-    if (!containerRef.current || canvasW <= 0 || canvasH <= 0) {
-      centerView(0.5, 300);
-      return;
-    }
+    if (!containerRef.current || canvasW <= 0 || canvasH <= 0) return;
     const cw = containerRef.current.offsetWidth;
     const ch = containerRef.current.offsetHeight;
     const scaleX = cw / canvasW;
     const scaleY = ch / canvasH;
     const fitScale = Math.min(scaleX, scaleY) * 0.9;
     const clampedScale = Math.max(0.15, Math.min(fitScale, 1.2));
-    centerView(clampedScale, 300);
+    // Center both horizontally and vertically
+    const posX = (cw - canvasW * clampedScale) / 2;
+    const posY = (ch - canvasH * clampedScale) / 2;
+    setTransform(posX, posY, clampedScale, 300);
   };
 
   return (
@@ -992,6 +992,7 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
   const [initialScale, setInitialScale] = useState(isMobile ? 0.3 : 0.55);
+  const [initialPos, setInitialPos] = useState({ x: 20, y: 0 });
   const hasFollowupDm = !!workflow.steps.find(s => s.id === 'followup-dm');
   const hasFollowupAgent = !!workflow.steps.find(s => s.id === 'followup-agent');
   const hasInlineStep5 = !!workflow.steps.find(s => s.id === 'step-5');
@@ -1070,16 +1071,18 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
       const newPos = computePositions(heights);
       setPos(newPos);
 
-      // Compute per-workflow initial scale from measured positions
+      // Compute per-workflow initial scale — readable level, fit height, left-aligned
       if (containerRef.current) {
-        const measuredW = Math.max(...Object.values(newPos).map(p => p.x + p.w)) + 60;
         const measuredH = Math.max(...Object.values(newPos).map(p => p.y + p.h)) + 60;
-        const cw = containerRef.current.offsetWidth;
         const ch = containerRef.current.offsetHeight;
-        const scaleX = cw / measuredW;
-        const scaleY = ch / measuredH;
-        const fitScale = Math.min(scaleX, scaleY) * 0.9;
-        setInitialScale(isMobile ? Math.min(fitScale, 0.5) : Math.max(0.2, Math.min(fitScale, 1.2)));
+        // Scale to fit the workflow height within the viewport (readable zoom)
+        const heightScale = (ch / measuredH) * 0.92;
+        const scale = isMobile ? Math.min(heightScale, 0.5) : Math.max(0.3, Math.min(heightScale, 1.2));
+        setInitialScale(scale);
+        // Position: left-aligned with padding, vertically centered
+        const scaledH = measuredH * scale;
+        const posY = (ch - scaledH) / 2;
+        setInitialPos({ x: 30, y: posY });
       }
     }, 100);
     return () => clearTimeout(timer);
@@ -1112,7 +1115,7 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
         backgroundSize: '20px 20px',
       }} />
 
-      <TransformWrapper key={`${initialScale}-${workflow.id}`} initialScale={initialScale} minScale={0.15} maxScale={2.5} centerOnInit centerZoomedOut limitToBounds={false} panning={{ velocityDisabled: true }}>
+      <TransformWrapper key={`${initialScale}-${workflow.id}-${initialPos.x}-${initialPos.y}`} initialScale={initialScale} initialPositionX={initialPos.x} initialPositionY={initialPos.y} minScale={0.15} maxScale={2.5} limitToBounds={false} panning={{ velocityDisabled: true }}>
         <ZoomControls isDark={isDark} canvasW={canvasW} canvasH={canvasH} containerRef={containerRef} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 
