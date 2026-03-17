@@ -533,55 +533,88 @@ export default function PnlView() {
         />
       </div>
 
-      {/* ─── COMMISSIONS SECTION ─── */}
-      <div className="space-y-4">
+      {/* ─── BOTTOM LINE TABLE ─── */}
+      <div className="space-y-3">
         <div className="flex items-center gap-3 px-1">
-          <div className="w-2 h-2 rounded-full bg-[#e879a0]" />
-          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Commissions</span>
+          <div className="w-2 h-2 rounded-full bg-[#2dd4bf]" />
+          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Bottom Line</span>
         </div>
 
-        <SectionBar
-          label={isYearly ? 'Total Yearly Commissions' : 'Total Monthly Commissions'}
-          values={[commTotals[0] * m, commTotals[1] * m, commTotals[2] * m]}
-          color="#e879a0"
-        />
-      </div>
-
-      {/* ─── NET PROFIT SECTION ─── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3 px-1">
-          <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
-          <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Net Result</span>
+        <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
+          <div className="w-full md:w-1/2" />
+          <div className="w-full md:w-1/2 flex gap-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex-1 text-center"><YearTag year={n} color="#2dd4bf" /></div>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3">
-          <div
-            className="w-full md:w-1/2 flex items-center px-4 py-4 rounded-2xl backdrop-blur-2xl"
-            style={{
-              background: 'rgba(34,197,94,0.04)',
-              border: '1px solid rgba(34,197,94,0.15)',
-            }}
-          >
-            <span className="text-[13px] font-bold uppercase tracking-wider text-[#22c55e]">
-              {isYearly ? 'Yearly Net Profit' : 'Monthly Net Profit'}
-            </span>
+        <div className="flex flex-col md:flex-row gap-3 items-stretch">
+          <div className="card overflow-x-auto w-full md:w-1/2">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                  <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider">Metric</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: 'Total Revenues', color: '#2dd4bf' },
+                  { label: 'Total Expenses', color: '#f43f5e' },
+                  { label: 'Total Commissions', color: '#e879a0' },
+                  { label: 'Net Profit', color: 'auto' },
+                  { label: 'Cumulative P&L', color: 'auto' },
+                ].map((row) => (
+                  <tr key={row.label} className={`border-b border-white/[0.02] h-[42px] ${row.label === 'Net Profit' || row.label === 'Cumulative P&L' ? '!bg-white/[0.03]' : ''}`}>
+                    <td className="px-4 text-[12px] font-bold text-white/80 whitespace-nowrap">{row.label}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <div className="w-full md:w-1/2 flex gap-3">
-            {netTotals.map((v, i) => {
-              const isPositive = v * m >= 0;
-              const color = isPositive ? '#22c55e' : '#f43f5e';
+            {([0, 1, 2] as const).map((yi) => {
+              const cumulative = (() => {
+                let total = 0;
+                for (let i = 0; i <= yi; i++) {
+                  total += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
+                }
+                return total;
+              })();
+
+              const rows = [
+                { value: revTotals[yi] * m, color: '#2dd4bf' },
+                { value: expTotals[yi] * m, color: '#f43f5e' },
+                { value: commTotals[yi] * m, color: '#e879a0' },
+                { value: netTotals[yi] * m, color: 'auto' as const },
+                { value: isYearly ? cumulative : cumulative / 12, color: 'auto' as const },
+              ];
+
               return (
-                <div
-                  key={i}
-                  className="flex-1 flex items-center justify-center py-4 rounded-2xl backdrop-blur-2xl"
-                  style={{
-                    background: `${color}08`,
-                    border: `1px solid ${color}20`,
-                  }}
-                >
-                  <div className="font-mono text-[14px] font-bold" style={{ color }}>
-                    {fNum(Math.round(v * m))}
-                  </div>
+                <div key={yi} className="card overflow-hidden flex-1 min-w-0">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="border-b border-white/[0.06] bg-white/[0.03]">
+                        <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row, ri) => {
+                        const isAutoColor = row.color === 'auto';
+                        const cellColor = isAutoColor
+                          ? (row.value >= 0 ? '#22c55e' : '#f43f5e')
+                          : row.color;
+                        const isHighlight = ri >= 3;
+                        return (
+                          <tr key={ri} className={`border-b border-white/[0.02] h-[42px] ${isHighlight ? '!bg-white/[0.03]' : ''}`}>
+                            <td className="px-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: cellColor }}>
+                              {fNum(Math.round(row.value))}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               );
             })}
