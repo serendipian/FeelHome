@@ -39,6 +39,8 @@ export default function ExpensesView() {
   const { teamData, updateTeamMember } = useTeam();
   const { fNum } = useCurrencyFormatters();
   const [salariesExpanded, setSalariesExpanded] = useState(false);
+  const [isYearly, setIsYearly] = useState(false);
+  const m = isYearly ? 12 : 1; // multiplier
 
   // Map expense labels → team member data (id + commission)
   const teamByLabel = useMemo(() => {
