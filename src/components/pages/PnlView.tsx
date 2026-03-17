@@ -199,16 +199,25 @@ export default function PnlView() {
     <div className="space-y-8 animate-fadeIn">
       {/* Monthly / Yearly toggle */}
       <div className="flex justify-end">
-        <div className="inline-flex rounded-lg overflow-hidden border border-white/[0.08] text-[11px]">
+        <div className="relative inline-flex rounded-full p-0.5 text-[11px]" style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.08)' }}>
+          <div
+            className="absolute top-0.5 bottom-0.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{
+              width: 'calc(50% - 2px)',
+              left: isYearly ? 'calc(50% + 1px)' : '2px',
+              background: 'linear-gradient(135deg, #d4a853, #d4875a)',
+              boxShadow: '0 1px 4px rgba(212,168,83,0.3)',
+            }}
+          />
           <button
             onClick={() => setIsYearly(false)}
-            className={`px-3 py-1.5 transition-colors cursor-pointer ${!isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+            className={`relative z-10 px-4 py-1.5 rounded-full font-medium transition-colors duration-300 cursor-pointer ${!isYearly ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Monthly
           </button>
           <button
             onClick={() => setIsYearly(true)}
-            className={`px-3 py-1.5 transition-colors cursor-pointer ${isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+            className={`relative z-10 px-4 py-1.5 rounded-full font-medium transition-colors duration-300 cursor-pointer ${isYearly ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Yearly
           </button>
@@ -500,7 +509,7 @@ export default function PnlView() {
                                 </td>
                                 {isSalaries && (
                                   <td className="px-2 text-center font-mono text-[11px] whitespace-nowrap" style={{ color: commAmount > 0 ? '#f43f5e' : undefined, opacity: commAmount > 0 ? 0.7 : 0.2 }}>
-                                    {commAmount > 0 ? fNum(commAmount * m) : '—'}
+                                    {commAmount > 0 ? fNum(Math.round(commAmount * m)) : '—'}
                                   </td>
                                 )}
                               </tr>
@@ -512,7 +521,7 @@ export default function PnlView() {
                             </td>
                             {isSalaries && (
                               <td className="px-2 py-2 text-center font-mono text-[11px] font-bold whitespace-nowrap" style={{ color: '#f43f5e', opacity: 0.9 }}>
-                                {fNum(items.reduce((s, item) => s + getCommissionAmount(item, y), 0) * m)}
+                                {fNum(Math.round(items.reduce((s, item) => s + getCommissionAmount(item, y), 0) * m))}
                               </td>
                             )}
                           </tr>
