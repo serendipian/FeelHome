@@ -10,7 +10,8 @@ const pageTitles: Record<string, string> = {
   '/summary': 'P&L Overview',
   '/revenues': 'Revenue Breakdown',
   '/expenses': 'Expense Detail',
-  '/investment': 'Investment Simulation',
+  '/pnl': 'P&L Summary',
+  '/investment': 'Pre-Launch Simulation',
   '/team': 'Team Structure',
   '/workflow': 'Workflows',
 };

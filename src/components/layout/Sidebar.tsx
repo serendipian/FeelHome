@@ -8,7 +8,8 @@ import { useMobileNav } from '@/context/MobileNavContext';
 const navItems = [
   { href: '/revenues', label: 'Revenues', icon: TrendUpIcon },
   { href: '/expenses', label: 'Expenses', icon: TrendDownIcon },
-  { href: '/investment', label: 'Investment', icon: DollarIcon },
+  { href: '/pnl', label: 'P&L Summary', icon: PnlIcon },
+  { href: '/investment', label: 'Pre-Launch Simulation', icon: DollarIcon },
   { href: '/team', label: 'Team', icon: TeamIcon },
   { href: '/workflow', label: 'Workflow', icon: WorkflowIcon },
   { href: '/tools-access', label: 'Tools Access', icon: ToolsIcon },
@@ -160,6 +161,14 @@ function WorkflowIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+    </svg>
+  );
+}
+
+function PnlIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
     </svg>
   );
 }
