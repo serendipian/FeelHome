@@ -383,19 +383,39 @@ function BranchCard({ label, color, triggers, isDark }: {
 
 // ── Zoom Controls ────────────────────────────────────────────────
 
-function ZoomControls({ isDark }: { isDark: boolean }) {
-  const { zoomIn, zoomOut, resetTransform } = useControls();
+function ZoomControls({ isDark, canvasW, canvasH, containerRef }: {
+  isDark: boolean;
+  canvasW: number;
+  canvasH: number;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { zoomIn, zoomOut, centerView } = useControls();
   const s = {
     background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.9)',
     border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.15)'}`,
     color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.6)',
     boxShadow: isDark ? 'none' : '0 1px 4px rgba(15,23,42,0.08)',
   };
+
+  const handleFit = () => {
+    if (!containerRef.current || canvasW <= 0 || canvasH <= 0) {
+      centerView(0.5, 300);
+      return;
+    }
+    const cw = containerRef.current.offsetWidth;
+    const ch = containerRef.current.offsetHeight;
+    const scaleX = cw / canvasW;
+    const scaleY = ch / canvasH;
+    const fitScale = Math.min(scaleX, scaleY) * 0.9;
+    const clampedScale = Math.max(0.15, Math.min(fitScale, 1.2));
+    centerView(clampedScale, 300);
+  };
+
   return (
     <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1">
       <button onClick={() => zoomIn()} className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>+</button>
       <button onClick={() => zoomOut()} className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-80 transition-opacity" style={s}>−</button>
-      <button onClick={() => resetTransform()} className="h-10 px-3 rounded-lg flex items-center justify-center text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity" style={s}>Fit</button>
+      <button onClick={handleFit} className="h-10 px-3 rounded-lg flex items-center justify-center text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity" style={s}>Fit</button>
     </div>
   );
 }
@@ -1047,7 +1067,20 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
         step5Top: refs.step5Top.current?.offsetHeight || (workflow.steps.find(s => s.id === 'followup-dm') ? H_FOLLOW_DM : 0),
         step5Bot: refs.step5Bot.current?.offsetHeight || (workflow.steps.find(s => s.id === 'followup-agent') ? H_FOLLOW_AGT : 0),
       };
-      setPos(computePositions(heights));
+      const newPos = computePositions(heights);
+      setPos(newPos);
+
+      // Compute per-workflow initial scale from measured positions
+      if (containerRef.current) {
+        const measuredW = Math.max(...Object.values(newPos).map(p => p.x + p.w)) + 60;
+        const measuredH = Math.max(...Object.values(newPos).map(p => p.y + p.h)) + 60;
+        const cw = containerRef.current.offsetWidth;
+        const ch = containerRef.current.offsetHeight;
+        const scaleX = cw / measuredW;
+        const scaleY = ch / measuredH;
+        const fitScale = Math.min(scaleX, scaleY) * 0.9;
+        setInitialScale(isMobile ? Math.min(fitScale, 0.5) : Math.max(0.2, Math.min(fitScale, 1.2)));
+      }
     }, 100);
     return () => clearTimeout(timer);
   }, [workflow.id]);
@@ -1059,18 +1092,6 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
 
   const canvasW = Math.max(...Object.values(pos).map(p => p.x + p.w)) + 60;
   const canvasH = Math.max(...Object.values(pos).map(p => p.y + p.h)) + 60;
-
-  // Compute initial scale to fit canvas within container
-  useEffect(() => {
-    if (containerRef.current && canvasW > 0 && canvasH > 0) {
-      const cw = containerRef.current.offsetWidth;
-      const ch = containerRef.current.offsetHeight;
-      const scaleX = cw / canvasW;
-      const scaleY = ch / canvasH;
-      const fitScale = Math.min(scaleX, scaleY) * 0.92;
-      setInitialScale(isMobile ? Math.min(fitScale, 0.35) : Math.max(0.35, Math.min(fitScale, 0.75)));
-    }
-  }, [canvasW, canvasH, isMobile]);
 
   return (
     <div
@@ -1092,7 +1113,7 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
       }} />
 
       <TransformWrapper key={`${initialScale}-${workflow.id}`} initialScale={initialScale} minScale={0.15} maxScale={2.5} centerOnInit centerZoomedOut limitToBounds={false} panning={{ velocityDisabled: true }}>
-        <ZoomControls isDark={isDark} />
+        <ZoomControls isDark={isDark} canvasW={canvasW} canvasH={canvasH} containerRef={containerRef} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 
           <DynamicConnectors pos={pos} isDark={isDark} workflow={workflow} />
