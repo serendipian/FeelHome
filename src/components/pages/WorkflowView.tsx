@@ -971,7 +971,7 @@ function useIsMobile() {
 function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; isDark: boolean; onNavigate?: (workflowId: string) => void }) {
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [initialScale, setInitialScale] = useState(isMobile ? 0.25 : 0.42);
+  const [initialScale, setInitialScale] = useState(isMobile ? 0.3 : 0.55);
   const hasFollowupDm = !!workflow.steps.find(s => s.id === 'followup-dm');
   const hasFollowupAgent = !!workflow.steps.find(s => s.id === 'followup-agent');
   const hasInlineStep5 = !!workflow.steps.find(s => s.id === 'step-5');
@@ -1067,8 +1067,8 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
       const ch = containerRef.current.offsetHeight;
       const scaleX = cw / canvasW;
       const scaleY = ch / canvasH;
-      const fitScale = Math.min(scaleX, scaleY) * 0.95;
-      setInitialScale(isMobile ? Math.min(fitScale, 0.25) : Math.max(0.15, Math.min(fitScale, 0.6)));
+      const fitScale = Math.min(scaleX, scaleY) * 0.92;
+      setInitialScale(isMobile ? Math.min(fitScale, 0.35) : Math.max(0.35, Math.min(fitScale, 0.75)));
     }
   }, [canvasW, canvasH, isMobile]);
 
@@ -1091,7 +1091,7 @@ function WorkflowCanvas({ workflow, isDark, onNavigate }: { workflow: Workflow; 
         backgroundSize: '20px 20px',
       }} />
 
-      <TransformWrapper key={`${initialScale}-${workflow.id}`} initialScale={initialScale} minScale={0.15} maxScale={2.5} centerOnInit limitToBounds={false} panning={{ velocityDisabled: true }}>
+      <TransformWrapper key={`${initialScale}-${workflow.id}`} initialScale={initialScale} minScale={0.15} maxScale={2.5} centerOnInit centerZoomedOut limitToBounds={false} panning={{ velocityDisabled: true }}>
         <ZoomControls isDark={isDark} />
         <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }} contentStyle={{ width: canvasW, height: canvasH }}>
 

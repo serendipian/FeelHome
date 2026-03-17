@@ -11,7 +11,6 @@ const navItems = [
   { href: '/pnl', label: 'P&L Summary', icon: PnlIcon },
   { href: '/investment', label: 'Pre-Launch Simulation', icon: DollarIcon },
   { href: '/team', label: 'Team', icon: TeamIcon },
-  { href: '/org', label: 'Organization', icon: OrgIcon },
   { href: '/workflow', label: 'Workflow', icon: WorkflowIcon },
   { href: '/tools-access', label: 'Tools Access', icon: ToolsIcon },
 ];
