@@ -235,7 +235,7 @@ export const DEFAULT_TEAM_DATA: TeamMemberData[] = [
       { label: 'Response time', target: '<1h/mo' },
     ],
     tools: ['Meta Business', 'Canva', 'Avito / Mubawab', 'Google Analytics', 'ChatGPT'],
-    commission: { rate: 10, type: 'All Revenues' },
+    commission: { rate: 10, type: 'All RE Revenues' },
   },
   {
     id: 'community-mgr',

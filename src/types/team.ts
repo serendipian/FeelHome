@@ -7,7 +7,7 @@ export type IconKey =
   | 'search' | 'phone' | 'filter' | 'database' | 'refresh' | 'building'
   | 'target';
 
-export type CommissionType = 'All Revenues' | 'Linked Deals' | 'No Commission';
+export type CommissionType = 'All Revenues' | 'All RE Revenues' | 'Linked Deals' | 'No Commission';
 
 export interface SerializableResponsibility {
   iconKey: IconKey;

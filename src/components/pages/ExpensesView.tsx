@@ -12,7 +12,7 @@ import BrandPill from '@/components/ui/BrandPill';
 import TotalBar from '@/components/ui/TotalBar';
 import EditableCell from '@/components/ui/EditableCell';
 
-const COMMISSION_TYPES: CommissionType[] = ['All Revenues', 'Linked Deals', 'No Commission'];
+const COMMISSION_TYPES: CommissionType[] = ['All Revenues', 'All RE Revenues', 'Linked Deals', 'No Commission'];
 
 const categoryConfig: Record<string, { label: string; color: string; subtitle: string }> = {
   salaries: { label: 'Salaries', color: '#f43f5e', subtitle: 'Team & Agents' },
@@ -102,6 +102,14 @@ export default function ExpensesView() {
 
     if (info.type === 'All Revenues') {
       return rate * totalRevenueYear[year];
+    }
+
+    // All RE Revenues: FH + MI only (no Expats.ma), all markets
+    if (info.type === 'All RE Revenues') {
+      let total = 0;
+      if (activeBrands.feelHome) total += rentalRevenues.reduce((s, i) => s + i[year].total, 0);
+      if (activeBrands.mInvest) total += saleRevenues.reduce((s, i) => s + i[year].total, 0);
+      return rate * total;
     }
 
     // Linked Deals: use the expense's market if available
