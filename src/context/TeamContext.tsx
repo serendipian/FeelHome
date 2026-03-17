@@ -61,9 +61,13 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     didHydrate.current = true;
     (async () => {
       const loaded = await loadScenarioValue<TeamMemberData[]>('teamData', activeScenario, DEFAULT_TEAM_DATA);
-      // Ensure all default members exist (in case new ones were added in code)
+      // Ensure all default members exist; always use code-defined title/expenseLabel
       const byId = new Map(loaded.map(m => [m.id, m]));
-      const merged = DEFAULT_TEAM_DATA.map(d => byId.get(d.id) ?? d);
+      const merged = DEFAULT_TEAM_DATA.map(d => {
+        const saved = byId.get(d.id);
+        if (!saved) return d;
+        return { ...saved, title: d.title, expenseLabel: d.expenseLabel };
+      });
       setTeamData(merged);
       setTimeout(() => { readyToSave.current = true; }, 0);
     })();
@@ -89,7 +93,11 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       await saveToSupabase(`teamData_${prevScenario}`, teamData);
       const loaded = await loadScenarioValue<TeamMemberData[]>('teamData', activeScenario, DEFAULT_TEAM_DATA);
       const byId = new Map(loaded.map(m => [m.id, m]));
-      const merged = DEFAULT_TEAM_DATA.map(d => byId.get(d.id) ?? d);
+      const merged = DEFAULT_TEAM_DATA.map(d => {
+        const saved = byId.get(d.id);
+        if (!saved) return d;
+        return { ...saved, title: d.title, expenseLabel: d.expenseLabel };
+      });
       setTeamData(merged);
       setTimeout(() => { readyToSave.current = true; }, 0);
     })();

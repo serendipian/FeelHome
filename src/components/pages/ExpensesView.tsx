@@ -95,7 +95,6 @@ export default function ExpensesView() {
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Expense</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Brands</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Var. Cost</th>
                     </tr>
                   </thead>
                   <tbody className="zebra-rows">
@@ -109,20 +108,11 @@ export default function ExpensesView() {
                             ))}
                           </div>
                         </td>
-                        <td className="px-3 text-right font-mono text-white/30">
-                          <EditableCell
-                            value={item.variableCost}
-                            onSave={(v) => updateExpenseItem(idx, 'variableCost', v)}
-                            isPercent
-                            format={(v) => `${(v * 100).toFixed(0)}%`}
-                            step={1}
-                          />
-                        </td>
                       </tr>
                     ))}
                     {isSalaries && salaryCollapsedCount > 0 && (
                       <tr>
-                        <td colSpan={3} className="px-4 py-2">
+                        <td colSpan={2} className="px-4 py-2">
                           <button
                             onClick={() => setSalariesExpanded(!salariesExpanded)}
                             className="text-[11px] text-white/30 hover:text-white/50 transition-colors cursor-pointer"
