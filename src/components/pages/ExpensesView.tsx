@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
 import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import { isExpenseActive } from '@/lib/calculations';
 import { ExpenseItem } from '@/types';
+import { useTeam } from '@/context/TeamContext';
 import BrandPill from '@/components/ui/BrandPill';
 import TotalBar from '@/components/ui/TotalBar';
 import EditableCell from '@/components/ui/EditableCell';
@@ -31,9 +32,73 @@ function YearTag({ year, color }: { year: number; color: string }) {
 }
 
 export default function ExpensesView() {
-  const { activeBrands, activeMarkets, expenseItems, updateExpenseItem, yearly } = useFinancial();
+  const { activeBrands, activeMarkets, expenseItems, updateExpenseItem, yearly, saleRevenues, rentalRevenues, mediaRevenues } = useFinancial();
+  const { teamData } = useTeam();
   const { fNum } = useCurrencyFormatters();
   const [salariesExpanded, setSalariesExpanded] = useState(false);
+
+  // Map expense labels → team member commission data
+  const commissionByLabel = useMemo(() => {
+    const map = new Map<string, { rate: number; type: string }>();
+    for (const member of teamData) {
+      map.set(member.expenseLabel, { rate: member.commission.rate, type: member.commission.type });
+    }
+    return map;
+  }, [teamData]);
+
+  // Calculate revenues by market for each year (for commission amounts)
+  const revenueByMarketYear = useMemo(() => {
+    const years = ['y1', 'y2', 'y3'] as const;
+    const result: Record<string, { y1: number; y2: number; y3: number }> = {};
+
+    // Combine sale + rental labels (Casablanca, Rabat, Marrakech, Autre)
+    for (const sale of saleRevenues) {
+      const key = sale.label.toLowerCase();
+      if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
+      for (const y of years) result[key][y] += sale[y].total;
+    }
+    for (const rental of rentalRevenues) {
+      const key = rental.label.toLowerCase();
+      if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
+      for (const y of years) result[key][y] += rental[y].total;
+    }
+    return result;
+  }, [saleRevenues, rentalRevenues]);
+
+  // Total revenues per year (FH + MI + Expats)
+  const totalRevenueYear = useMemo(() => {
+    const years = ['y1', 'y2', 'y3'] as const;
+    const totals = { y1: 0, y2: 0, y3: 0 };
+    for (const y of years) {
+      if (activeBrands.feelHome) totals[y] += rentalRevenues.reduce((s, i) => s + i[y].total, 0);
+      if (activeBrands.mInvest) totals[y] += saleRevenues.reduce((s, i) => s + i[y].total, 0);
+      if (activeBrands.expats) totals[y] += mediaRevenues.reduce((s, i) => s + i[y].total, 0);
+    }
+    return totals;
+  }, [activeBrands, saleRevenues, rentalRevenues, mediaRevenues]);
+
+  // Calculate commission amount for a given expense item and year
+  const getCommissionAmount = (item: ExpenseItem, year: 'y1' | 'y2' | 'y3'): number => {
+    const comm = commissionByLabel.get(item.label);
+    if (!comm) return 0;
+    const rate = comm.rate / 100;
+
+    if (comm.type === 'All Revenues') {
+      return rate * totalRevenueYear[year];
+    }
+
+    // Linked Deals: use the expense's market if available
+    if (item.market) {
+      const marketRev = revenueByMarketYear[item.market];
+      return marketRev ? rate * marketRev[year] : 0;
+    }
+
+    // Linked Deals without specific market (e.g., Property Hunter): FH + MI revenues across all markets
+    let total = 0;
+    if (activeBrands.feelHome) total += rentalRevenues.reduce((s, i) => s + i[year].total, 0);
+    if (activeBrands.mInvest) total += saleRevenues.reduce((s, i) => s + i[year].total, 0);
+    return rate * total;
+  };
 
   const activeItems = expenseItems
     .map((item, idx) => ({ item, idx }))
@@ -88,31 +153,50 @@ export default function ExpensesView() {
 
             {/* Cards row */}
             <div className="flex flex-col md:flex-row gap-3 items-stretch">
-              {/* Left card: expense label, brands, variable cost */}
+              {/* Left card: expense label, brands, commission info */}
               <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Expense</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Brands</th>
+                      {isSalaries && (
+                        <>
+                          <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Comm.</th>
+                          <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">Type</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="zebra-rows">
-                    {items.map(({ item, idx }) => (
-                      <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
-                        <td className="px-4 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
-                        <td className="px-3">
-                          <div className="flex gap-1 flex-nowrap">
-                            {item.brands.map((b) => (
-                              <BrandPill key={b} brandKey={b} />
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {items.map(({ item, idx }) => {
+                      const comm = isSalaries ? commissionByLabel.get(item.label) : undefined;
+                      return (
+                        <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
+                          <td className="px-4 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
+                          <td className="px-3">
+                            <div className="flex gap-1 flex-nowrap">
+                              {item.brands.map((b) => (
+                                <BrandPill key={b} brandKey={b} />
+                              ))}
+                            </div>
+                          </td>
+                          {isSalaries && (
+                            <>
+                              <td className="px-3 text-right font-mono text-white/40 whitespace-nowrap">
+                                {comm ? `${comm.rate}%` : '—'}
+                              </td>
+                              <td className="px-3 text-white/30 whitespace-nowrap text-[10px]">
+                                {comm ? comm.type : '—'}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      );
+                    })}
                     {isSalaries && salaryCollapsedCount > 0 && (
                       <tr>
-                        <td colSpan={2} className="px-4 py-2">
+                        <td colSpan={4} className="px-4 py-2">
                           <button
                             onClick={() => setSalariesExpanded(!salariesExpanded)}
                             className="text-[11px] text-white/30 hover:text-white/50 transition-colors cursor-pointer"
@@ -124,6 +208,7 @@ export default function ExpensesView() {
                         </td>
                       </tr>
                     )}
+                    {!isSalaries && salaryCollapsedCount > 0 && null}
                   </tbody>
                 </table>
               </div>
@@ -135,33 +220,44 @@ export default function ExpensesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Amount</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Salary</th>
+                          {isSalaries && (
+                            <th className="px-2 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Comm.</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody className="zebra-rows">
-                        {items.map(({ item, idx }) => (
-                          <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
-                            <td className="px-3 text-center font-mono text-white/50">
-                              {item[y] > 0 ? (
-                                <EditableCell
-                                  value={item[y]}
-                                  onSave={(v) => updateExpenseItem(idx, y, v)}
-                                  format={fNum}
-                                />
-                              ) : (
-                                <EditableCell
-                                  value={item[y]}
-                                  onSave={(v) => updateExpenseItem(idx, y, v)}
-                                  format={(v) => v === 0 ? '—' : fNum(v)}
-                                  className="text-white/15"
-                                />
+                        {items.map(({ item, idx }) => {
+                          const commAmount = isSalaries ? getCommissionAmount(item, y) : 0;
+                          return (
+                            <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
+                              <td className="px-3 text-center font-mono text-white/50">
+                                {item[y] > 0 ? (
+                                  <EditableCell
+                                    value={item[y]}
+                                    onSave={(v) => updateExpenseItem(idx, y, v)}
+                                    format={fNum}
+                                  />
+                                ) : (
+                                  <EditableCell
+                                    value={item[y]}
+                                    onSave={(v) => updateExpenseItem(idx, y, v)}
+                                    format={(v) => v === 0 ? '—' : fNum(v)}
+                                    className="text-white/15"
+                                  />
+                                )}
+                              </td>
+                              {isSalaries && (
+                                <td className="px-2 text-center font-mono text-[11px] text-amber-400/60 whitespace-nowrap">
+                                  {commAmount > 0 ? fNum(commAmount) : '—'}
+                                </td>
                               )}
-                            </td>
-                          </tr>
-                        ))}
+                            </tr>
+                          );
+                        })}
                         {isSalaries && salaryCollapsedCount > 0 && (
                           <tr>
-                            <td className="px-3 py-2">
+                            <td colSpan={2} className="px-3 py-2">
                               <button
                                 onClick={() => setSalariesExpanded(!salariesExpanded)}
                                 className="text-[11px] text-white/30 hover:text-white/50 transition-colors w-full text-center cursor-pointer"
@@ -176,6 +272,11 @@ export default function ExpensesView() {
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
                             {fNum(allItems.reduce((s, { item }) => s + item[y], 0))}
                           </td>
+                          {isSalaries && (
+                            <td className="px-2 py-3 text-center font-mono text-[11px] font-bold text-amber-400/80 whitespace-nowrap">
+                              {fNum(allItems.reduce((s, { item }) => s + getCommissionAmount(item, y), 0))}
+                            </td>
+                          )}
                         </tr>
                       </tbody>
                     </table>
