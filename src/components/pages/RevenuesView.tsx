@@ -92,16 +92,16 @@ export default function RevenuesView() {
                 <table className="w-full text-[12px]">
                   <colgroup>
                     <col />
-                    <col style={{ width: 80 }} />
-                    <col style={{ width: 70 }} />
-                    <col style={{ width: 80 }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '18%' }} />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Rent</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Comm</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Avg Rent</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Avg Comm</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>
                   </thead>
                   <tbody className="zebra-rows">
@@ -110,13 +110,13 @@ export default function RevenuesView() {
                       return (
                       <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                        <td className="px-3 py-2.5 text-center font-mono text-white/40">
                           <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={fNum} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                        <td className="px-3 py-2.5 text-center font-mono text-white/40">
                           <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v}`} step={0.1} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
+                        <td className="px-3 py-2.5 text-center font-mono text-[#d4875a] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
                       </tr>
                       );
                     })}
@@ -189,14 +189,22 @@ export default function RevenuesView() {
             <div className="flex flex-col md:flex-row gap-3 items-stretch">
               <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
+                  <colgroup>
+                    <col />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '18%' }} />
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Price/m²</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Area</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Price</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Comm.</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Price/m²</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Area</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Avg Price</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Avg Comm</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-center uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>
                   </thead>
                   <tbody className="zebra-rows">
@@ -205,17 +213,17 @@ export default function RevenuesView() {
                       return (
                       <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                         <td className="px-4 py-2.5 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                        <td className="px-3 py-2.5 text-center font-mono text-white/40">
                           <EditableCell value={item.priceM2} onSave={(v) => updateSaleItem(idx, 'priceM2', v)} format={fNum} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                        <td className="px-3 py-2.5 text-center font-mono text-white/40">
                           <EditableCell value={item.area} onSave={(v) => updateSaleItem(idx, 'area', v)} format={(v) => `${v}m²`} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/25 whitespace-nowrap">{fNum(item.avgPrice)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white/40">
+                        <td className="px-3 py-2.5 text-center font-mono text-white/25 whitespace-nowrap">{fNum(item.avgPrice)}</td>
+                        <td className="px-3 py-2.5 text-center font-mono text-white/40">
                           <EditableCell value={item.commRate} onSave={(v) => updateSaleItem(idx, 'commRate', v)} isPercent format={(v) => `${(v * 100).toFixed(1)}%`} step={0.1} />
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono text-[#5b8ec9] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
+                        <td className="px-3 py-2.5 text-center font-mono text-[#5b8ec9] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
                       </tr>
                       );
                     })}
