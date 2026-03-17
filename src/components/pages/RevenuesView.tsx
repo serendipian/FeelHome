@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
 import { useCurrencyFormatters } from '@/context/CurrencyContext';
@@ -37,6 +37,8 @@ export default function RevenuesView() {
   } = useFinancial();
 
   const { fNum } = useCurrencyFormatters();
+  const [isYearly, setIsYearly] = useState(false);
+  const m = isYearly ? 12 : 1;
 
   const isMarketActive = (label: string) => {
     const key = label.toLowerCase() as keyof typeof activeMarkets;
@@ -45,6 +47,24 @@ export default function RevenuesView() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Monthly / Yearly toggle */}
+      <div className="flex justify-end">
+        <div className="inline-flex rounded-lg overflow-hidden border border-white/[0.08] text-[11px]">
+          <button
+            onClick={() => setIsYearly(false)}
+            className={`px-3 py-1.5 transition-colors cursor-pointer ${!isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setIsYearly(true)}
+            className={`px-3 py-1.5 transition-colors cursor-pointer ${isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+          >
+            Yearly
+          </button>
+        </div>
+      </div>
+
       {/* Feel Home */}
       {activeBrands.feelHome && (() => {
         return (
@@ -117,7 +137,7 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                           );
@@ -125,7 +145,7 @@ export default function RevenuesView() {
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#d4875a] whitespace-nowrap">
-                            {fNum(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(rentalRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0) * m)}
                           </td>
                         </tr>
                       </tbody>
@@ -216,7 +236,7 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                           );
@@ -224,7 +244,7 @@ export default function RevenuesView() {
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#5b8ec9] whitespace-nowrap">
-                            {fNum(saleRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(saleRevenues.filter(r => isMarketActive(r.label)).reduce((s, r) => s + r[y].total, 0) * m)}
                           </td>
                         </tr>
                       </tbody>
@@ -298,14 +318,14 @@ export default function RevenuesView() {
                               <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
-                              {item[y].total > 0 ? fNum(item[y].total) : <span className="text-white/15">—</span>}
+                              {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
                             </td>
                           </tr>
                         ))}
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3" />
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold text-[#1d7ff3] whitespace-nowrap">
-                            {fNum(mediaRevenues.reduce((s, r) => s + r[y].total, 0))}
+                            {fNum(mediaRevenues.reduce((s, r) => s + r[y].total, 0) * m)}
                           </td>
                         </tr>
                       </tbody>
@@ -319,8 +339,8 @@ export default function RevenuesView() {
       })()}
 
       <TotalBar
-        label="Total Monthly Revenue"
-        values={[yearly[0].revenue / 12, yearly[1].revenue / 12, yearly[2].revenue / 12]}
+        label={isYearly ? 'Total Yearly Revenue' : 'Total Monthly Revenue'}
+        values={[yearly[0].revenue / 12 * m, yearly[1].revenue / 12 * m, yearly[2].revenue / 12 * m]}
         color="#d4a853"
       />
     </div>

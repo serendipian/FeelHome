@@ -148,6 +148,24 @@ export default function ExpensesView() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Monthly / Yearly toggle */}
+      <div className="flex justify-end">
+        <div className="inline-flex rounded-lg overflow-hidden border border-white/[0.08] text-[11px]">
+          <button
+            onClick={() => setIsYearly(false)}
+            className={`px-3 py-1.5 transition-colors cursor-pointer ${!isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setIsYearly(true)}
+            className={`px-3 py-1.5 transition-colors cursor-pointer ${isYearly ? 'bg-white/[0.1] text-white/80 font-semibold' : 'text-white/30 hover:text-white/50'}`}
+          >
+            Yearly
+          </button>
+        </div>
+      </div>
+
       {(['salaries', 'fixed', 'marketing'] as const).map((cat) => {
         const allItems = grouped[cat];
         if (allItems.length === 0) return null;
@@ -288,21 +306,21 @@ export default function ExpensesView() {
                                 {item[y] > 0 ? (
                                   <EditableCell
                                     value={item[y]}
-                                    onSave={(v) => updateExpenseItem(idx, y, v)}
-                                    format={fNum}
+                                    onSave={(v) => updateExpenseItem(idx, y, isYearly ? v / 12 : v)}
+                                    format={(v) => fNum(v * m)}
                                   />
                                 ) : (
                                   <EditableCell
                                     value={item[y]}
-                                    onSave={(v) => updateExpenseItem(idx, y, v)}
-                                    format={(v) => v === 0 ? '—' : fNum(v)}
+                                    onSave={(v) => updateExpenseItem(idx, y, isYearly ? v / 12 : v)}
+                                    format={(v) => v === 0 ? '—' : fNum(v * m)}
                                     className="text-white/15"
                                   />
                                 )}
                               </td>
                               {isSalaries && (
                                 <td className="px-2 text-center font-mono text-[11px] whitespace-nowrap" style={{ color: commAmount > 0 ? '#f43f5e' : undefined, opacity: commAmount > 0 ? 0.7 : 0.2 }}>
-                                  {commAmount > 0 ? fNum(commAmount) : '—'}
+                                  {commAmount > 0 ? fNum(commAmount * m) : '—'}
                                 </td>
                               )}
                             </tr>
@@ -323,11 +341,11 @@ export default function ExpensesView() {
                         {/* Subtotal row */}
                         <tr className="border-t border-white/[0.06]">
                           <td className="px-3 py-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: config.color }}>
-                            {fNum(allItems.reduce((s, { item }) => s + item[y], 0))}
+                            {fNum(allItems.reduce((s, { item }) => s + item[y], 0) * m)}
                           </td>
                           {isSalaries && (
                             <td className="px-2 py-3 text-center font-mono text-[11px] font-bold whitespace-nowrap" style={{ color: '#f43f5e', opacity: 0.9 }}>
-                              {fNum(allItems.reduce((s, { item }) => s + getCommissionAmount(item, y), 0))}
+                              {fNum(allItems.reduce((s, { item }) => s + getCommissionAmount(item, y), 0) * m)}
                             </td>
                           )}
                         </tr>
@@ -342,8 +360,8 @@ export default function ExpensesView() {
       })}
 
       <TotalBar
-        label="Total Monthly Expenses"
-        values={[yearly[0].expenses / 12, yearly[1].expenses / 12, yearly[2].expenses / 12]}
+        label={isYearly ? 'Total Yearly Expenses' : 'Total Monthly Expenses'}
+        values={[yearly[0].expenses / 12 * m, yearly[1].expenses / 12 * m, yearly[2].expenses / 12 * m]}
         color="#f43f5e"
       />
     </div>
