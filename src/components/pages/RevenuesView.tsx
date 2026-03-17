@@ -90,6 +90,12 @@ export default function RevenuesView() {
             <div className="flex flex-col md:flex-row gap-3 items-stretch">
               <div className="card overflow-x-auto w-full md:w-1/2">
                 <table className="w-full text-[12px]">
+                  <colgroup>
+                    <col />
+                    <col style={{ width: 80 }} />
+                    <col style={{ width: 70 }} />
+                    <col style={{ width: 80 }} />
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
