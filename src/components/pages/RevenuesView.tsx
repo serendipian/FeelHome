@@ -94,7 +94,7 @@ export default function RevenuesView() {
                     <tr className="border-b border-white/[0.06] bg-white/[0.03]">
                       <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider whitespace-nowrap">City</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Rent</th>
-                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Commission</th>
+                      <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Avg Comm</th>
                       <th className="px-3 py-2.5 text-[10px] font-semibold text-white/40 text-right uppercase tracking-wider whitespace-nowrap">Rev/Conv</th>
                     </tr>
                   </thead>
@@ -108,7 +108,7 @@ export default function RevenuesView() {
                           <EditableCell value={item.rent} onSave={(v) => updateRentalItem(idx, 'rent', v)} format={fNum} />
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono text-white/40">
-                          <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v} mo`} step={0.1} />
+                          <EditableCell value={item.commFactor} onSave={(v) => updateRentalItem(idx, 'commFactor', v)} format={(v) => `${v}`} step={0.1} />
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono text-[#d4875a] font-semibold whitespace-nowrap">{fNum(item.revPerConv)}</td>
                       </tr>
@@ -124,7 +124,7 @@ export default function RevenuesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">{isYearly ? 'Conv/Y' : 'Conv/M'}</th>
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
@@ -223,7 +223,7 @@ export default function RevenuesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">{isYearly ? 'Conv/Y' : 'Conv/M'}</th>
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
@@ -307,7 +307,7 @@ export default function RevenuesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Conv.</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">{isYearly ? 'Conv/Y' : 'Conv/M'}</th>
                           <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Revenue</th>
                         </tr>
                       </thead>
