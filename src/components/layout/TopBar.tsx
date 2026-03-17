@@ -60,29 +60,34 @@ export default function TopBar() {
         <h1 className="text-[15px] md:text-[18px] font-semibold leading-tight" style={{ color: 'rgba(0,0,0,0.85)' }}>{title}</h1>
 
         {showViewMode && (
-          <div className="relative inline-flex rounded-full p-[3px] ml-4" style={{ background: 'rgba(0,0,0,0.06)' }}>
-            <div
-              className="absolute top-[3px] bottom-[3px] rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-              style={{
-                width: 'calc(50% - 3px)',
-                left: isYearly ? 'calc(50%)' : '3px',
-                background: '#000',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              }}
-            />
-            <button
-              onClick={() => setIsYearly(false)}
-              className={`relative z-10 px-3.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-300 cursor-pointer ${!isYearly ? 'text-white' : 'text-black/35 hover:text-black/55'}`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setIsYearly(true)}
-              className={`relative z-10 px-3.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-300 cursor-pointer ${isYearly ? 'text-white' : 'text-black/35 hover:text-black/55'}`}
-            >
-              Yearly
-            </button>
-          </div>
+          <button
+            onClick={() => setIsYearly(!isYearly)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 cursor-pointer ml-4"
+            style={{
+              background: 'rgba(0,0,0,0.06)',
+              border: '1px solid rgba(0,0,0,0.12)',
+            }}
+          >
+            <div className="relative w-[36px] h-[20px] rounded-full transition-colors duration-300" style={{
+              background: isYearly ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.1)',
+            }}>
+              <div
+                className="absolute top-[2px] w-[16px] h-[16px] rounded-full transition-all duration-300 flex items-center justify-center"
+                style={{
+                  left: isYearly ? '18px' : '2px',
+                  background: isYearly ? '#000' : '#888',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                }}
+              >
+                <span style={{ fontSize: '7px', fontWeight: 700, color: 'white', lineHeight: 1 }}>
+                  {isYearly ? 'Y' : 'M'}
+                </span>
+              </div>
+            </div>
+            <span className="text-[11px] font-medium" style={{ color: 'rgba(0,0,0,0.55)' }}>
+              {isYearly ? 'Yearly' : 'Monthly'}
+            </span>
+          </button>
         )}
       </div>
 

@@ -403,7 +403,7 @@ export default function PnlView() {
         <SectionBar
           label={isYearly ? 'Total Yearly Revenue' : 'Total Monthly Revenue'}
           values={[revTotals[0] * m, revTotals[1] * m, revTotals[2] * m]}
-          color="#d4a853"
+          color="#2dd4bf"
         />
       </div>
 
@@ -516,91 +516,147 @@ export default function PnlView() {
         />
       </div>
 
-      {/* ─── BOTTOM LINE TABLE ─── */}
-      <div className="space-y-3">
+      {/* ─── BOTTOM LINE ─── */}
+      <div className="space-y-5">
         <div className="flex items-center gap-3 px-1">
-          <div className="w-2 h-2 rounded-full bg-[#2dd4bf]" />
+          <div className="relative w-2.5 h-2.5">
+            <div className="absolute inset-0 rounded-full bg-[#2dd4bf] animate-ping opacity-30" />
+            <div className="relative w-2.5 h-2.5 rounded-full bg-[#2dd4bf]" />
+          </div>
           <span className="text-[13px] font-bold text-white/80 uppercase tracking-wider">Bottom Line</span>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3 items-start md:items-end">
-          <div className="w-full md:w-1/2" />
-          <div className="w-full md:w-1/2 flex gap-3">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="flex-1 text-center"><YearTag year={n} color="#2dd4bf" /></div>
-            ))}
+        {/* Summary rows as stacked cards */}
+        <div className="space-y-2">
+          {(() => {
+            const bottomRows = [
+              { label: 'Total Revenues', icon: '↗', values: [revTotals[0] * m, revTotals[1] * m, revTotals[2] * m], color: '#2dd4bf' },
+              { label: 'Total Expenses', icon: '↘', values: [expTotals[0] * m, expTotals[1] * m, expTotals[2] * m], color: '#f43f5e' },
+              { label: 'Commissions', icon: '⊘', values: [commTotals[0] * m, commTotals[1] * m, commTotals[2] * m], color: '#f97316' },
+            ];
+            return bottomRows.map((row) => {
+              const r = parseInt(row.color.slice(1, 3), 16);
+              const g = parseInt(row.color.slice(3, 5), 16);
+              const b = parseInt(row.color.slice(5, 7), 16);
+              return (
+                <div key={row.label} className="flex flex-col md:flex-row gap-2">
+                  <div
+                    className="w-full md:w-1/2 flex items-center gap-3 px-5 py-3.5 rounded-2xl"
+                    style={{
+                      background: `rgba(${r},${g},${b},0.04)`,
+                      border: `1px solid rgba(${r},${g},${b},0.10)`,
+                    }}
+                  >
+                    <span className="text-[14px] opacity-50">{row.icon}</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: row.color }}>{row.label}</span>
+                  </div>
+                  <div className="w-full md:w-1/2 flex gap-2">
+                    {row.values.map((v, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 flex items-center justify-center py-3.5 rounded-2xl"
+                        style={{
+                          background: `rgba(${r},${g},${b},0.04)`,
+                          border: `1px solid rgba(${r},${g},${b},0.10)`,
+                        }}
+                      >
+                        <span className="font-mono text-[13px] font-bold" style={{ color: row.color }}>{fNum(Math.round(v))}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+
+        {/* Net Profit — hero card */}
+        <div
+          className="relative overflow-hidden rounded-3xl p-[1px]"
+          style={{
+            background: `linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03))`,
+          }}
+        >
+          <div className="rounded-3xl px-6 py-5 backdrop-blur-2xl" style={{ background: 'rgba(6,7,10,0.85)' }}>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2 flex flex-col justify-center gap-1">
+                <span className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.15em]">Result</span>
+                <span className="text-[16px] font-black text-white/90 tracking-tight">Net Profit</span>
+              </div>
+              <div className="w-full md:w-1/2 flex gap-3">
+                {([0, 1, 2] as const).map((yi) => {
+                  const val = netTotals[yi] * m;
+                  const isPositive = val >= 0;
+                  const color = isPositive ? '#22c55e' : '#f43f5e';
+                  const r = isPositive ? 34 : 244;
+                  const g = isPositive ? 197 : 63;
+                  const b = isPositive ? 94 : 94;
+                  return (
+                    <div
+                      key={yi}
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 rounded-2xl"
+                      style={{
+                        background: `rgba(${r},${g},${b},0.06)`,
+                        border: `1px solid rgba(${r},${g},${b},0.15)`,
+                        boxShadow: `0 0 20px rgba(${r},${g},${b},0.08)`,
+                      }}
+                    >
+                      <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: `rgba(${r},${g},${b},0.5)` }}>Y{yi + 1}</span>
+                      <span className="font-mono text-[15px] font-black" style={{ color }}>{fNum(Math.round(val))}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3 items-stretch">
-          <div className="card overflow-x-auto w-full md:w-1/2">
-            <table className="w-full text-[12px]">
-              <thead>
-                <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                  <th className="px-4 py-2.5 text-[10px] font-semibold text-white/40 text-left uppercase tracking-wider">Metric</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { label: 'Total Revenues', color: '#2dd4bf' },
-                  { label: 'Total Expenses', color: '#f43f5e' },
-                  { label: 'Total Commissions', color: '#e879a0' },
-                  { label: 'Net Profit', color: 'auto' },
-                  { label: 'Cumulative P&L', color: 'auto' },
-                ].map((row) => (
-                  <tr key={row.label} className={`border-b border-white/[0.02] h-[42px] ${row.label === 'Net Profit' || row.label === 'Cumulative P&L' ? '!bg-white/[0.03]' : ''}`}>
-                    <td className="px-4 text-[12px] font-bold text-white/80 whitespace-nowrap">{row.label}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="w-full md:w-1/2 flex gap-3">
-            {([0, 1, 2] as const).map((yi) => {
-              const cumulative = (() => {
-                let total = 0;
-                for (let i = 0; i <= yi; i++) {
-                  total += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
-                }
-                return total;
-              })();
-
-              const rows = [
-                { value: revTotals[yi] * m, color: '#2dd4bf' },
-                { value: expTotals[yi] * m, color: '#f43f5e' },
-                { value: commTotals[yi] * m, color: '#e879a0' },
-                { value: netTotals[yi] * m, color: 'auto' as const },
-                { value: isYearly ? cumulative : cumulative / 12, color: 'auto' as const },
-              ];
-
-              return (
-                <div key={yi} className="card overflow-hidden flex-1 min-w-0">
-                  <table className="w-full text-[12px]">
-                    <thead>
-                      <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                        <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row, ri) => {
-                        const isAutoColor = row.color === 'auto';
-                        const cellColor = isAutoColor
-                          ? (row.value >= 0 ? '#22c55e' : '#f43f5e')
-                          : row.color;
-                        const isHighlight = ri >= 3;
-                        return (
-                          <tr key={ri} className={`border-b border-white/[0.02] h-[42px] ${isHighlight ? '!bg-white/[0.03]' : ''}`}>
-                            <td className="px-3 text-center font-mono text-[13px] font-bold whitespace-nowrap" style={{ color: cellColor }}>
-                              {fNum(Math.round(row.value))}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })}
+        {/* Cumulative P&L — accent bar */}
+        <div
+          className="relative overflow-hidden rounded-3xl p-[1px]"
+          style={{
+            background: (() => {
+              let total = 0;
+              for (let i = 0; i < 3; i++) total += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
+              return total >= 0
+                ? 'linear-gradient(135deg, rgba(34,197,94,0.25), rgba(34,197,94,0.05))'
+                : 'linear-gradient(135deg, rgba(244,63,94,0.25), rgba(244,63,94,0.05))';
+            })(),
+          }}
+        >
+          <div className="rounded-3xl px-6 py-5 backdrop-blur-2xl" style={{ background: 'rgba(6,7,10,0.85)' }}>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-1/2 flex flex-col justify-center gap-1">
+                <span className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.15em]">Accumulated</span>
+                <span className="text-[16px] font-black text-white/90 tracking-tight">Cumulative P&L</span>
+              </div>
+              <div className="w-full md:w-1/2 flex gap-3">
+                {([0, 1, 2] as const).map((yi) => {
+                  let cumulative = 0;
+                  for (let i = 0; i <= yi; i++) cumulative += (revTotals[i] - expTotals[i] - commTotals[i]) * 12;
+                  const val = isYearly ? cumulative : cumulative / 12;
+                  const isPositive = val >= 0;
+                  const color = isPositive ? '#22c55e' : '#f43f5e';
+                  const r = isPositive ? 34 : 244;
+                  const g = isPositive ? 197 : 63;
+                  const b = isPositive ? 94 : 94;
+                  return (
+                    <div
+                      key={yi}
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 rounded-2xl"
+                      style={{
+                        background: `rgba(${r},${g},${b},0.06)`,
+                        border: `1px solid rgba(${r},${g},${b},0.15)`,
+                        boxShadow: `0 0 20px rgba(${r},${g},${b},0.08)`,
+                      }}
+                    >
+                      <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: `rgba(${r},${g},${b},0.5)` }}>Y{yi + 1}</span>
+                      <span className="font-mono text-[15px] font-black" style={{ color }}>{fNum(Math.round(val))}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
