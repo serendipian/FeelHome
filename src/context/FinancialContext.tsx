@@ -62,6 +62,16 @@ function reorderByLabel<T extends { label: string }>(loaded: T[], defaults: T[])
   return defaults.map(d => byLabel.get(d.label) ?? d);
 }
 
+// Reorder expenses, preserving structural fields (brands, market, category) from defaults
+function reorderExpenses(loaded: ExpenseItem[], defaults: ExpenseItem[]): ExpenseItem[] {
+  const byLabel = new Map(loaded.map(item => [item.label, item]));
+  return defaults.map(d => {
+    const saved = byLabel.get(d.label);
+    if (!saved) return d;
+    return { ...saved, brands: d.brands, market: d.market, category: d.category };
+  });
+}
+
 // Zero-conversion defaults for new scenarios
 function zeroConvSales(): SaleRevenueItem[] {
   return defaultSaleRevenues.map(item => recalcSaleItem({
@@ -154,7 +164,7 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
       setSaleRevenues(reorderByLabel(sr, defaultSaleRevenues));
       setRentalRevenues(reorderByLabel(rr, defaultRentalRevenues));
       setMediaRevenues(reorderByLabel(mr, defaultMediaRevenues));
-      setExpenseItems(reorderByLabel(ei, defaultExpenses));
+      setExpenseItems(reorderExpenses(ei, defaultExpenses));
       setInvestment(inv);
       setCommissionRate(cr);
       setTimeout(() => { readyToSave.current = true; }, 0);
@@ -210,7 +220,7 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
     setSaleRevenues(reorderByLabel(sr, defaultSaleRevenues));
     setRentalRevenues(reorderByLabel(rr, defaultRentalRevenues));
     setMediaRevenues(reorderByLabel(mr, defaultMediaRevenues));
-    setExpenseItems(reorderByLabel(ei, defaultExpenses));
+    setExpenseItems(reorderExpenses(ei, defaultExpenses));
 
     setTimeout(() => { readyToSave.current = true; }, 0);
   }, [saleRevenues, rentalRevenues, mediaRevenues, expenseItems]);

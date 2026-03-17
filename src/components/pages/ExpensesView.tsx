@@ -1,15 +1,18 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { formatNumber } from '@/lib/formatters';
 import { useCurrencyFormatters } from '@/context/CurrencyContext';
 import { isExpenseActive } from '@/lib/calculations';
 import { ExpenseItem } from '@/types';
 import { useTeam } from '@/context/TeamContext';
+import type { CommissionType } from '@/types/team';
 import BrandPill from '@/components/ui/BrandPill';
 import TotalBar from '@/components/ui/TotalBar';
 import EditableCell from '@/components/ui/EditableCell';
+
+const COMMISSION_TYPES: CommissionType[] = ['All Revenues', 'Linked Deals', 'No Commission'];
 
 const categoryConfig: Record<string, { label: string; color: string; subtitle: string }> = {
   salaries: { label: 'Salaries', color: '#f43f5e', subtitle: 'Team & Agents' },
@@ -33,25 +36,39 @@ function YearTag({ year, color }: { year: number; color: string }) {
 
 export default function ExpensesView() {
   const { activeBrands, activeMarkets, expenseItems, updateExpenseItem, yearly, saleRevenues, rentalRevenues, mediaRevenues } = useFinancial();
-  const { teamData } = useTeam();
+  const { teamData, updateTeamMember } = useTeam();
   const { fNum } = useCurrencyFormatters();
   const [salariesExpanded, setSalariesExpanded] = useState(false);
 
-  // Map expense labels → team member commission data
-  const commissionByLabel = useMemo(() => {
-    const map = new Map<string, { rate: number; type: string }>();
+  // Map expense labels → team member data (id + commission)
+  const teamByLabel = useMemo(() => {
+    const map = new Map<string, { id: string; rate: number; type: CommissionType }>();
     for (const member of teamData) {
-      map.set(member.expenseLabel, { rate: member.commission.rate, type: member.commission.type });
+      map.set(member.expenseLabel, { id: member.id, rate: member.commission.rate, type: member.commission.type });
     }
     return map;
   }, [teamData]);
+
+  // Update commission rate for a team member (from expense label)
+  const handleCommissionRateChange = useCallback((expenseLabel: string, newRate: number) => {
+    const info = teamByLabel.get(expenseLabel);
+    if (!info) return;
+    updateTeamMember(info.id, { commission: { rate: newRate, type: info.type } });
+  }, [teamByLabel, updateTeamMember]);
+
+  // Update commission type for a team member (from expense label)
+  const handleCommissionTypeChange = useCallback((expenseLabel: string, newType: CommissionType) => {
+    const info = teamByLabel.get(expenseLabel);
+    if (!info) return;
+    const newRate = newType === 'No Commission' ? 0 : info.rate;
+    updateTeamMember(info.id, { commission: { rate: newRate, type: newType } });
+  }, [teamByLabel, updateTeamMember]);
 
   // Calculate revenues by market for each year (for commission amounts)
   const revenueByMarketYear = useMemo(() => {
     const years = ['y1', 'y2', 'y3'] as const;
     const result: Record<string, { y1: number; y2: number; y3: number }> = {};
 
-    // Combine sale + rental labels (Casablanca, Rabat, Marrakech, Autre)
     for (const sale of saleRevenues) {
       const key = sale.label.toLowerCase();
       if (!result[key]) result[key] = { y1: 0, y2: 0, y3: 0 };
@@ -79,11 +96,11 @@ export default function ExpensesView() {
 
   // Calculate commission amount for a given expense item and year
   const getCommissionAmount = (item: ExpenseItem, year: 'y1' | 'y2' | 'y3'): number => {
-    const comm = commissionByLabel.get(item.label);
-    if (!comm) return 0;
-    const rate = comm.rate / 100;
+    const info = teamByLabel.get(item.label);
+    if (!info || info.type === 'No Commission') return 0;
+    const rate = info.rate / 100;
 
-    if (comm.type === 'All Revenues') {
+    if (info.type === 'All Revenues') {
       return rate * totalRevenueYear[year];
     }
 
@@ -93,7 +110,7 @@ export default function ExpensesView() {
       return marketRev ? rate * marketRev[year] : 0;
     }
 
-    // Linked Deals without specific market (e.g., Property Hunter): FH + MI revenues across all markets
+    // Linked Deals without specific market: FH + MI revenues across all markets
     let total = 0;
     if (activeBrands.feelHome) total += rentalRevenues.reduce((s, i) => s + i[year].total, 0);
     if (activeBrands.mInvest) total += saleRevenues.reduce((s, i) => s + i[year].total, 0);
@@ -170,7 +187,8 @@ export default function ExpensesView() {
                   </thead>
                   <tbody className="zebra-rows">
                     {items.map(({ item, idx }) => {
-                      const comm = isSalaries ? commissionByLabel.get(item.label) : undefined;
+                      const info = isSalaries ? teamByLabel.get(item.label) : undefined;
+                      const isNoComm = info?.type === 'No Commission';
                       return (
                         <tr key={idx} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors h-[37px]">
                           <td className="px-4 text-white/60 font-medium whitespace-nowrap">{item.label}</td>
@@ -184,10 +202,32 @@ export default function ExpensesView() {
                           {isSalaries && (
                             <>
                               <td className="px-3 text-right font-mono text-white/40 whitespace-nowrap">
-                                {comm ? `${comm.rate}%` : '—'}
+                                {info ? (
+                                  isNoComm ? (
+                                    <span className="text-white/20">—</span>
+                                  ) : (
+                                    <EditableCell
+                                      value={info.rate}
+                                      onSave={(v) => handleCommissionRateChange(item.label, v)}
+                                      format={(v) => `${v}%`}
+                                      step={1}
+                                    />
+                                  )
+                                ) : '—'}
                               </td>
-                              <td className="px-3 text-white/30 whitespace-nowrap text-[10px]">
-                                {comm ? comm.type : '—'}
+                              <td className="px-3 whitespace-nowrap text-[10px]">
+                                {info ? (
+                                  <select
+                                    value={info.type}
+                                    onChange={(e) => handleCommissionTypeChange(item.label, e.target.value as CommissionType)}
+                                    className="bg-transparent text-white/40 text-[10px] border-none outline-none cursor-pointer hover:text-white/60 transition-colors appearance-none pr-3"
+                                    style={{ backgroundImage: 'none' }}
+                                  >
+                                    {COMMISSION_TYPES.map((t) => (
+                                      <option key={t} value={t} className="bg-[#0a0b0f] text-white/80">{t}</option>
+                                    ))}
+                                  </select>
+                                ) : '—'}
                               </td>
                             </>
                           )}
@@ -208,7 +248,6 @@ export default function ExpensesView() {
                         </td>
                       </tr>
                     )}
-                    {!isSalaries && salaryCollapsedCount > 0 && null}
                   </tbody>
                 </table>
               </div>
@@ -220,7 +259,7 @@ export default function ExpensesView() {
                     <table className="w-full text-[12px]">
                       <thead>
                         <tr className="border-b border-white/[0.06] bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Salary</th>
+                          <th className="px-3 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">{isSalaries ? 'Salary' : 'Amount'}</th>
                           {isSalaries && (
                             <th className="px-2 py-2.5 text-[9px] font-semibold text-white/35 text-center uppercase tracking-wider">Comm.</th>
                           )}
@@ -248,7 +287,7 @@ export default function ExpensesView() {
                                 )}
                               </td>
                               {isSalaries && (
-                                <td className="px-2 text-center font-mono text-[11px] text-amber-400/60 whitespace-nowrap">
+                                <td className="px-2 text-center font-mono text-[11px] whitespace-nowrap" style={{ color: commAmount > 0 ? '#f43f5e' : undefined, opacity: commAmount > 0 ? 0.7 : 0.2 }}>
                                   {commAmount > 0 ? fNum(commAmount) : '—'}
                                 </td>
                               )}
@@ -273,7 +312,7 @@ export default function ExpensesView() {
                             {fNum(allItems.reduce((s, { item }) => s + item[y], 0))}
                           </td>
                           {isSalaries && (
-                            <td className="px-2 py-3 text-center font-mono text-[11px] font-bold text-amber-400/80 whitespace-nowrap">
+                            <td className="px-2 py-3 text-center font-mono text-[11px] font-bold whitespace-nowrap" style={{ color: '#f43f5e', opacity: 0.9 }}>
                               {fNum(allItems.reduce((s, { item }) => s + getCommissionAmount(item, y), 0))}
                             </td>
                           )}

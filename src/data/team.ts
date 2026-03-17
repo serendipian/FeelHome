@@ -262,7 +262,7 @@ export const DEFAULT_TEAM_DATA: TeamMemberData[] = [
       { label: 'Inbound leads', target: '50/mo' },
     ],
     tools: ['Instagram', 'TikTok', 'Canva', 'CapCut', 'Meta Business'],
-    commission: { rate: 10, type: 'All Revenues' },
+    commission: { rate: 0, type: 'No Commission' },
   },
   {
     id: 'property-hunter',
@@ -315,7 +315,7 @@ export const DEFAULT_TEAM_DATA: TeamMemberData[] = [
       { label: 'Follow-up rate', target: '100%/mo' },
     ],
     tools: ['WhatsApp Business', 'CRM', 'Phone', 'Email'],
-    commission: { rate: 10, type: 'All Revenues' },
+    commission: { rate: 0, type: 'No Commission' },
   },
   {
     id: 'community-manager',
@@ -342,7 +342,7 @@ export const DEFAULT_TEAM_DATA: TeamMemberData[] = [
       { label: 'Inbound leads', target: '50/mo' },
     ],
     tools: ['Instagram', 'TikTok', 'Canva', 'CapCut', 'Meta Business'],
-    commission: { rate: 10, type: 'All Revenues' },
+    commission: { rate: 0, type: 'No Commission' },
   },
   {
     id: 'agent-casa',
