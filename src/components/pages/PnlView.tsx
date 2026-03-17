@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { useCurrencyFormatters } from '@/context/CurrencyContext';
+import { useViewMode } from '@/context/ViewModeContext';
 import { isExpenseActive } from '@/lib/calculations';
 import { ExpenseItem } from '@/types';
 import { useTeam } from '@/context/TeamContext';
@@ -88,7 +89,7 @@ export default function PnlView() {
   } = useFinancial();
   const { teamData } = useTeam();
   const { fNum } = useCurrencyFormatters();
-  const [isYearly, setIsYearly] = useState(false);
+  const { isYearly } = useViewMode();
   const m = isYearly ? 12 : 1;
 
   const isMarketActive = (label: string) => {
@@ -197,33 +198,6 @@ export default function PnlView() {
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      {/* Monthly / Yearly toggle */}
-      <div className="flex justify-end">
-        <div className="relative inline-flex rounded-full p-0.5 text-[11px]" style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.08)' }}>
-          <div
-            className="absolute top-0.5 bottom-0.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            style={{
-              width: 'calc(50% - 2px)',
-              left: isYearly ? 'calc(50% + 1px)' : '2px',
-              background: 'linear-gradient(135deg, #d4a853, #d4875a)',
-              boxShadow: '0 1px 4px rgba(212,168,83,0.3)',
-            }}
-          />
-          <button
-            onClick={() => setIsYearly(false)}
-            className={`relative z-10 px-4 py-1.5 rounded-full font-medium transition-colors duration-300 cursor-pointer ${!isYearly ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setIsYearly(true)}
-            className={`relative z-10 px-4 py-1.5 rounded-full font-medium transition-colors duration-300 cursor-pointer ${isYearly ? 'text-white' : 'text-slate-400 hover:text-slate-600'}`}
-          >
-            Yearly
-          </button>
-        </div>
-      </div>
-
       {/* ─── REVENUES SECTION ─── */}
       <div className="space-y-4">
         <div className="flex items-center gap-3 px-1">

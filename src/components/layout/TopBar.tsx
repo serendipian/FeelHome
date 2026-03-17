@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useMobileNav } from '@/context/MobileNavContext';
+import { useViewMode } from '@/context/ViewModeContext';
 
 const pageTitles: Record<string, string> = {
   '/': 'P&L Overview',
@@ -16,11 +17,15 @@ const pageTitles: Record<string, string> = {
   '/workflow': 'Workflows',
 };
 
+const viewModePages = ['/revenues', '/expenses', '/pnl'];
+
 export default function TopBar() {
   const pathname = usePathname();
   const { currency, isUSD, toggleCurrency } = useCurrency();
   const { toggleSidebar, togglePanel, togglePanelCollapsed } = useMobileNav();
+  const { isYearly, setIsYearly } = useViewMode();
   const title = pageTitles[pathname] || pageTitles['/'];
+  const showViewMode = viewModePages.includes(pathname);
 
   const handlePanelToggle = useCallback(() => {
     if (window.matchMedia('(min-width: 1024px)').matches) {
@@ -53,6 +58,32 @@ export default function TopBar() {
         </button>
 
         <h1 className="text-[15px] md:text-[18px] font-semibold leading-tight" style={{ color: 'rgba(0,0,0,0.85)' }}>{title}</h1>
+
+        {showViewMode && (
+          <div className="relative inline-flex rounded-full p-[3px] ml-4" style={{ background: 'rgba(0,0,0,0.06)' }}>
+            <div
+              className="absolute top-[3px] bottom-[3px] rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{
+                width: 'calc(50% - 3px)',
+                left: isYearly ? 'calc(50%)' : '3px',
+                background: '#000',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }}
+            />
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`relative z-10 px-3.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-300 cursor-pointer ${!isYearly ? 'text-white' : 'text-black/35 hover:text-black/55'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`relative z-10 px-3.5 py-1 rounded-full text-[11px] font-medium transition-colors duration-300 cursor-pointer ${isYearly ? 'text-white' : 'text-black/35 hover:text-black/55'}`}
+            >
+              Yearly
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
