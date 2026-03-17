@@ -244,7 +244,7 @@ export default function InvestmentView() {
       let expensesTotal = 0;
       const expByCategory = { salaries: 0, fixed: 0, marketing: 0 };
       expenseItems.forEach((item, i) => {
-        if (isExpenseActive(item, activeBrands)) {
+        if (isExpenseActive(item, activeBrands, activeMarkets)) {
           const val = sim.expenses[i]?.[mi] ?? 0;
           expByCategory[item.category] += val;
           expensesTotal += val;
@@ -444,7 +444,7 @@ export default function InvestmentView() {
           <CashFlowRow label="Salaries" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.salaries} color="#f43f5e" bold
             totalCells={[{ value: localSnapshots.reduce((s, snap) => s + snap.expByCategory.salaries, 0), color: '#f43f5e' }]} />
           {expenseItems.map((item, idx) => {
-            if (item.category !== 'salaries' || !isExpenseActive(item, activeBrands)) return null;
+            if (item.category !== 'salaries' || !isExpenseActive(item, activeBrands, activeMarkets)) return null;
             const isCollapsed = collapseFromIdx > 0 && idx >= collapseFromIdx && !salariesExpanded;
             if (isCollapsed) return null;
             const rowTotal = tableMonths.reduce((s, m) => s + (sim.expenses[idx]?.[m - 1] ?? 0), 0);
@@ -477,7 +477,7 @@ export default function InvestmentView() {
                   <svg className={`w-3 h-3 transition-transform ${salariesExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
-                  {salariesExpanded ? 'Collapse future hires' : `Show ${expenseItems.filter((e, i) => e.category === 'salaries' && i >= collapseFromIdx && isExpenseActive(e, activeBrands)).length} future hires`}
+                  {salariesExpanded ? 'Collapse future hires' : `Show ${expenseItems.filter((e, i) => e.category === 'salaries' && i >= collapseFromIdx && isExpenseActive(e, activeBrands, activeMarkets)).length} future hires`}
                 </button>
               </td>
             </tr>
@@ -487,7 +487,7 @@ export default function InvestmentView() {
           <CashFlowRow label="Fixed Costs" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.fixed} color="#f43f5e" bold
             totalCells={[{ value: localSnapshots.reduce((s, snap) => s + snap.expByCategory.fixed, 0), color: '#f43f5e' }]} />
           {expenseItems.map((item, idx) => {
-            if (item.category !== 'fixed' || !isExpenseActive(item, activeBrands)) return null;
+            if (item.category !== 'fixed' || !isExpenseActive(item, activeBrands, activeMarkets)) return null;
             const rowTotal = tableMonths.reduce((s, m) => s + (sim.expenses[idx]?.[m - 1] ?? 0), 0);
             return (
               <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
@@ -513,7 +513,7 @@ export default function InvestmentView() {
           <CashFlowRow label="Marketing" months={tableMonths} snapshots={localSnapshots} getValue={(s) => s.expByCategory.marketing} color="#f43f5e" bold
             totalCells={[{ value: localSnapshots.reduce((s, snap) => s + snap.expByCategory.marketing, 0), color: '#f43f5e' }]} />
           {expenseItems.map((item, idx) => {
-            if (item.category !== 'marketing' || !isExpenseActive(item, activeBrands)) return null;
+            if (item.category !== 'marketing' || !isExpenseActive(item, activeBrands, activeMarkets)) return null;
             const rowTotal = tableMonths.reduce((s, m) => s + (sim.expenses[idx]?.[m - 1] ?? 0), 0);
             return (
               <tr key={`exp-${idx}`} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">

@@ -27,7 +27,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y1: 14000,
     y2: 12000,
     y3: 12000,
-    brands: ['expats'],
+    brands: ['feelHome', 'mInvest'],
   },
   {
     label: 'Property Hunter',
@@ -64,6 +64,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 15000,
     y3: 15000,
     brands: ['feelHome', 'mInvest'],
+    market: 'casablanca',
   },
   {
     label: 'Agent Rabat #1',
@@ -73,6 +74,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 15000,
     y3: 15000,
     brands: ['feelHome', 'mInvest'],
+    market: 'rabat',
   },
   {
     label: 'Agent Marrakech #1',
@@ -82,6 +84,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 15000,
     y3: 15000,
     brands: ['feelHome', 'mInvest'],
+    market: 'marrakech',
   },
   {
     label: 'Agent Casablanca #2',
@@ -91,6 +94,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 12000,
     y3: 12000,
     brands: ['feelHome', 'mInvest'],
+    market: 'casablanca',
   },
   {
     label: 'Agent Rabat #2',
@@ -100,6 +104,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 12000,
     y3: 12000,
     brands: ['feelHome', 'mInvest'],
+    market: 'rabat',
   },
   {
     label: 'Agent Marrakech #2',
@@ -109,6 +114,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 12000,
     y3: 12000,
     brands: ['feelHome', 'mInvest'],
+    market: 'marrakech',
   },
   {
     label: 'Agent Casablanca #3',
@@ -118,6 +124,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 0,
     y3: 8000,
     brands: ['feelHome', 'mInvest'],
+    market: 'casablanca',
   },
   {
     label: 'Agent Rabat #3',
@@ -127,6 +134,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 0,
     y3: 8000,
     brands: ['feelHome', 'mInvest'],
+    market: 'rabat',
   },
   {
     label: 'Agent Marrakech #3',
@@ -136,6 +144,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 0,
     y3: 8000,
     brands: ['feelHome', 'mInvest'],
+    market: 'marrakech',
   },
   {
     label: 'Agent Tangier #1',
@@ -145,6 +154,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 18000,
     y3: 18000,
     brands: ['feelHome', 'mInvest'],
+    market: 'autre',
   },
   {
     label: 'Agent Agadir #1',
@@ -154,6 +164,7 @@ export const defaultExpenses: ExpenseItem[] = [
     y2: 0,
     y3: 18000,
     brands: ['feelHome', 'mInvest'],
+    market: 'autre',
   },
 
   // ── FIXED ─────────────────────────────────────────

@@ -50,6 +50,7 @@ export interface ExpenseItem {
   y2: number;
   y3: number;
   brands: BrandKey[];
+  market?: string;
 }
 
 export interface YearlyFinancials {

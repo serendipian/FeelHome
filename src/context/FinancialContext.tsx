@@ -298,11 +298,11 @@ export function FinancialProvider({ children }: { children: React.ReactNode }) {
 
   const expensesByCategory = useMemo(
     () => ({
-      y1: calcExpensesByCategory(activeBrands, 'y1', expenseItems),
-      y2: calcExpensesByCategory(activeBrands, 'y2', expenseItems),
-      y3: calcExpensesByCategory(activeBrands, 'y3', expenseItems),
+      y1: calcExpensesByCategory(activeBrands, 'y1', expenseItems, activeMarkets),
+      y2: calcExpensesByCategory(activeBrands, 'y2', expenseItems, activeMarkets),
+      y3: calcExpensesByCategory(activeBrands, 'y3', expenseItems, activeMarkets),
     }),
-    [activeBrands, expenseItems]
+    [activeBrands, activeMarkets, expenseItems]
   );
 
   const simulation = useMemo(

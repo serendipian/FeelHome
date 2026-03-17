@@ -31,13 +31,13 @@ function YearTag({ year, color }: { year: number; color: string }) {
 }
 
 export default function ExpensesView() {
-  const { activeBrands, expenseItems, updateExpenseItem, yearly } = useFinancial();
+  const { activeBrands, activeMarkets, expenseItems, updateExpenseItem, yearly } = useFinancial();
   const { fNum } = useCurrencyFormatters();
   const [salariesExpanded, setSalariesExpanded] = useState(false);
 
   const activeItems = expenseItems
     .map((item, idx) => ({ item, idx }))
-    .filter(({ item }) => isExpenseActive(item, activeBrands));
+    .filter(({ item }) => isExpenseActive(item, activeBrands, activeMarkets));
 
   const grouped = {
     salaries: activeItems.filter(({ item }) => item.category === 'salaries'),

@@ -73,16 +73,18 @@ export function calcRevenueByBrand(
   };
 }
 
-export function isExpenseActive(expense: ExpenseItem, activeBrands: Record<BrandKey, boolean>): boolean {
-  return expense.brands.some((brand) => activeBrands[brand]);
+export function isExpenseActive(expense: ExpenseItem, activeBrands: Record<BrandKey, boolean>, activeMarkets?: MarketFlags): boolean {
+  if (!expense.brands.some((brand) => activeBrands[brand])) return false;
+  if (expense.market && activeMarkets && !activeMarkets[expense.market]) return false;
+  return true;
 }
 
-export function calcExpenses(activeBrands: Record<BrandKey, boolean>, year: Year, expenseItems: ExpenseItem[]): number {
-  return expenseItems.filter((exp) => isExpenseActive(exp, activeBrands)).reduce((sum, exp) => sum + exp[year], 0);
+export function calcExpenses(activeBrands: Record<BrandKey, boolean>, year: Year, expenseItems: ExpenseItem[], activeMarkets?: MarketFlags): number {
+  return expenseItems.filter((exp) => isExpenseActive(exp, activeBrands, activeMarkets)).reduce((sum, exp) => sum + exp[year], 0);
 }
 
-export function calcExpensesByCategory(activeBrands: Record<BrandKey, boolean>, year: Year, expenseItems: ExpenseItem[]) {
-  const active = expenseItems.filter((exp) => isExpenseActive(exp, activeBrands));
+export function calcExpensesByCategory(activeBrands: Record<BrandKey, boolean>, year: Year, expenseItems: ExpenseItem[], activeMarkets?: MarketFlags) {
+  const active = expenseItems.filter((exp) => isExpenseActive(exp, activeBrands, activeMarkets));
   return {
     salaries: active.filter((e) => e.category === 'salaries').reduce((s, e) => s + e[year], 0),
     fixed: active.filter((e) => e.category === 'fixed').reduce((s, e) => s + e[year], 0),
@@ -102,7 +104,7 @@ export function calcYearlyFinancials(
 ): YearlyFinancials {
   const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets);
   const commissions = revenue * commissionRate;
-  const expensesTotal = calcExpenses(activeBrands, year, expenseItems);
+  const expensesTotal = calcExpenses(activeBrands, year, expenseItems, activeMarkets);
   const profit = revenue - commissions - expensesTotal;
   return { revenue: revenue * 12, commissions: commissions * 12, expenses: expensesTotal * 12, profit: profit * 12 };
 }
@@ -119,7 +121,7 @@ export function calcMonthlyFinancials(
   return (['y1', 'y2', 'y3'] as const).map((year) => {
     const revenue = calcRevenue(activeBrands, year, sales, rentals, media, activeMarkets);
     const commissions = revenue * commissionRate;
-    const expensesTotal = calcExpenses(activeBrands, year, expenseItems);
+    const expensesTotal = calcExpenses(activeBrands, year, expenseItems, activeMarkets);
     const profit = revenue - commissions - expensesTotal;
     return { revenue, commissions, expenses: expensesTotal, profit };
   });
@@ -152,8 +154,8 @@ export function calcInvestmentSimulation(
       expats: 0,
     };
     const commissions = commByBrand.feelHome + commByBrand.mInvest;
-    const expByCategory = calcExpensesByCategory(activeBrands, year, expenseItems);
-    const expensesTotal = calcExpenses(activeBrands, year, expenseItems);
+    const expByCategory = calcExpensesByCategory(activeBrands, year, expenseItems, activeMarkets);
+    const expensesTotal = calcExpenses(activeBrands, year, expenseItems, activeMarkets);
     const profit = revenue - commissions - expensesTotal;
 
     cumulative += profit;
