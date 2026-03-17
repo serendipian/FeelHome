@@ -140,7 +140,7 @@ export default function RevenuesView() {
                           return (
                           <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
-                              <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                              {isYearly ? String(item[y].conv * 12) : <EditableCell value={item[y].conv} onSave={(v) => updateRentalItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />}
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
                               {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
@@ -247,7 +247,7 @@ export default function RevenuesView() {
                           return (
                           <tr key={item.label} className={`border-b border-white/[0.02] transition-colors ${active ? 'hover:!bg-white/[0.04]' : 'opacity-25'}`}>
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
-                              <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                              {isYearly ? String(item[y].conv * 12) : <EditableCell value={item[y].conv} onSave={(v) => updateSaleItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />}
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
                               {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
@@ -329,7 +329,7 @@ export default function RevenuesView() {
                         {mediaRevenues.map((item, idx) => (
                           <tr key={item.label} className="border-b border-white/[0.02] hover:!bg-white/[0.04] transition-colors">
                             <td className="px-3 py-2.5 text-center font-mono text-white/40">
-                              <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />
+                              {isYearly ? String(item[y].conv * 12) : <EditableCell value={item[y].conv} onSave={(v) => updateMediaItem(idx, `${y}.conv`, v)} format={(v) => String(v)} />}
                             </td>
                             <td className="px-3 py-2.5 text-center font-mono text-white/70 font-medium whitespace-nowrap">
                               {item[y].total > 0 ? fNum(item[y].total * m) : <span className="text-white/15">—</span>}
