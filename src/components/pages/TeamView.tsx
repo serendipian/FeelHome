@@ -217,7 +217,7 @@ export default function TeamView() {
       {visibleAgents.length > 0 && (
         <div className="flex flex-col md:flex-row">
           <SectionLabel label="Field Agents" />
-          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`flex-1 grid grid-cols-1 sm:grid-cols-2 ${visibleAgents.length <= 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4`}>
             {visibleAgents.map((member) => (
               <MemberCard
                 key={member.id}
@@ -563,20 +563,20 @@ function TabContent({ member, tab, color, onCommissionRateChange, onCommissionTy
 
   if (tab === 'overview') {
     return (
-      <div className="space-y-1.5">
+      <div className="grid grid-cols-2 gap-1">
         {member.responsibilities.map((r, i) => (
           <div
             key={i}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors duration-200"
-            style={{ background: pillBg, border: pillBorder }}
+            className="flex items-center gap-2 rounded-md px-2 py-1.5"
+            style={{ background: pillBg }}
           >
             <div
-              className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-              style={{ background: `${color}0a`, color: `${color}80` }}
+              className="w-5 h-5 rounded flex items-center justify-center shrink-0"
+              style={{ color: `${color}80` }}
             >
               {getIcon(r.iconKey)}
             </div>
-            <span className={`text-[11px] font-medium leading-tight ${textSecondary}`}>{r.label}</span>
+            <span className={`text-[10px] font-medium leading-tight truncate ${textSecondary}`}>{r.label}</span>
           </div>
         ))}
       </div>
