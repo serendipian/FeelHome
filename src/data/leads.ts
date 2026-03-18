@@ -15,12 +15,12 @@ export const DEFAULT_SOURCES: LeadSource[] = [
   { id: 'media-expats', category: 'medias', label: 'Expats.ma', imageType: 'laptop', imageUrl: '/images/leads/expats-ma.png', leadsPerMonth: 0 },
   { id: 'media-guide', category: 'medias', label: 'Guideimmobilier.ma', imageType: 'laptop', imageUrl: '/images/leads/guide-immobilier.png', leadsPerMonth: 0 },
   // Facebook Groups
-  { id: 'fb-expats-morocco', category: 'fbGroups', label: 'Expats Morocco', sublabel: '45K', imageType: 'cover', imageUrl: '/images/leads/expats-morocco.jpeg', leadsPerMonth: 0 },
-  { id: 'fb-francais-maroc', category: 'fbGroups', label: 'Français du Maroc', sublabel: '38K', imageType: 'cover', imageUrl: '/images/leads/francais-du-maroc.jpeg', leadsPerMonth: 0 },
-  { id: 'fb-reseau-expatries', category: 'fbGroups', label: 'Réseau des Expatriés au Maroc', sublabel: '22K', imageType: 'cover', imageUrl: '/images/leads/reseau-expatries.jpeg', leadsPerMonth: 0 },
-  { id: 'fb-francais-marrakech', category: 'fbGroups', label: 'Français de Marrakech', sublabel: '15K', imageType: 'cover', imageUrl: '/images/leads/francais-marrakech.jpeg', leadsPerMonth: 0 },
-  { id: 'fb-expats-maroc', category: 'fbGroups', label: 'Expats Maroc', sublabel: '30K', imageType: 'cover', imageUrl: '/images/leads/expats-maroc.jpeg', leadsPerMonth: 0 },
-  { id: 'fb-bouskouristes', category: 'fbGroups', label: 'Les Bouskouristes', sublabel: '8K', imageType: 'cover', imageUrl: 'https://consonews.ma/wp-content/uploads/2017/11/bouskoura-green-city.jpg', leadsPerMonth: 0 },
+  { id: 'fb-expats-morocco', category: 'fbGroups', label: 'Expats Morocco', sublabel: '34K', imageType: 'cover', imageUrl: '/images/leads/expats-morocco.jpeg', leadsPerMonth: 0 },
+  { id: 'fb-francais-maroc', category: 'fbGroups', label: 'Français du Maroc', sublabel: '37K', imageType: 'cover', imageUrl: '/images/leads/francais-du-maroc.jpeg', leadsPerMonth: 0 },
+  { id: 'fb-reseau-expatries', category: 'fbGroups', label: 'Réseau des Expatriés au Maroc', sublabel: '38K', imageType: 'cover', imageUrl: '/images/leads/reseau-expatries.jpeg', leadsPerMonth: 0 },
+  { id: 'fb-francais-marrakech', category: 'fbGroups', label: 'Français de Marrakech', sublabel: '19K', imageType: 'cover', imageUrl: '/images/leads/francais-marrakech.jpeg', leadsPerMonth: 0 },
+  { id: 'fb-expats-maroc', category: 'fbGroups', label: 'Expats Maroc', sublabel: '11K', imageType: 'cover', imageUrl: '/images/leads/expats-maroc.jpeg', leadsPerMonth: 0 },
+  { id: 'fb-bouskouristes', category: 'fbGroups', label: 'Les Bouskouristes', sublabel: '14K', imageType: 'cover', imageUrl: 'https://consonews.ma/wp-content/uploads/2017/11/bouskoura-green-city.jpg', leadsPerMonth: 0 },
   // Social Media Pages
   { id: 'sm-facebook', category: 'socialMedia', label: 'Facebook', imageType: 'logo', imageUrl: 'https://cdn.simpleicons.org/facebook', leadsPerMonth: 0 },
   { id: 'sm-instagram', category: 'socialMedia', label: 'Instagram', imageType: 'logo', imageUrl: 'https://play-lh.googleusercontent.com/VRMWkE5p3CkWhJs6nv-9ZsLAs1QOg5ob1_3qg-rckwYW7yp1fMrYZqnEFpk0IoVP4LM', leadsPerMonth: 0 },
