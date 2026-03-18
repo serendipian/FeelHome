@@ -71,9 +71,10 @@ function LeadsEditableCell({ value, onSave, size = 'sm' }: {
 /*  SourceCard                                                         */
 /* ------------------------------------------------------------------ */
 
-function SourceCard({ source, onUpdate }: {
+function SourceCard({ source, onUpdate, compact = true }: {
   source: LeadSource;
   onUpdate: (value: number) => void;
+  compact?: boolean;
 }) {
   const renderVisual = () => {
     if (source.imageType === 'laptop') {
@@ -113,13 +114,16 @@ function SourceCard({ source, onUpdate }: {
     }
 
     if (source.imageType === 'logo') {
+      const h = compact ? 'h-[40px]' : 'h-[50px]';
+      const sz = compact ? 'w-6 h-6' : 'w-7 h-7';
+      const tsz = compact ? 'text-[10px]' : 'text-[11px]';
       return (
-        <div className="h-[50px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
+        <div className={`${h} flex items-center justify-center`} style={{ background: '#f8f8f8' }}>
           {source.imageUrl ? (
-            <img src={source.imageUrl} alt={source.label} className="w-7 h-7 rounded object-cover" />
+            <img src={source.imageUrl} alt={source.label} className={`${sz} rounded object-cover`} />
           ) : (
             <div
-              className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold"
+              className={`${sz} rounded flex items-center justify-center ${tsz} font-semibold`}
               style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
             >
               {source.label.charAt(0)}
@@ -130,11 +134,13 @@ function SourceCard({ source, onUpdate }: {
     }
 
     // icon variant
+    const ih = compact ? 'h-[40px]' : 'h-[50px]';
+    const isz = compact ? 'w-6 h-6' : 'w-7 h-7';
     return (
-      <div className="h-[50px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
+      <div className={`${ih} flex items-center justify-center`} style={{ background: '#f8f8f8' }}>
         <div
-          className="w-7 h-7 rounded flex items-center justify-center font-semibold"
-          style={source.emoji ? { fontSize: '18px' } : { fontSize: '11px', background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
+          className={`${isz} rounded flex items-center justify-center font-semibold`}
+          style={source.emoji ? { fontSize: compact ? '16px' : '18px' } : { fontSize: compact ? '10px' : '11px', background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
         >
           {source.emoji ?? source.label.charAt(0)}
         </div>
@@ -146,14 +152,14 @@ function SourceCard({ source, onUpdate }: {
     <div
       className="rounded-lg overflow-hidden transition-colors"
       style={{
-        width: '100px',
+        width: compact ? '76px' : '100px',
         background: '#ffffff',
         border: '1px solid rgba(0,0,0,0.08)',
       }}
       data-node={source.id}
     >
       {renderVisual()}
-      <div className="px-1.5 py-1.5 text-center">
+      <div className={`${compact ? 'px-1 py-1' : 'px-1.5 py-1.5'} text-center`}>
         <div className="text-[9px] font-medium truncate" style={{ color: 'rgba(0,0,0,0.6)' }}>{source.label}</div>
         {source.sublabel && (
           <div className="text-[8px]" style={{ color: 'rgba(0,0,0,0.35)' }}>{source.sublabel}</div>
@@ -238,12 +244,13 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
 /*  SourceCategoryGroup                                                */
 /* ------------------------------------------------------------------ */
 
-function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate }: {
+function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, compact = true }: {
   label: string;
   sources: LeadSource[];
   gridClass?: string;
   dataNode: string;
   onUpdate: (id: string, value: number) => void;
+  compact?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center" data-node={dataNode}>
@@ -260,6 +267,7 @@ function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate }: 
             key={s.id}
             source={s}
             onUpdate={(v) => onUpdate(s.id, v)}
+            compact={compact}
           />
         ))}
       </div>
@@ -651,8 +659,8 @@ export default function LeadsView() {
 
       {/* Row 1: Medias, FB Groups, Social Media, Publicite */}
       <div className="flex flex-wrap gap-5 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
-        <SourceCategoryGroup label="Medias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} />
-        <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Medias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} compact={false} />
+        <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} compact={false} />
         <SourceCategoryGroup label="Social Media" sources={sourcesByCategory.get('socialMedia') || []} gridClass="grid grid-cols-2" dataNode="cat-socialMedia" onUpdate={updateSourceLeads} />
         <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} />
       </div>
