@@ -11,6 +11,7 @@ const navItems = [
   { href: '/pnl', label: 'P&L Summary', icon: PnlIcon },
   { href: '/investment', label: 'Pre-Launch Simulation', icon: DollarIcon },
   { href: '/team', label: 'Team', icon: TeamIcon },
+  { href: '/leads', label: 'Leads Pipeline', icon: LeadsIcon },
   { href: '/workflow', label: 'Workflow', icon: WorkflowIcon },
   { href: '/tools-access', label: 'Tools Access', icon: ToolsIcon },
 ];
@@ -185,6 +186,15 @@ function ToolsIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+    </svg>
+  );
+}
+
+function LeadsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1.5M12 19.5V21M4.219 4.219l1.061 1.061M17.72 17.72l1.06 1.06M3 12h1.5M19.5 12H21M4.219 19.781l1.061-1.061M17.72 6.28l1.06-1.06" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 3L8.5 21M15.5 3L14 21" />
     </svg>
   );
 }

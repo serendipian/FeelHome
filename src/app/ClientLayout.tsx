@@ -6,6 +6,7 @@ import { CurrencyProvider } from '@/context/CurrencyContext';
 import { MobileNavProvider, useMobileNav } from '@/context/MobileNavContext';
 import { TeamProvider } from '@/context/TeamContext';
 import { ToolsAccessProvider } from '@/context/ToolsAccessContext';
+import { LeadsProvider } from '@/context/LeadsContext';
 import { ViewModeProvider } from '@/context/ViewModeContext';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
@@ -40,11 +41,13 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     <FinancialProvider>
     <TeamProvider>
     <ToolsAccessProvider>
+    <LeadsProvider>
     <ViewModeProvider>
     <MobileNavProvider>
       <LayoutShell>{children}</LayoutShell>
     </MobileNavProvider>
     </ViewModeProvider>
+    </LeadsProvider>
     </ToolsAccessProvider>
     </TeamProvider>
     </FinancialProvider>
