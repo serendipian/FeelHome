@@ -38,20 +38,45 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     didHydrate.current = true;
     (async () => {
       const loaded = await loadFromSupabase<LeadsPipelineData>('leadsPipeline', DEFAULT_LEADS_DATA);
-      // Merge: preserve saved values, add new defaults
-      const loadedSourceIds = new Set(loaded.sources.map(s => s.id));
-      const newSources = DEFAULT_LEADS_DATA.sources.filter(d => !loadedSourceIds.has(d.id));
-      const loadedChannelIds = new Set(loaded.channels.map(c => c.id));
-      const newChannels = DEFAULT_LEADS_DATA.channels.filter(d => !loadedChannelIds.has(d.id));
-      const loadedTeamIds = new Set(loaded.team.map(t => t.id));
-      const newTeam = DEFAULT_LEADS_DATA.team.filter(d => !loadedTeamIds.has(d.id));
-      const loadedSignerIds = new Set(loaded.dealSigners.map(s => s.id));
-      const newSigners = DEFAULT_LEADS_DATA.dealSigners.filter(d => !loadedSignerIds.has(d.id));
+      // Merge: use defaults as base, overlay saved numeric values
+      const loadedSourceMap = new Map(loaded.sources.map(s => [s.id, s]));
+      const mergedSources = DEFAULT_LEADS_DATA.sources.map(def => {
+        const saved = loadedSourceMap.get(def.id);
+        return saved ? { ...def, leadsPerMonth: saved.leadsPerMonth } : def;
+      });
+      // Add any saved sources not in defaults
+      const defaultSourceIds = new Set(DEFAULT_LEADS_DATA.sources.map(s => s.id));
+      const extraSources = loaded.sources.filter(s => !defaultSourceIds.has(s.id));
+
+      const loadedChannelMap = new Map(loaded.channels.map(c => [c.id, c]));
+      const mergedChannels = DEFAULT_LEADS_DATA.channels.map(def => {
+        const saved = loadedChannelMap.get(def.id);
+        return saved ? { ...def, leadsPerMonth: saved.leadsPerMonth } : def;
+      });
+      const defaultChannelIds = new Set(DEFAULT_LEADS_DATA.channels.map(c => c.id));
+      const extraChannels = loaded.channels.filter(c => !defaultChannelIds.has(c.id));
+
+      const loadedTeamMap = new Map(loaded.team.map(t => [t.id, t]));
+      const mergedTeam = DEFAULT_LEADS_DATA.team.map(def => {
+        const saved = loadedTeamMap.get(def.id);
+        return saved ? { ...def, received: saved.received, qualified: saved.qualified } : def;
+      });
+      const defaultTeamIds = new Set(DEFAULT_LEADS_DATA.team.map(t => t.id));
+      const extraTeam = loaded.team.filter(t => !defaultTeamIds.has(t.id));
+
+      const loadedSignerMap = new Map(loaded.dealSigners.map(s => [s.id, s]));
+      const mergedSigners = DEFAULT_LEADS_DATA.dealSigners.map(def => {
+        const saved = loadedSignerMap.get(def.id);
+        return saved ? { ...def, dealsSigned: saved.dealsSigned } : def;
+      });
+      const defaultSignerIds = new Set(DEFAULT_LEADS_DATA.dealSigners.map(s => s.id));
+      const extraSigners = loaded.dealSigners.filter(s => !defaultSignerIds.has(s.id));
+
       setData({
-        sources: [...loaded.sources, ...newSources],
-        channels: [...loaded.channels, ...newChannels],
-        team: [...loaded.team, ...newTeam],
-        dealSigners: [...loaded.dealSigners, ...newSigners],
+        sources: [...mergedSources, ...extraSources],
+        channels: [...mergedChannels, ...extraChannels],
+        team: [...mergedTeam, ...extraTeam],
+        dealSigners: [...mergedSigners, ...extraSigners],
         connections: loaded.connections ?? DEFAULT_LEADS_DATA.connections,
       });
       setTimeout(() => { readyToSave.current = true; }, 0);

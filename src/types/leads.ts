@@ -5,9 +5,11 @@ export type SourceCategory =
   | 'socialMedia'
   | 'ads'
   | 'websites'
-  | 'partners';
+  | 'partners'
+  | 'mls'
+  | 'llm';
 
-export type ImageType = 'laptop' | 'logo' | 'icon';
+export type ImageType = 'laptop' | 'logo' | 'icon' | 'cover';
 
 export interface LeadSource {
   id: string;
@@ -46,6 +48,8 @@ export interface PipelineConnections {
   websitesToChannels: string[];
   partnersToChannels: string[];
   adsToChannels: string[];
+  mlsToChannels: string[];
+  llmToChannels: string[];
   channelsToDirector: string[];
   channelsToDigital: string[];
 }

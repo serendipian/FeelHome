@@ -76,9 +76,45 @@ function SourceCard({ source, onUpdate }: {
   onUpdate: (value: number) => void;
 }) {
   const renderVisual = () => {
+    if (source.imageType === 'laptop') {
+      return (
+        <div className="h-[70px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
+          <div className="flex flex-col items-center">
+            <div
+              className="relative rounded overflow-hidden"
+              style={{
+                width: '76px',
+                height: '46px',
+                border: '1.5px solid rgba(0,0,0,0.1)',
+                borderRadius: '3px 3px 0 0',
+                background: '#f5f5f5',
+              }}
+            >
+              {source.imageUrl ? (
+                <img src={source.imageUrl} alt={source.label} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[9px]" style={{ color: 'rgba(0,0,0,0.3)' }}>
+                  {source.label}
+                </div>
+              )}
+            </div>
+            <div style={{ width: '90px', height: '4px', background: 'rgba(0,0,0,0.06)', borderRadius: '0 0 3px 3px' }} />
+          </div>
+        </div>
+      );
+    }
+
+    if (source.imageType === 'cover' && source.imageUrl) {
+      return (
+        <div className="h-[50px] overflow-hidden">
+          <img src={source.imageUrl} alt={source.label} className="w-full h-full object-cover" />
+        </div>
+      );
+    }
+
     if (source.imageType === 'logo') {
       return (
-        <div className="h-[50px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.02)' }}>
+        <div className="h-[50px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
           {source.imageUrl ? (
             <img src={source.imageUrl} alt={source.label} className="w-7 h-7 rounded object-cover" />
           ) : (
@@ -95,7 +131,7 @@ function SourceCard({ source, onUpdate }: {
 
     // icon variant
     return (
-      <div className="h-[50px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.02)' }}>
+      <div className="h-[50px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
         <div
           className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold"
           style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
@@ -111,8 +147,8 @@ function SourceCard({ source, onUpdate }: {
       className="rounded-lg overflow-hidden transition-colors"
       style={{
         width: '100px',
-        background: 'rgba(0,0,0,0.02)',
-        border: '1px solid rgba(0,0,0,0.06)',
+        background: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.08)',
       }}
       data-node={source.id}
     >
@@ -144,13 +180,13 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
       className="rounded-xl overflow-hidden transition-colors"
       style={{
         width: '180px',
-        background: 'rgba(0,0,0,0.02)',
+        background: '#ffffff',
         border: '1px solid rgba(0,0,0,0.08)',
       }}
       data-node={source.id}
     >
       {/* Laptop mockup — large */}
-      <div className="h-[100px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.025)' }}>
+      <div className="h-[100px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
         <div className="flex flex-col items-center">
           <div
             className="relative rounded overflow-hidden"
@@ -159,7 +195,7 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
               height: '72px',
               border: '2px solid rgba(0,0,0,0.1)',
               borderRadius: '4px 4px 0 0',
-              background: 'rgba(0,0,0,0.03)',
+              background: '#f5f5f5',
             }}
           >
             {source.imageUrl ? (
@@ -187,15 +223,10 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
         {source.sublabel && (
           <div className="text-[9px]" style={{ color: 'rgba(0,0,0,0.35)' }}>{source.sublabel}</div>
         )}
-        <div className="mt-1.5 flex items-center justify-center gap-3">
+        <div className="mt-1.5 flex items-center justify-center">
           <div>
             <div className="text-[18px] font-bold" style={{ color: 'rgba(0,0,0,0.85)' }}>{inboundLeads}</div>
             <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>visits/mo</div>
-          </div>
-          <div className="w-px h-5" style={{ background: 'rgba(0,0,0,0.06)' }} />
-          <div>
-            <LeadsEditableCell value={source.leadsPerMonth} onSave={onUpdate} />
-            <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>direct</div>
           </div>
         </div>
       </div>
@@ -248,8 +279,8 @@ function ChannelCard({ channel, onUpdate }: {
     <div
       className="rounded-lg p-2.5 text-center w-[95px] transition-colors"
       style={{
-        background: 'rgba(0,0,0,0.02)',
-        border: '1px solid rgba(0,0,0,0.06)',
+        background: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.08)',
       }}
       data-node={`ch-${channel.id}`}
     >
@@ -279,15 +310,15 @@ function TeamCard({ member, onUpdate }: {
     <div
       className="rounded-lg overflow-hidden w-[185px] transition-colors"
       style={{
-        background: 'rgba(0,0,0,0.02)',
-        border: '1px solid rgba(0,0,0,0.06)',
+        background: '#ffffff',
+        border: '1px solid rgba(0,0,0,0.08)',
       }}
       data-node={`tm-${member.id}`}
     >
       <div
         className="h-[44px] flex items-center gap-2.5 px-3"
         style={{
-          background: 'rgba(0,0,0,0.02)',
+          background: '#f8f8f8',
           borderBottom: '1px solid rgba(0,0,0,0.05)',
         }}
       >
@@ -348,7 +379,7 @@ function DealSummary({ signers, channels, onUpdate }: {
   return (
     <div
       className="rounded-lg px-6 py-3.5 inline-flex gap-5 items-center"
-      style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}
+      style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}
       data-node="deals"
     >
       {signers.map((s, i) => (
@@ -438,6 +469,24 @@ function PipelineLines({ canvasRef, connections }: {
       for (const chId of connections.adsToChannels) {
         const ch = node(`ch-${chId}`);
         if (ch) addLine(getBottom(ads), getTop(ch), chId === 'adsform' ? 0.15 : 0.05);
+      }
+    }
+
+    // MLS -> channels
+    const mls = node('cat-mls');
+    if (mls) {
+      for (const chId of connections.mlsToChannels) {
+        const ch = node(`ch-${chId}`);
+        if (ch) addLine(getBottom(mls), getTop(ch), chId === 'mlsform' ? 0.15 : 0.1);
+      }
+    }
+
+    // LLM -> channels
+    const llm = node('cat-llm');
+    if (llm) {
+      for (const chId of connections.llmToChannels) {
+        const ch = node(`ch-${chId}`);
+        if (ch) addLine(getBottom(llm), getTop(ch), 0.1);
       }
     }
 
@@ -558,21 +607,22 @@ export default function LeadsView() {
 
       {/* Row 1: Medias, FB Groups, Social Media, Publicite */}
       <div className="flex flex-wrap gap-5 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
-        <SourceCategoryGroup label="Médias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Medias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} />
         <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} />
         <SourceCategoryGroup label="Social Media" sources={sourcesByCategory.get('socialMedia') || []} gridClass="grid grid-cols-2" dataNode="cat-socialMedia" onUpdate={updateSourceLeads} />
         <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} />
       </div>
 
-      {/* Row 2: SEO | Websites (big) | Partenaires */}
+      {/* Row 2: LLM | SEO | Websites (big) | Partners | MLS */}
       <div className="flex flex-wrap gap-8 justify-center items-center mb-9" style={{ position: 'relative', zIndex: 2 }}>
+        <SourceCategoryGroup label="LLM" sources={sourcesByCategory.get('llm') || []} dataNode="cat-llm" onUpdate={updateSourceLeads} />
         <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} />
         <div className="flex flex-col items-center" data-node="cat-websites">
           <div
             className="text-[10px] font-semibold uppercase tracking-wider mb-1"
             style={{ color: 'rgba(0,0,0,0.4)' }}
           >
-            Sites Web
+            Websites
           </div>
           <div className="w-px h-2.5 mb-1" style={{ background: 'rgba(0,0,0,0.08)' }} />
           <div className="flex gap-4">
@@ -586,7 +636,8 @@ export default function LeadsView() {
             ))}
           </div>
         </div>
-        <SourceCategoryGroup label="Partenaires" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Partners" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="MLS" sources={sourcesByCategory.get('mls') || []} dataNode="cat-mls" onUpdate={updateSourceLeads} />
       </div>
 
       {/* Row 3: Channels */}
@@ -596,11 +647,12 @@ export default function LeadsView() {
         ))}
       </div>
 
-      {/* Row 4: Director + Digital Coordinator */}
+      {/* Row 4: Digital Coordinator + Director */}
       <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
-        {data.team.filter(t => t.id === 'director' || t.id === 'digital').map(tm => (
-          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} />
-        ))}
+        {['digital', 'director'].map(id => {
+          const tm = data.team.find(t => t.id === id);
+          return tm ? <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} /> : null;
+        })}
       </div>
 
       {/* Row 5: Agents + Property Hunter */}
