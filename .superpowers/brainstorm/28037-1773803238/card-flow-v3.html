@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Pipeline — Network Layout</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#06070a; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:24px 16px; min-height:100vh; }
+
+  h2 { font-size:20px; font-weight:700; margin-bottom:2px; }
+  .subtitle { color:rgba(255,255,255,0.4); font-size:12px; margin-bottom:28px; }
+  .stage-label { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; padding-left:4px; }
+  .stage-label span { font-size:10px; font-weight:400; color:rgba(255,255,255,0.3); text-transform:none; letter-spacing:0; margin-left:6px; }
+
+  /* Category group */
+  .source-groups { display:flex; flex-wrap:wrap; gap:24px; justify-content:center; margin-bottom:12px; }
+  .cat-group { display:flex; flex-direction:column; align-items:center; }
+  .cat-header {
+    background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12);
+    border-radius:10px; padding:8px 16px; text-align:center; margin-bottom:0;
+    font-weight:700; font-size:12px; position:relative; z-index:2;
+  }
+  .cat-tree-line { width:1.5px; height:14px; background:rgba(255,255,255,0.12); margin:0 auto; }
+  .cat-branch { display:flex; gap:8px; position:relative; padding-top:0; }
+  .cat-branch::before {
+    content:''; position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:calc(100% - 60px); height:1.5px; background:rgba(255,255,255,0.1);
+  }
+
+  /* Individual source card */
+  .src-card {
+    width:120px; display:flex; flex-direction:column; align-items:center; position:relative;
+  }
+  .src-card .branch-line { width:1.5px; height:10px; background:rgba(255,255,255,0.1); }
+  .src-card-inner {
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px; overflow:hidden; width:100%;
+  }
+  .src-visual { height:65px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .src-info { padding:6px 8px; }
+  .src-name { font-weight:600; font-size:10px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .src-num { display:flex; justify-content:space-between; align-items:center; margin-top:3px; }
+  .src-num .val { font-size:14px; font-weight:700; }
+  .src-num .unit { font-size:8px; color:rgba(255,255,255,0.3); }
+
+  .badge { position:absolute; top:3px; right:3px; padding:1px 4px; border-radius:3px; font-size:7px; font-weight:600; }
+
+  /* Hub */
+  .hub-section { display:flex; justify-content:center; margin:12px 0; }
+  .hub-card { background:rgba(45,212,191,0.06); border:1.5px solid rgba(45,212,191,0.25); border-radius:14px; padding:14px 24px; text-align:center; }
+
+  /* Channel cards */
+  .channels-row { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px; }
+  .ch-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; text-align:center; width:110px; }
+  .ch-card .icon { font-size:20px; margin-bottom:3px; }
+  .ch-card .name { font-weight:600; font-size:10px; }
+  .ch-card .num { font-size:16px; font-weight:700; margin-top:3px; }
+
+  /* Team cards */
+  .team-row { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:12px; }
+  .tm-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; width:190px; }
+  .tm-head { height:50px; display:flex; align-items:center; gap:8px; padding:0 12px; }
+  .tm-av { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; background:rgba(0,0,0,0.3); }
+  .tm-stats { padding:6px 12px 8px; display:flex; justify-content:space-between; }
+  .tm-stat .v { font-size:14px; font-weight:700; }
+  .tm-stat .l { font-size:8px; color:rgba(255,255,255,0.3); }
+
+  /* SVG connectors */
+  .conn-svg { width:100%; display:block; }
+
+  /* Deal summary */
+  .deal-box { background:rgba(212,168,83,0.06); border:1.5px solid rgba(212,168,83,0.2); border-radius:14px; padding:16px 28px; text-align:center; display:inline-flex; gap:24px; align-items:center; }
+
+  .legend { display:flex; gap:14px; justify-content:center; margin-top:20px; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:rgba(255,255,255,0.4); }
+  .legend-line { width:18px; height:2px; border-radius:1px; }
+</style>
+</head>
+<body>
+
+<h2>Leads Pipeline — Network Flow</h2>
+<p class="subtitle">Sources (by category) → Website Hub → Channels → Team → Clients</p>
+
+<!-- ═══════════ STAGE 1: SOURCES ═══════════ -->
+<div class="stage-label" style="color:#2dd4bf;">Sources <span>Grouped by category</span></div>
+
+<div class="source-groups">
+
+  <!-- ── SEO ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#2dd4bf; border-color:rgba(45,212,191,0.25);">🔍 SEO</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#0f172a,#1e293b);"><div style="text-align:center;"><div style="font-size:16px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:9px;color:rgba(255,255,255,0.5);">🇫🇷 FR</div></div></div>
+          <div class="src-info"><div class="src-name">Français</div><div class="src-num"><span class="val" style="color:#2dd4bf;">150</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#0f172a,#1e293b);"><div style="text-align:center;"><div style="font-size:16px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:9px;color:rgba(255,255,255,0.5);">🇬🇧 EN</div></div></div>
+          <div class="src-info"><div class="src-name">Anglais</div><div class="src-num"><span class="val" style="color:#2dd4bf;">80</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Médias ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#d4a853; border-color:rgba(212,168,83,0.25);">📰 Médias</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:11px;font-weight:700;color:#d4a853;">Expats.ma</div></div>
+          <div class="src-info"><div class="src-name">Expats.ma</div><div class="src-num"><span class="val" style="color:#2dd4bf;">90</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:9px;font-weight:700;color:#d4a853;text-align:center;">Guide<br>Immobilier.ma</div></div>
+          <div class="src-info"><div class="src-name">Guideimmobilier</div><div class="src-num"><span class="val" style="color:#2dd4bf;">40</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Facebook Groups ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#1877f2; border-color:rgba(24,119,242,0.3);">👥 Facebook Groups</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">45K</div></div></div>
+          <div class="src-info"><div class="src-name">Expats Morocco</div><div class="src-num"><span class="val" style="color:#2dd4bf;">35</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">38K</div></div></div>
+          <div class="src-info"><div class="src-name">Français du Maroc</div><div class="src-num"><span class="val" style="color:#2dd4bf;">28</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">22K</div></div></div>
+          <div class="src-info"><div class="src-name">Réseau Expatriés</div><div class="src-num"><span class="val" style="color:#2dd4bf;">18</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">15K</div></div></div>
+          <div class="src-info"><div class="src-name">Fr. de Marrakech</div><div class="src-num"><span class="val" style="color:#2dd4bf;">12</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">30K</div></div></div>
+          <div class="src-info"><div class="src-name">Expats Maroc</div><div class="src-num"><span class="val" style="color:#2dd4bf;">22</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:14px;">👥</div><div style="font-size:7px;color:rgba(255,255,255,0.7);">8K</div></div></div>
+          <div class="src-info"><div class="src-name">Les Bouskouristes</div><div class="src-num"><span class="val" style="color:#2dd4bf;">10</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Social Media Pages ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#e040fb; border-color:rgba(224,64,251,0.25);">📱 Social Media Pages</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="font-size:24px;font-weight:700;color:#fff;">f</div></div>
+          <div class="src-info"><div class="src-name">Facebook</div><div class="src-num"><span class="val" style="color:#2dd4bf;">55</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">
+            <div style="width:28px;height:28px;border:2px solid #fff;border-radius:8px;display:flex;align-items:center;justify-content:center;"><div style="width:12px;height:12px;border:1.5px solid #fff;border-radius:50%;position:relative;"><div style="position:absolute;top:-2px;right:-2px;width:3px;height:3px;background:#fff;border-radius:50%;"></div></div></div>
+          </div>
+          <div class="src-info"><div class="src-name">Instagram</div><div class="src-num"><span class="val" style="color:#2dd4bf;">65</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#c4302b,#8b0000);"><div style="font-size:20px;color:#fff;">▶</div></div>
+          <div class="src-info"><div class="src-name">Youtube</div><div class="src-num"><span class="val" style="color:#2dd4bf;">30</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#0077b5,#004182);"><div style="font-size:18px;font-weight:800;color:#fff;">in</div></div>
+          <div class="src-info"><div class="src-name">Linkedin</div><div class="src-num"><span class="val" style="color:#2dd4bf;">20</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Publicité ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#f97316; border-color:rgba(249,115,22,0.25);">📢 Publicité</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1877f2,#0a3d91);"><div style="text-align:center;"><div style="font-size:16px;font-weight:700;color:#fff;">f</div><div style="font-size:8px;color:rgba(255,255,255,0.7);font-weight:600;">ADS</div></div></div>
+          <div class="src-info"><div class="src-name">Facebook Ads</div><div class="src-num"><span class="val" style="color:#2dd4bf;">120</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#16213e);"><div style="display:flex;gap:1px;"><span style="font-size:16px;font-weight:700;color:#4285f4;">G</span><span style="font-size:16px;font-weight:700;color:#ea4335;">o</span><span style="font-size:16px;font-weight:700;color:#fbbc05;">o</span><span style="font-size:16px;font-weight:700;color:#4285f4;">g</span><span style="font-size:16px;font-weight:700;color:#34a853;">l</span><span style="font-size:16px;font-weight:700;color:#ea4335;">e</span></div></div>
+          <div class="src-info"><div class="src-name">Google Ads</div><div class="src-num"><span class="val" style="color:#2dd4bf;">95</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Partenaires ── -->
+  <div class="cat-group">
+    <div class="cat-header" style="color:#8b5cf6; border-color:rgba(139,92,246,0.25);">🤝 Partenaires</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:22px;">🏢</div></div>
+          <div class="src-info"><div class="src-name">Agences/Agents</div><div class="src-num"><span class="val" style="color:#2dd4bf;">20</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:22px;">🏗️</div></div>
+          <div class="src-info"><div class="src-name">Sociétés</div><div class="src-num"><span class="val" style="color:#2dd4bf;">8</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+      <div class="src-card">
+        <div class="branch-line"></div>
+        <div class="src-card-inner">
+          <div class="src-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:22px;">🏛️</div></div>
+          <div class="src-info"><div class="src-name">Ambassades</div><div class="src-num"><span class="val" style="color:#2dd4bf;">5</span><span class="unit">/mo</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════ CONNECTOR: Sources → Website ═══════════ -->
+<svg class="conn-svg" style="height:60px;" viewBox="0 0 1000 60" preserveAspectRatio="none">
+  <defs>
+    <marker id="at" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#2dd4bf" opacity="0.5"/></marker>
+    <marker id="ao" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#f97316" opacity="0.5"/></marker>
+  </defs>
+  <!-- Converging lines from each category group down to center hub -->
+  <line x1="80" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#at)"/>
+  <line x1="200" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#at)"/>
+  <line x1="380" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.5" opacity="0.25" marker-end="url(#at)"/>
+  <line x1="550" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#at)"/>
+  <line x1="720" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#at)"/>
+  <!-- Partners → website -->
+  <line x1="900" y1="0" x2="500" y2="58" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#at)"/>
+  <!-- Partners → direct call (orange dashed, goes right) -->
+  <line x1="900" y1="0" x2="920" y2="58" stroke="#f97316" stroke-width="1.5" opacity="0.4" stroke-dasharray="5,4" marker-end="url(#ao)"/>
+  <text x="940" y="35" fill="#f97316" font-size="10" opacity="0.5">direct →</text>
+</svg>
+
+<!-- ═══════════ WEBSITE HUB ═══════════ -->
+<div class="stage-label" style="color:#2dd4bf;">Website Hub <span>Intermediate — aggregates all traffic</span></div>
+<div class="hub-section">
+  <div class="hub-card">
+    <div style="display:flex; gap:20px; align-items:center;">
+      <div style="display:flex;gap:10px;">
+        <div style="background:rgba(45,212,191,0.1);padding:6px 10px;border-radius:6px;">
+          <div style="font-size:10px;color:#2dd4bf;font-weight:600;">Feel Home</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.3);">FR + EN</div>
+        </div>
+        <div style="background:rgba(212,168,83,0.1);padding:6px 10px;border-radius:6px;">
+          <div style="font-size:10px;color:#d4a853;font-weight:600;">M Invest</div>
+          <div style="font-size:8px;color:rgba(255,255,255,0.3);">FR + EN</div>
+        </div>
+      </div>
+      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:#2dd4bf;">788</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);">monthly visitors</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CONNECTOR: Hub → Channels ═══════════ -->
+<svg class="conn-svg" style="height:50px;" viewBox="0 0 1000 50" preserveAspectRatio="none">
+  <defs><marker id="ab" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#1d7ff3" opacity="0.5"/></marker></defs>
+  <line x1="500" y1="0" x2="100" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="230" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="360" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="480" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.25" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="600" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="720" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <line x1="500" y1="0" x2="840" y2="48" stroke="#1d7ff3" stroke-width="1.2" opacity="0.2" marker-end="url(#ab)"/>
+  <!-- Direct call gets partner line too -->
+  <line x1="920" y1="0" x2="920" y2="48" stroke="#f97316" stroke-width="1.5" opacity="0.35" stroke-dasharray="5,4" marker-end="url(#ao)"/>
+</svg>
+
+<!-- ═══════════ STAGE 2: CHANNELS ═══════════ -->
+<div class="stage-label" style="color:#1d7ff3;">Communication Channels <span>How leads reach the team</span></div>
+<div class="channels-row">
+  <div class="ch-card"><div class="icon">📧</div><div class="name">Emails</div><div class="num" style="color:#1d7ff3;">110</div></div>
+  <div class="ch-card"><div class="icon">📋</div><div class="name">Website Forms</div><div class="num" style="color:#1d7ff3;">145</div></div>
+  <div class="ch-card"><div class="icon">📝</div><div class="name">Ads Lead Forms</div><div class="num" style="color:#1d7ff3;">85</div></div>
+  <div class="ch-card"><div class="icon">💬</div><div class="name">WhatsApp Msg</div><div class="num" style="color:#1d7ff3;">195</div></div>
+  <div class="ch-card"><div class="icon">📱</div><div class="name">Instagram Msg</div><div class="num" style="color:#1d7ff3;">45</div></div>
+  <div class="ch-card"><div class="icon">💬</div><div class="name">Facebook Msg</div><div class="num" style="color:#1d7ff3;">60</div></div>
+  <div class="ch-card"><div class="icon">📞</div><div class="name">WhatsApp Call</div><div class="num" style="color:#1d7ff3;">55</div></div>
+  <div class="ch-card" style="border-color:rgba(249,115,22,0.3);"><div class="icon">📞</div><div class="name">Direct Call</div><div class="num" style="color:#f97316;">40</div><div style="font-size:7px;color:#f97316;margin-top:1px;">+ partners</div></div>
+</div>
+
+<!-- ═══════════ CONNECTOR: Channels → Team ═══════════ -->
+<svg class="conn-svg" style="height:40px;" viewBox="0 0 1000 40" preserveAspectRatio="none">
+  <defs><marker id="ag" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#d4a853" opacity="0.5"/></marker></defs>
+  <text x="350" y="20" fill="rgba(255,255,255,0.1)" font-size="10">All channels →</text>
+  <text x="600" y="20" fill="rgba(255,255,255,0.1)" font-size="10">All but Direct Call →</text>
+  <line x1="350" y1="0" x2="350" y2="38" stroke="#d4a853" stroke-width="1.5" opacity="0.25" marker-end="url(#ag)"/>
+  <line x1="650" y1="0" x2="650" y2="38" stroke="#d4a853" stroke-width="1.5" opacity="0.25" marker-end="url(#ag)"/>
+</svg>
+
+<!-- ═══════════ STAGE 3: TEAM ═══════════ -->
+<div class="stage-label" style="color:#d4a853;">Team — Qualification & Dispatch</div>
+<div class="team-row">
+  <div class="tm-card">
+    <div class="tm-head" style="background:linear-gradient(135deg,#d4a853,#b8860b);"><div class="tm-av">YB</div><div><div style="font-weight:600;font-size:12px;">Director</div><div style="font-size:9px;opacity:0.8;">All channels</div></div></div>
+    <div class="tm-stats"><div class="tm-stat"><div class="v" style="color:#d4a853;">735</div><div class="l">received</div></div><div class="tm-stat"><div class="v" style="color:#22c55e;">180</div><div class="l">qualified</div></div><div class="tm-stat"><div class="v" style="color:#f97316;">24%</div><div class="l">rate</div></div></div>
+  </div>
+  <div class="tm-card">
+    <div class="tm-head" style="background:linear-gradient(135deg,#1d7ff3,#1565c0);"><div class="tm-av">DC</div><div><div style="font-weight:600;font-size:12px;">Digital Coordinator</div><div style="font-size:9px;opacity:0.8;">All but Direct Call</div></div></div>
+    <div class="tm-stats"><div class="tm-stat"><div class="v" style="color:#1d7ff3;">695</div><div class="l">received</div></div><div class="tm-stat"><div class="v" style="color:#22c55e;">165</div><div class="l">qualified</div></div><div class="tm-stat"><div class="v" style="color:#f97316;">24%</div><div class="l">rate</div></div></div>
+  </div>
+</div>
+
+<!-- Dispatch -->
+<svg class="conn-svg" style="height:35px;" viewBox="0 0 1000 35" preserveAspectRatio="none">
+  <defs><marker id="agr" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#22c55e" opacity="0.5"/></marker></defs>
+  <text x="500" y="10" fill="rgba(255,255,255,0.1)" font-size="9" text-anchor="middle">dispatch qualified leads</text>
+  <line x1="400" y1="14" x2="350" y2="33" stroke="#22c55e" stroke-width="1.2" opacity="0.25" marker-end="url(#agr)"/>
+  <line x1="600" y1="14" x2="650" y2="33" stroke="#22c55e" stroke-width="1.2" opacity="0.25" marker-end="url(#agr)"/>
+</svg>
+
+<div class="team-row">
+  <div class="tm-card">
+    <div class="tm-head" style="background:linear-gradient(135deg,#22c55e,#16a34a);"><div class="tm-av">AG</div><div><div style="font-weight:600;font-size:12px;">Agents</div><div style="font-size:9px;opacity:0.8;">Field agents</div></div></div>
+    <div class="tm-stats"><div class="tm-stat"><div class="v" style="color:#22c55e;">210</div><div class="l">assigned</div></div><div class="tm-stat"><div class="v" style="color:#d4a853;">85</div><div class="l">signed</div></div></div>
+  </div>
+  <div class="tm-card">
+    <div class="tm-head" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);"><div class="tm-av">PH</div><div><div style="font-weight:600;font-size:12px;">Property Hunter</div><div style="font-size:9px;opacity:0.8;">Property search</div></div></div>
+    <div class="tm-stats"><div class="tm-stat"><div class="v" style="color:#8b5cf6;">135</div><div class="l">missions</div></div><div class="tm-stat"><div class="v" style="color:#d4a853;">45</div><div class="l">matched</div></div></div>
+  </div>
+</div>
+
+<!-- Final -->
+<svg class="conn-svg" style="height:30px;" viewBox="0 0 1000 30" preserveAspectRatio="none">
+  <line x1="500" y1="0" x2="500" y2="28" stroke="#d4a853" stroke-width="2" opacity="0.3" marker-end="url(#ag)"/>
+</svg>
+
+<!-- ═══════════ STAGE 4: DEALS ═══════════ -->
+<div class="stage-label" style="color:#d4a853;">Deals Signed — Clients</div>
+<div style="display:flex;justify-content:center;margin-bottom:16px;">
+  <div class="deal-box">
+    <div><div style="font-size:10px;color:rgba(255,255,255,0.4);">Director</div><div style="font-size:24px;font-weight:800;color:#d4a853;">52</div></div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+    <div><div style="font-size:10px;color:rgba(255,255,255,0.4);">Agents</div><div style="font-size:24px;font-weight:800;color:#d4a853;">33</div></div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+    <div><div style="font-size:10px;color:rgba(255,255,255,0.4);">Total Clients</div><div style="font-size:24px;font-weight:800;color:#22c55e;">85</div></div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+    <div><div style="font-size:10px;color:rgba(255,255,255,0.4);">Conversion</div><div style="font-size:24px;font-weight:800;color:#f97316;">10.8%</div></div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-line" style="background:#2dd4bf;"></div> Source → Website</div>
+  <div class="legend-item"><div class="legend-line" style="background:#1d7ff3;"></div> Website → Channel</div>
+  <div class="legend-item"><div class="legend-line" style="background:#d4a853;"></div> Channel → Team</div>
+  <div class="legend-item"><div class="legend-line" style="background:#22c55e;"></div> Dispatch → Field</div>
+  <div class="legend-item"><div class="legend-line" style="background:#f97316; border-top:1.5px dashed #f97316; height:0;"></div> Direct (bypass)</div>
+</div>
+
+</body>
+</html>

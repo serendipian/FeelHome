@@ -81,7 +81,7 @@ export default function TeamView() {
       {/* ━━━ Management: Director + Marketing Manager + Community Manager ━━━ */}
       <div className="flex flex-col md:flex-row">
         <SectionLabel label="Management" />
-        <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-0">
+        <div className="flex-1 flex flex-col md:flex-row items-stretch gap-4 md:gap-0">
           <div className="flex-1 min-w-0">
             <MemberCard
               member={directorM}
@@ -93,7 +93,7 @@ export default function TeamView() {
           </div>
           {marketingManagerM && (
             <>
-              <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+              <div className="hidden md:flex"><HorizontalConnector isDark={isDark} /></div>
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={marketingManagerM}
@@ -107,7 +107,7 @@ export default function TeamView() {
           )}
           {communityMgrM && activeBrands.expats && (
             <>
-              <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+              <div className="hidden md:flex"><HorizontalConnector isDark={isDark} /></div>
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={communityMgrM}
@@ -137,7 +137,7 @@ export default function TeamView() {
       {/* ━━━ Backoffice: Digital Coordinator + Property Hunter + Customer Service ━━━ */}
       <div className="flex flex-col md:flex-row">
         <SectionLabel label="Backoffice" />
-        <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-0">
+        <div className="flex-1 flex flex-col md:flex-row items-stretch gap-4 md:gap-0">
           <div className="flex-1 min-w-0">
             <MemberCard
               member={digitalManagerM}
@@ -147,7 +147,7 @@ export default function TeamView() {
               onKPIChange={(i, f, v) => updateKPI(digitalManagerM.id, i, f, v)}
             />
           </div>
-          <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+          <div className="hidden md:flex"><HorizontalConnector isDark={isDark} /></div>
           <div className="flex-1 min-w-0">
             <MemberCard
               member={propertyHunterM}
@@ -159,7 +159,7 @@ export default function TeamView() {
           </div>
           {customerServiceM && (
             <>
-              <div className="hidden md:block"><HorizontalConnector isDark={isDark} /></div>
+              <div className="hidden md:flex"><HorizontalConnector isDark={isDark} /></div>
               <div className="flex-1 min-w-0">
                 <MemberCard
                   member={customerServiceM}
@@ -471,16 +471,16 @@ function FlowLine({
 
 function HorizontalConnector({ isDark }: { isDark: boolean }) {
   const baseStroke = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)';
-  const pathD = 'M0,2 L100,2';
+  const pathD = 'M0,10 L48,10';
 
   return (
     <div className="w-12 shrink-0 self-stretch flex items-center justify-center">
-      <svg className="w-full" style={{ height: 4, overflow: 'visible' }} viewBox="0 0 100 4" preserveAspectRatio="none" fill="none">
-        <line x1="0" y1="2" x2="100" y2="2" stroke={baseStroke} strokeWidth="1" />
+      <svg width="48" height="20" style={{ overflow: 'visible' }} fill="none">
+        <line x1="0" y1="10" x2="48" y2="10" stroke={baseStroke} strokeWidth="1" />
         <g>
           <animateMotion
             path={pathD}
-            dur="6s"
+            dur="2.5s"
             repeatCount="indefinite"
             keyPoints="0;1;0"
             keyTimes="0;0.5;1"

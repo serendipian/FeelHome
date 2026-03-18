@@ -1,0 +1,57 @@
+<h2>How should the leads pipeline be laid out?</h2>
+<p class="subtitle">Choose the visual structure for navigating the funnel stages</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Horizontal Flow (Sankey/Funnel)</h3>
+      <p>A left-to-right flow diagram showing leads moving through stages: <strong>Sources → Channels → Team → Clients</strong>. Numbers shrink as the funnel narrows. Think Sankey diagram with animated flows between stages. The whole pipeline is visible at once.</p>
+      <div style="margin-top:12px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(255,255,255,0.5);">
+          <div style="padding:8px 16px; background:rgba(45,212,191,0.15); border-radius:6px; color:#2dd4bf;">Sources<br><small>850 leads</small></div>
+          <span>→</span>
+          <div style="padding:8px 16px; background:rgba(29,127,243,0.15); border-radius:6px; color:#1d7ff3;">Channels<br><small>720 contacts</small></div>
+          <span>→</span>
+          <div style="padding:8px 16px; background:rgba(212,168,83,0.15); border-radius:6px; color:#d4a853;">Team<br><small>340 qualified</small></div>
+          <span>→</span>
+          <div style="padding:8px 16px; background:rgba(34,197,94,0.15); border-radius:6px; color:#22c55e;">Clients<br><small>85 signed</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Vertical Stages with Expandable Cards</h3>
+      <p>Each stage is a full-width section you scroll through vertically. Each source/channel is a card you can expand to see details and edit numbers. The source cards show website screenshots or group images in a laptop/phone mockup frame. More detail-oriented, great for editing.</p>
+      <div style="margin-top:12px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; color:rgba(255,255,255,0.5);">
+          <div style="padding:8px 16px; background:rgba(45,212,191,0.08); border-radius:6px; border-left:3px solid #2dd4bf;">Stage 1: Sources — 6 categories, 18 items</div>
+          <div style="padding:8px 16px; background:rgba(29,127,243,0.08); border-radius:6px; border-left:3px solid #1d7ff3;">Stage 2: Channels — 8 communication methods</div>
+          <div style="padding:8px 16px; background:rgba(212,168,83,0.08); border-radius:6px; border-left:3px solid #d4a853;">Stage 3: Team Qualification — 4 roles</div>
+          <div style="padding:8px 16px; background:rgba(34,197,94,0.08); border-radius:6px; border-left:3px solid #22c55e;">Stage 4: Deals Signed — 2 closers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid: Flow Overview + Detail Panels</h3>
+      <p>A compact Sankey/flow diagram at the top showing the big picture, plus expandable detail sections below for each stage. Best of both worlds — you see the funnel shape AND can drill into specifics. Click a stage in the flow to jump to its detail section.</p>
+      <div style="margin-top:12px; padding:16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:13px; color:rgba(255,255,255,0.5);">
+          <div style="padding:8px; background:rgba(255,255,255,0.03); border-radius:6px; margin-bottom:8px; text-align:center;">📊 Flow diagram overview (clickable stages)</div>
+          <div style="display:flex; gap:6px;">
+            <div style="flex:1; padding:8px; background:rgba(45,212,191,0.08); border-radius:6px; text-align:center;">Sources detail</div>
+            <div style="flex:1; padding:8px; background:rgba(29,127,243,0.08); border-radius:6px; text-align:center;">Channels detail</div>
+            <div style="flex:1; padding:8px; background:rgba(212,168,83,0.08); border-radius:6px; text-align:center;">Team detail</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

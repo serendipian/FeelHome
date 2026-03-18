@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Pipeline</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#06070a; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:24px 12px; min-height:100vh; position:relative; }
+
+  h2 { font-size:20px; font-weight:700; margin-bottom:2px; text-align:center; }
+  .subtitle { color:rgba(255,255,255,0.4); font-size:12px; margin-bottom:24px; text-align:center; }
+
+  #canvas { position:relative; }
+  #lines-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  #lines-svg line { transition: opacity 0.2s; }
+
+  .row { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; align-items:flex-start; margin-bottom:16px; position:relative; z-index:1; }
+  .row-tight { margin-bottom:12px; }
+
+  /* Category group */
+  .cat-group { display:flex; flex-direction:column; align-items:center; }
+  .cat-header { background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.12); border-radius:10px; padding:6px 14px; text-align:center; font-weight:700; font-size:11px; }
+  .cat-tree-line { width:1.5px; height:10px; background:rgba(255,255,255,0.1); }
+  .cat-branch { display:flex; gap:6px; position:relative; flex-wrap:wrap; justify-content:center; }
+  .cat-branch::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:calc(100% - 40px); height:1px; background:rgba(255,255,255,0.08); }
+  .cat-branch.grid-2x3 { display:grid; grid-template-columns:repeat(3,100px); gap:6px; }
+  .cat-branch.grid-2x2 { display:grid; grid-template-columns:repeat(2,100px); gap:6px; }
+
+  /* Source card */
+  .src-card { width:100px; display:flex; flex-direction:column; align-items:center; }
+  .src-card .bl { width:1px; height:8px; background:rgba(255,255,255,0.08); }
+  .ci { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:9px; overflow:hidden; width:100%; }
+  .sv { height:52px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .si { padding:4px 6px; }
+  .sn { font-weight:600; font-size:8px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .snum { display:flex; justify-content:space-between; align-items:center; margin-top:1px; }
+  .snum .v { font-size:12px; font-weight:700; }
+  .snum .u { font-size:7px; color:rgba(255,255,255,0.25); }
+
+  /* Laptop */
+  .laptop { width:88%; margin:0 auto; }
+  .ls { background:#0d1117; border:1.5px solid #333; border-radius:3px 3px 0 0; padding:3px; height:32px; display:flex; align-items:center; justify-content:center; }
+  .lb { width:104%; margin-left:-2%; height:3px; background:#333; border-radius:0 0 2px 2px; }
+
+  /* Channel card */
+  .ch { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 6px; text-align:center; width:95px; }
+  .ch .icon { font-size:16px; margin-bottom:1px; }
+  .ch .name { font-weight:600; font-size:8px; }
+  .ch .num { font-size:14px; font-weight:700; margin-top:2px; }
+
+  /* Team card */
+  .tm { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:11px; overflow:hidden; width:180px; }
+  .tmh { height:42px; display:flex; align-items:center; gap:8px; padding:0 10px; }
+  .tma { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; background:rgba(0,0,0,0.3); }
+  .tms { padding:4px 10px 6px; display:flex; justify-content:space-between; }
+  .tms .v { font-size:12px; font-weight:700; }
+  .tms .l { font-size:7px; color:rgba(255,255,255,0.25); }
+
+  /* Deal box */
+  .deal { background:rgba(212,168,83,0.06); border:1.5px solid rgba(212,168,83,0.2); border-radius:12px; padding:12px 20px; display:inline-flex; gap:18px; align-items:center; }
+
+  .legend { display:flex; gap:12px; justify-content:center; margin-top:16px; padding:6px; background:rgba(255,255,255,0.02); border-radius:6px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:4px; font-size:8px; color:rgba(255,255,255,0.35); }
+  .legend-line { width:14px; height:2px; border-radius:1px; }
+</style>
+</head>
+<body>
+
+<h2>Leads Pipeline</h2>
+<p class="subtitle">Full acquisition funnel — Sources → Websites → Channels → Team → Clients</p>
+
+<div id="canvas">
+<svg id="lines-svg"></svg>
+
+<!-- ═══ ROW 1: Médias | Facebook Groups | Social Media | Publicité ═══ -->
+<div class="row">
+
+  <div class="cat-group" data-node="medias">
+    <div class="cat-header" style="color:#d4a853; border-color:rgba(212,168,83,0.25);">📰 Médias</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:9px;font-weight:700;color:#d4a853;">Expats.ma</div></div><div class="si"><div class="sn">Expats.ma</div><div class="snum"><span class="v" style="color:#2dd4bf;">90</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:7px;font-weight:700;color:#d4a853;text-align:center;">Guide<br>Immobilier.ma</div></div><div class="si"><div class="sn">Guideimmobilier</div><div class="snum"><span class="v" style="color:#2dd4bf;">40</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+  <div class="cat-group" data-node="fbgroups">
+    <div class="cat-header" style="color:#1877f2; border-color:rgba(24,119,242,0.3);">👥 Facebook Groups</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch grid-2x3">
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">45K</div></div></div><div class="si"><div class="sn">Expats Morocco</div><div class="snum"><span class="v" style="color:#2dd4bf;">35</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">38K</div></div></div><div class="si"><div class="sn">Français du Maroc</div><div class="snum"><span class="v" style="color:#2dd4bf;">28</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">22K</div></div></div><div class="si"><div class="sn">Réseau Expatriés</div><div class="snum"><span class="v" style="color:#2dd4bf;">18</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">15K</div></div></div><div class="si"><div class="sn">Fr. de Marrakech</div><div class="snum"><span class="v" style="color:#2dd4bf;">12</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">30K</div></div></div><div class="si"><div class="sn">Expats Maroc</div><div class="snum"><span class="v" style="color:#2dd4bf;">22</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="text-align:center;"><div style="font-size:11px;">👥</div><div style="font-size:6px;color:rgba(255,255,255,0.7);">8K</div></div></div><div class="si"><div class="sn">Les Bouskouristes</div><div class="snum"><span class="v" style="color:#2dd4bf;">10</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+  <div class="cat-group" data-node="social">
+    <div class="cat-header" style="color:#e040fb; border-color:rgba(224,64,251,0.25);">📱 Social Media</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch grid-2x2">
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0d47a1);"><div style="font-size:18px;font-weight:700;color:#fff;">f</div></div><div class="si"><div class="sn">Facebook</div><div class="snum"><span class="v" style="color:#2dd4bf;">55</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);"><div style="width:20px;height:20px;border:2px solid #fff;border-radius:6px;display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;border:1.5px solid #fff;border-radius:50%;"></div></div></div><div class="si"><div class="sn">Instagram</div><div class="snum"><span class="v" style="color:#2dd4bf;">65</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#c4302b,#8b0000);"><div style="font-size:14px;color:#fff;">▶</div></div><div class="si"><div class="sn">Youtube</div><div class="snum"><span class="v" style="color:#2dd4bf;">30</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card" style="width:auto;"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#0077b5,#004182);"><div style="font-size:14px;font-weight:800;color:#fff;">in</div></div><div class="si"><div class="sn">Linkedin</div><div class="snum"><span class="v" style="color:#2dd4bf;">20</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+  <div class="cat-group" data-node="ads">
+    <div class="cat-header" style="color:#f97316; border-color:rgba(249,115,22,0.25);">📢 Publicité</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1877f2,#0a3d91);"><div style="text-align:center;"><div style="font-size:14px;font-weight:700;color:#fff;">f</div><div style="font-size:6px;color:rgba(255,255,255,0.7);font-weight:600;">ADS</div></div></div><div class="si"><div class="sn">Facebook Ads</div><div class="snum"><span class="v" style="color:#2dd4bf;">120</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#16213e);"><div style="display:flex;gap:1px;"><span style="font-size:12px;font-weight:700;color:#4285f4;">G</span><span style="font-size:12px;font-weight:700;color:#ea4335;">o</span><span style="font-size:12px;font-weight:700;color:#fbbc05;">o</span><span style="font-size:12px;font-weight:700;color:#4285f4;">g</span><span style="font-size:12px;font-weight:700;color:#34a853;">l</span><span style="font-size:12px;font-weight:700;color:#ea4335;">e</span></div></div><div class="si"><div class="sn">Google Ads</div><div class="snum"><span class="v" style="color:#2dd4bf;">95</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ ROW 2: SEO | Websites | Partenaires ═══ -->
+<div class="row">
+
+  <div class="cat-group" data-node="seo">
+    <div class="cat-header" style="color:#2dd4bf; border-color:rgba(45,212,191,0.25);">🔍 SEO</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#0f172a,#1e293b);"><div style="text-align:center;"><div style="font-size:14px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:7px;color:rgba(255,255,255,0.5);">🇫🇷 FR</div></div></div><div class="si"><div class="sn">Français</div><div class="snum"><span class="v" style="color:#2dd4bf;">150</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#0f172a,#1e293b);"><div style="text-align:center;"><div style="font-size:14px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:7px;color:rgba(255,255,255,0.5);">🇬🇧 EN</div></div></div><div class="si"><div class="sn">Anglais</div><div class="snum"><span class="v" style="color:#2dd4bf;">80</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+  <div class="cat-group" data-node="websites">
+    <div class="cat-header" style="color:#2dd4bf; border-color:rgba(45,212,191,0.3);">🌐 Sites Web Agences</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card" style="width:120px;" data-node="web-fh"><div class="bl"></div><div class="ci"><div class="sv" style="background:#1a1a2e;padding:5px 6px 0;height:60px;flex-direction:column;"><div class="laptop"><div class="ls"><div><div style="font-size:7px;font-weight:700;color:#2dd4bf;">feelhome.ma</div><div style="width:50%;height:2px;background:rgba(45,212,191,0.4);border-radius:1px;margin:2px auto 0;"></div></div></div><div class="lb"></div></div></div><div class="si"><div class="sn">Feel Home</div><div style="font-size:6px;color:rgba(255,255,255,0.25);">FR + EN</div><div class="snum"><span class="v" style="color:#2dd4bf;">420</span><span class="u">visits</span></div></div></div></div>
+      <div class="src-card" style="width:120px;" data-node="web-mi"><div class="bl"></div><div class="ci"><div class="sv" style="background:#1a1a2e;padding:5px 6px 0;height:60px;flex-direction:column;"><div class="laptop"><div class="ls"><div><div style="font-size:7px;font-weight:700;color:#d4a853;">minvest.ma</div><div style="width:50%;height:2px;background:rgba(212,168,83,0.4);border-radius:1px;margin:2px auto 0;"></div></div></div><div class="lb"></div></div></div><div class="si"><div class="sn">M Invest</div><div style="font-size:6px;color:rgba(255,255,255,0.25);">FR + EN</div><div class="snum"><span class="v" style="color:#2dd4bf;">368</span><span class="u">visits</span></div></div></div></div>
+    </div>
+  </div>
+
+  <div class="cat-group" data-node="partners">
+    <div class="cat-header" style="color:#8b5cf6; border-color:rgba(139,92,246,0.25);">🤝 Partenaires</div>
+    <div class="cat-tree-line"></div>
+    <div class="cat-branch">
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:18px;">🏢</div></div><div class="si"><div class="sn">Agences/Agents</div><div class="snum"><span class="v" style="color:#2dd4bf;">20</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:18px;">🏗️</div></div><div class="si"><div class="sn">Sociétés</div><div class="snum"><span class="v" style="color:#2dd4bf;">8</span><span class="u">/mo</span></div></div></div></div>
+      <div class="src-card"><div class="bl"></div><div class="ci"><div class="sv" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);"><div style="font-size:18px;">🏛️</div></div><div class="si"><div class="sn">Ambassades</div><div class="snum"><span class="v" style="color:#2dd4bf;">5</span><span class="u">/mo</span></div></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ ROW 3: Channels ═══ -->
+<div class="row row-tight">
+  <div class="ch" data-node="email"><div class="icon">📧</div><div class="name">Email</div><div class="num" style="color:#1d7ff3;">110</div></div>
+  <div class="ch" data-node="webform"><div class="icon">📋</div><div class="name">Website Form</div><div class="num" style="color:#1d7ff3;">145</div></div>
+  <div class="ch" data-node="adsform"><div class="icon">📝</div><div class="name">Ads Lead Form</div><div class="num" style="color:#1d7ff3;">85</div></div>
+  <div class="ch" data-node="wamsg"><div class="icon">💬</div><div class="name">WhatsApp Msg</div><div class="num" style="color:#1d7ff3;">195</div></div>
+  <div class="ch" data-node="igmsg"><div class="icon">📱</div><div class="name">Instagram Msg</div><div class="num" style="color:#1d7ff3;">45</div></div>
+  <div class="ch" data-node="fbmsg"><div class="icon">💬</div><div class="name">Facebook Msg</div><div class="num" style="color:#1d7ff3;">60</div></div>
+  <div class="ch" data-node="wacall"><div class="icon">📞</div><div class="name">WhatsApp Call</div><div class="num" style="color:#1d7ff3;">55</div></div>
+  <div class="ch" data-node="directcall"><div class="icon">📞</div><div class="name">Direct Call</div><div class="num" style="color:#1d7ff3;">40</div></div>
+</div>
+
+<!-- ═══ ROW 4: Director + Digital Coordinator ═══ -->
+<div class="row">
+  <div class="tm" data-node="director">
+    <div class="tmh" style="background:linear-gradient(135deg,#d4a853,#b8860b);"><div class="tma">YB</div><div><div style="font-weight:600;font-size:11px;">Director</div><div style="font-size:7px;opacity:0.8;">Calls only</div></div></div>
+    <div class="tms"><div><div class="v" style="color:#d4a853;">95</div><div class="l">received</div></div><div><div class="v" style="color:#22c55e;">72</div><div class="l">qualified</div></div><div><div class="v" style="color:#f97316;">76%</div><div class="l">rate</div></div></div>
+  </div>
+  <div class="tm" data-node="digital">
+    <div class="tmh" style="background:linear-gradient(135deg,#1d7ff3,#1565c0);"><div class="tma">DC</div><div><div style="font-weight:600;font-size:11px;">Digital Coordinator</div><div style="font-size:7px;opacity:0.8;">Digital channels</div></div></div>
+    <div class="tms"><div><div class="v" style="color:#1d7ff3;">535</div><div class="l">received</div></div><div><div class="v" style="color:#22c55e;">165</div><div class="l">qualified</div></div><div><div class="v" style="color:#f97316;">31%</div><div class="l">rate</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ ROW 5: Agents + Property Hunter ═══ -->
+<div class="row">
+  <div class="tm" data-node="agents">
+    <div class="tmh" style="background:linear-gradient(135deg,#22c55e,#16a34a);"><div class="tma">AG</div><div><div style="font-weight:600;font-size:11px;">Agents</div><div style="font-size:7px;opacity:0.8;">Field agents</div></div></div>
+    <div class="tms"><div><div class="v" style="color:#22c55e;">210</div><div class="l">assigned</div></div><div><div class="v" style="color:#d4a853;">85</div><div class="l">signed</div></div></div>
+  </div>
+  <div class="tm" data-node="hunter">
+    <div class="tmh" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);"><div class="tma">PH</div><div><div style="font-weight:600;font-size:11px;">Property Hunter</div><div style="font-size:7px;opacity:0.8;">Property search</div></div></div>
+    <div class="tms"><div><div class="v" style="color:#8b5cf6;">135</div><div class="l">missions</div></div><div><div class="v" style="color:#d4a853;">45</div><div class="l">matched</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ ROW 6: Deals ═══ -->
+<div class="row">
+  <div class="deal" data-node="deals">
+    <div><div style="font-size:8px;color:rgba(255,255,255,0.4);">Director</div><div style="font-size:20px;font-weight:800;color:#d4a853;">52</div></div>
+    <div style="width:1px;height:24px;background:rgba(255,255,255,0.08);"></div>
+    <div><div style="font-size:8px;color:rgba(255,255,255,0.4);">Agents</div><div style="font-size:20px;font-weight:800;color:#d4a853;">33</div></div>
+    <div style="width:1px;height:24px;background:rgba(255,255,255,0.08);"></div>
+    <div><div style="font-size:8px;color:rgba(255,255,255,0.4);">Total Clients</div><div style="font-size:20px;font-weight:800;color:#22c55e;">85</div></div>
+    <div style="width:1px;height:24px;background:rgba(255,255,255,0.08);"></div>
+    <div><div style="font-size:8px;color:rgba(255,255,255,0.4);">Conversion</div><div style="font-size:20px;font-weight:800;color:#f97316;">10.8%</div></div>
+  </div>
+</div>
+
+</div><!-- /canvas -->
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-line" style="background:#2dd4bf;"></div> Sources → Websites</div>
+  <div class="legend-item"><div class="legend-line" style="background:#1d7ff3;"></div> Websites → Channels</div>
+  <div class="legend-item"><div class="legend-line" style="background:#8b5cf6;"></div> Partners → Channels</div>
+  <div class="legend-item"><div class="legend-line" style="background:#f97316;"></div> Ads → Channels</div>
+  <div class="legend-item"><div class="legend-line" style="background:#d4a853;"></div> Channels → Team</div>
+  <div class="legend-item"><div class="legend-line" style="background:#22c55e;"></div> Team → Deals</div>
+</div>
+
+<script>
+function getCenter(el) {
+  const r = el.getBoundingClientRect();
+  const cr = document.getElementById('canvas').getBoundingClientRect();
+  return { x: r.left + r.width/2 - cr.left, y: r.top + r.height/2 - cr.top };
+}
+function getBottom(el) {
+  const r = el.getBoundingClientRect();
+  const cr = document.getElementById('canvas').getBoundingClientRect();
+  return { x: r.left + r.width/2 - cr.left, y: r.bottom - cr.top };
+}
+function getTop(el) {
+  const r = el.getBoundingClientRect();
+  const cr = document.getElementById('canvas').getBoundingClientRect();
+  return { x: r.left + r.width/2 - cr.left, y: r.top - cr.top };
+}
+
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function drawLine(svg, from, to, color, opacity=0.2, dash=false) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', from.x);
+  line.setAttribute('y1', from.y);
+  line.setAttribute('x2', to.x);
+  line.setAttribute('y2', to.y);
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', '1.2');
+  line.setAttribute('opacity', opacity);
+  if (dash) line.setAttribute('stroke-dasharray', '4,3');
+  svg.appendChild(line);
+}
+
+function drawLines() {
+  const svg = document.getElementById('lines-svg');
+  svg.innerHTML = '';
+  const canvas = document.getElementById('canvas');
+  svg.setAttribute('width', canvas.offsetWidth);
+  svg.setAttribute('height', canvas.offsetHeight);
+
+  const n = (id) => document.querySelector(`[data-node="${id}"]`);
+
+  // Sources → Websites (both)
+  const webFH = n('web-fh') || n('websites');
+  const webMI = n('web-mi') || n('websites');
+  const websites = n('websites');
+  const srcGroups = ['medias','fbgroups','social','seo'];
+  srcGroups.forEach(id => {
+    const el = n(id);
+    if (!el) return;
+    const from = getBottom(el);
+    if (webFH) drawLine(svg, from, getTop(webFH), '#2dd4bf', 0.15);
+    if (webMI) drawLine(svg, from, getTop(webMI), '#2dd4bf', 0.15);
+  });
+
+  // Ads → Websites
+  const ads = n('ads');
+  if (ads) {
+    const from = getBottom(ads);
+    if (webFH) drawLine(svg, from, getTop(webFH), '#2dd4bf', 0.15);
+    if (webMI) drawLine(svg, from, getTop(webMI), '#2dd4bf', 0.15);
+  }
+
+  // Websites → Website Form, WhatsApp Msg, WhatsApp Call, Direct Call
+  const webChannels = ['webform','wamsg','wacall','directcall'];
+  [webFH, webMI].forEach(web => {
+    if (!web) return;
+    webChannels.forEach(ch => {
+      const el = n(ch);
+      if (el) drawLine(svg, getBottom(web), getTop(el), '#1d7ff3', 0.18);
+    });
+  });
+
+  // Partners → Direct Call, Email
+  const partners = n('partners');
+  if (partners) {
+    const from = getBottom(partners);
+    const dc = n('directcall');
+    const em = n('email');
+    if (dc) drawLine(svg, from, getTop(dc), '#8b5cf6', 0.25);
+    if (em) drawLine(svg, from, getTop(em), '#8b5cf6', 0.25);
+  }
+
+  // Ads → Ads Form + all other channels
+  if (ads) {
+    const from = getBottom(ads);
+    const allCh = ['email','webform','adsform','wamsg','igmsg','fbmsg','wacall','directcall'];
+    allCh.forEach(ch => {
+      const el = n(ch);
+      if (el) drawLine(svg, from, getTop(el), '#f97316', ch === 'adsform' ? 0.3 : 0.1);
+    });
+  }
+
+  // Director ← Direct Call, WhatsApp Call
+  const dir = n('director');
+  if (dir) {
+    ['directcall','wacall'].forEach(ch => {
+      const el = n(ch);
+      if (el) drawLine(svg, getBottom(el), getTop(dir), '#d4a853', 0.25);
+    });
+  }
+
+  // Digital Coordinator ← Website Form, Ads Form, WhatsApp Msg, Email
+  const dig = n('digital');
+  if (dig) {
+    ['webform','adsform','wamsg','email'].forEach(ch => {
+      const el = n(ch);
+      if (el) drawLine(svg, getBottom(el), getTop(dig), '#d4a853', 0.25);
+    });
+  }
+
+  // Director → Agents, Hunter
+  if (dir) {
+    const ag = n('agents');
+    const ph = n('hunter');
+    if (ag) drawLine(svg, getBottom(dir), getTop(ag), '#22c55e', 0.2);
+    if (ph) drawLine(svg, getBottom(dir), getTop(ph), '#22c55e', 0.2);
+  }
+  // Digital → Agents, Hunter
+  if (dig) {
+    const ag = n('agents');
+    const ph = n('hunter');
+    if (ag) drawLine(svg, getBottom(dig), getTop(ag), '#22c55e', 0.2);
+    if (ph) drawLine(svg, getBottom(dig), getTop(ph), '#22c55e', 0.2);
+  }
+
+  // Agents/Hunter → Deals
+  const deals = n('deals');
+  if (deals) {
+    const ag = n('agents');
+    const ph = n('hunter');
+    if (ag) drawLine(svg, getBottom(ag), getTop(deals), '#d4a853', 0.2);
+    if (ph) drawLine(svg, getBottom(ph), getTop(deals), '#d4a853', 0.2);
+  }
+}
+
+window.addEventListener('load', () => { setTimeout(drawLines, 100); });
+window.addEventListener('resize', drawLines);
+</script>
+
+</body>
+</html>

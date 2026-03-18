@@ -9,8 +9,8 @@ import type {
 
 export const DEFAULT_SOURCES: LeadSource[] = [
   // SEO
-  { id: 'seo-fr', category: 'seo', label: 'SEO Français', sublabel: '🇫🇷 FR', imageType: 'icon', leadsPerMonth: 0 },
-  { id: 'seo-en', category: 'seo', label: 'SEO Anglais', sublabel: '🇬🇧 EN', imageType: 'icon', leadsPerMonth: 0 },
+  { id: 'seo-fr', category: 'seo', label: 'SEO Français', sublabel: 'FR', imageType: 'icon', leadsPerMonth: 0 },
+  { id: 'seo-en', category: 'seo', label: 'SEO Anglais', sublabel: 'EN', imageType: 'icon', leadsPerMonth: 0 },
   // Médias
   { id: 'media-expats', category: 'medias', label: 'Expats.ma', imageType: 'logo', leadsPerMonth: 0 },
   { id: 'media-guide', category: 'medias', label: 'Guideimmobilier.ma', imageType: 'logo', leadsPerMonth: 0 },

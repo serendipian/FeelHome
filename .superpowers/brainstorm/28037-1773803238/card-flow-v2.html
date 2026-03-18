@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Pipeline — Card Flow</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#06070a; color:#fff; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; padding:32px; min-height:100vh; }
+
+  h2 { font-size:22px; font-weight:700; margin-bottom:4px; }
+  .subtitle { color:rgba(255,255,255,0.4); font-size:13px; margin-bottom:32px; }
+
+  .stage-label { font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; padding-left:4px; }
+  .stage-label span { font-size:11px; font-weight:400; color:rgba(255,255,255,0.3); text-transform:none; letter-spacing:0; margin-left:8px; }
+
+  /* Card grid */
+  .card-row { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px; justify-content:center; }
+
+  /* Source cards */
+  .card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; width:160px; flex-shrink:0; position:relative; }
+  .card-visual { height:90px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .card-info { padding:8px 10px; }
+  .card-name { font-weight:600; font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-cat { font-size:10px; color:rgba(255,255,255,0.35); margin-top:1px; }
+  .card-num { display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  .card-num .val { font-size:16px; font-weight:700; }
+  .card-num .unit { font-size:9px; color:rgba(255,255,255,0.3); }
+
+  /* Connection lines area */
+  .connections { position:relative; height:80px; margin:0 0 8px; }
+  .connections svg { width:100%; height:100%; }
+  .conn-line { stroke-width:1.5; fill:none; opacity:0.4; }
+  .conn-line:hover { opacity:0.8; stroke-width:2.5; }
+
+  /* Hub card (website) */
+  .hub-section { display:flex; justify-content:center; margin-bottom:8px; }
+  .hub-card { background:rgba(45,212,191,0.06); border:1.5px solid rgba(45,212,191,0.25); border-radius:14px; padding:16px 28px; text-align:center; position:relative; }
+  .hub-card .hub-icon { font-size:14px; color:#2dd4bf; margin-bottom:4px; }
+  .hub-card .hub-name { font-size:15px; font-weight:700; color:#2dd4bf; }
+  .hub-card .hub-sub { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; }
+  .hub-card .hub-num { font-size:22px; font-weight:800; color:#2dd4bf; margin-top:6px; }
+  .hub-card .hub-unit { font-size:10px; color:rgba(255,255,255,0.3); }
+
+  /* Channel cards (smaller) */
+  .channel-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px; text-align:center; width:130px; flex-shrink:0; }
+  .channel-card .ch-icon { font-size:24px; margin-bottom:4px; }
+  .channel-card .ch-name { font-weight:600; font-size:11px; color:#fff; }
+  .channel-card .ch-num { font-size:18px; font-weight:700; margin-top:4px; }
+
+  /* Team cards */
+  .team-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; overflow:hidden; width:200px; }
+  .team-header { height:60px; display:flex; align-items:center; gap:10px; padding:0 14px; }
+  .team-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700; color:#fff; flex-shrink:0; }
+  .team-info-block { padding:8px 14px 10px; display:flex; justify-content:space-between; }
+  .team-stat .tv { font-size:16px; font-weight:700; }
+  .team-stat .tl { font-size:9px; color:rgba(255,255,255,0.3); }
+
+  /* Arrow labels */
+  .arrow-section { text-align:center; padding:6px 0; color:rgba(255,255,255,0.12); font-size:11px; letter-spacing:2px; }
+
+  /* Direct line badge */
+  .direct-badge { position:absolute; top:4px; right:4px; background:rgba(249,115,22,0.2); color:#f97316; font-size:8px; padding:1px 5px; border-radius:3px; font-weight:600; }
+
+  .legend { display:flex; gap:16px; justify-content:center; margin-top:24px; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(255,255,255,0.5); }
+  .legend-line { width:24px; height:2px; border-radius:1px; }
+</style>
+</head>
+<body>
+
+<h2>Leads Pipeline — Full Flow</h2>
+<p class="subtitle">Sources → Website Hub → Communication Channels → Team → Clients</p>
+
+<!-- STAGE 1: SOURCES -->
+<div class="stage-label" style="color:#2dd4bf;">Stage 1 — Sources <span>Lead generation origins</span></div>
+<div class="card-row" id="sources-row">
+
+  <!-- SEO FR -->
+  <div class="card" data-id="seo-fr">
+    <div class="card-visual" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
+      <div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">🇫🇷 Français</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">SEO Français</div><div class="card-cat">Référencement</div><div class="card-num"><span class="val" style="color:#2dd4bf;">150</span><span class="unit">visits/mo</span></div></div>
+  </div>
+
+  <!-- SEO EN -->
+  <div class="card" data-id="seo-en">
+    <div class="card-visual" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
+      <div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#2dd4bf;">SEO</div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">🇬🇧 English</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">SEO Anglais</div><div class="card-cat">Référencement</div><div class="card-num"><span class="val" style="color:#2dd4bf;">80</span><span class="unit">visits/mo</span></div></div>
+  </div>
+
+  <!-- Expats.ma -->
+  <div class="card" data-id="expats-ma">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);">
+      <div style="text-align:center;"><div style="font-size:14px;font-weight:700;color:#d4a853;">Expats.ma</div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px;">Media Platform</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">Expats.ma</div><div class="card-cat">Médias</div><div class="card-num"><span class="val" style="color:#2dd4bf;">90</span><span class="unit">visits/mo</span></div></div>
+  </div>
+
+  <!-- GuideImmobilier -->
+  <div class="card" data-id="guide-immo">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);">
+      <div style="text-align:center;"><div style="font-size:12px;font-weight:700;color:#d4a853;">Guide</div><div style="font-size:12px;font-weight:700;color:#d4a853;">Immobilier.ma</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">Guideimmobilier.ma</div><div class="card-cat">Médias</div><div class="card-num"><span class="val" style="color:#2dd4bf;">40</span><span class="unit">visits/mo</span></div></div>
+  </div>
+
+  <!-- FB Group: Expats Morocco -->
+  <div class="card" data-id="fb-expats">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);">
+      <div style="text-align:center;"><div style="font-size:20px;">👥</div><div style="font-size:9px;color:rgba(255,255,255,0.8);margin-top:2px;">45K members</div></div>
+      <div style="position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.2);padding:1px 5px;border-radius:3px;font-size:8px;color:#fff;">FB Group</div>
+    </div>
+    <div class="card-info"><div class="card-name">Expats Morocco</div><div class="card-cat">Facebook Groups</div><div class="card-num"><span class="val" style="color:#2dd4bf;">35</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- FB Group: Français du Maroc -->
+  <div class="card" data-id="fb-francais">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);">
+      <div style="text-align:center;"><div style="font-size:20px;">👥</div><div style="font-size:9px;color:rgba(255,255,255,0.8);margin-top:2px;">38K members</div></div>
+      <div style="position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.2);padding:1px 5px;border-radius:3px;font-size:8px;color:#fff;">FB Group</div>
+    </div>
+    <div class="card-info"><div class="card-name">Français du Maroc</div><div class="card-cat">Facebook Groups</div><div class="card-num"><span class="val" style="color:#2dd4bf;">28</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- Facebook Page -->
+  <div class="card" data-id="fb-page">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1877f2,#0d47a1);">
+      <div style="text-align:center;"><div style="font-size:28px;font-weight:700;color:#fff;">f</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">Facebook Page</div><div class="card-cat">Social Media Pages</div><div class="card-num"><span class="val" style="color:#2dd4bf;">55</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- Instagram -->
+  <div class="card" data-id="ig-page">
+    <div class="card-visual" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">
+      <div style="width:36px;height:36px;border:2.5px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <div style="width:16px;height:16px;border:2px solid #fff;border-radius:50%;position:relative;"><div style="position:absolute;top:-2px;right:-2px;width:4px;height:4px;background:#fff;border-radius:50%;"></div></div>
+      </div>
+    </div>
+    <div class="card-info"><div class="card-name">Instagram</div><div class="card-cat">Social Media Pages</div><div class="card-num"><span class="val" style="color:#2dd4bf;">65</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- Facebook Ads -->
+  <div class="card" data-id="fb-ads">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1877f2,#0a3d91);">
+      <div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:#fff;">f</div><div style="font-size:9px;color:rgba(255,255,255,0.7);margin-top:2px;font-weight:600;">ADS</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">Facebook Ads</div><div class="card-cat">Publicité</div><div class="card-num"><span class="val" style="color:#2dd4bf;">120</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- Google Ads -->
+  <div class="card" data-id="g-ads">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
+      <div style="display:flex;gap:2px;"><span style="font-size:20px;font-weight:700;color:#4285f4;">G</span><span style="font-size:20px;font-weight:700;color:#ea4335;">o</span><span style="font-size:20px;font-weight:700;color:#fbbc05;">o</span><span style="font-size:20px;font-weight:700;color:#4285f4;">g</span><span style="font-size:20px;font-weight:700;color:#34a853;">l</span><span style="font-size:20px;font-weight:700;color:#ea4335;">e</span></div>
+    </div>
+    <div class="card-info"><div class="card-name">Google Ads</div><div class="card-cat">Publicité</div><div class="card-num"><span class="val" style="color:#2dd4bf;">95</span><span class="unit">clicks/mo</span></div></div>
+  </div>
+
+  <!-- Partners -->
+  <div class="card" data-id="partners">
+    <div class="card-visual" style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);">
+      <div style="text-align:center;"><div style="font-size:28px;">🤝</div><div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px;">Referral Network</div></div>
+    </div>
+    <div class="card-info"><div class="card-name">Partenaires</div><div class="card-cat">Agences, Sociétés, Ambassades</div><div class="card-num"><span class="val" style="color:#2dd4bf;">30</span><span class="unit">refs/mo</span></div></div>
+  </div>
+
+</div>
+
+<!-- SVG CONNECTIONS: Sources → Website Hub -->
+<svg id="svg-sources-to-hub" style="width:100%;height:80px;display:block;margin:4px 0;">
+  <defs>
+    <marker id="arrow-teal" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#2dd4bf" opacity="0.4"/></marker>
+    <marker id="arrow-orange" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#f97316" opacity="0.5"/></marker>
+  </defs>
+  <!-- These lines are illustrative — in real app these would be computed dynamically -->
+  <line x1="8%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="16%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="24%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#arrow-teal)"/>
+  <line x1="32%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#arrow-teal)"/>
+  <line x1="40%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="48%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="55%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="62%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="70%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <line x1="78%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-teal)"/>
+  <!-- Partners also goes to direct call — orange dashed line going right -->
+  <line x1="92%" y1="0" x2="50%" y2="78" stroke="#2dd4bf" stroke-width="1.2" opacity="0.2" marker-end="url(#arrow-teal)"/>
+  <line x1="92%" y1="0" x2="92%" y2="78" stroke="#f97316" stroke-width="1.5" opacity="0.4" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
+  <text x="94%" y="45" fill="#f97316" font-size="8" opacity="0.6">direct</text>
+</svg>
+
+<!-- WEBSITE HUB -->
+<div class="stage-label" style="color:#2dd4bf;">Hub — Website <span>Intermediate channel aggregating traffic</span></div>
+<div class="hub-section">
+  <div class="hub-card">
+    <div style="display:flex; gap:24px; align-items:center;">
+      <div>
+        <div style="display:flex;gap:12px;margin-bottom:8px;">
+          <div style="background:rgba(45,212,191,0.1);padding:6px 10px;border-radius:6px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);">Feel Home</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.3);">FR + EN</div>
+          </div>
+          <div style="background:rgba(212,168,83,0.1);padding:6px 10px;border-radius:6px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);">M Invest</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.3);">FR + EN</div>
+          </div>
+        </div>
+        <div class="hub-name">🌐 Websites</div>
+        <div class="hub-sub">feelhome.ma · minvest.ma</div>
+      </div>
+      <div style="text-align:center;">
+        <div class="hub-num">788</div>
+        <div class="hub-unit">monthly visitors</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SVG CONNECTIONS: Hub → Channels -->
+<svg style="width:100%;height:60px;display:block;margin:4px 0;">
+  <line x1="50%" y1="0" x2="12%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <line x1="50%" y1="0" x2="28%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <line x1="50%" y1="0" x2="42%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <line x1="50%" y1="0" x2="58%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <line x1="50%" y1="0" x2="72%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <line x1="50%" y1="0" x2="88%" y2="58" stroke="#1d7ff3" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-teal)"/>
+  <!-- Partners direct call line arrives here -->
+  <line x1="92%" y1="0" x2="88%" y2="58" stroke="#f97316" stroke-width="1.5" opacity="0.4" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
+</svg>
+
+<!-- STAGE 2: COMMUNICATION CHANNELS -->
+<div class="stage-label" style="color:#1d7ff3;">Stage 2 — Communication Channels <span>How leads reach the team</span></div>
+<div class="card-row" id="channels-row">
+  <div class="channel-card"><div class="ch-icon">📧</div><div class="ch-name">Emails</div><div class="ch-num" style="color:#1d7ff3;">110</div></div>
+  <div class="channel-card"><div class="ch-icon">📋</div><div class="ch-name">Website Forms</div><div class="ch-num" style="color:#1d7ff3;">145</div></div>
+  <div class="channel-card"><div class="ch-icon">📝</div><div class="ch-name">Ads Lead Forms</div><div class="ch-num" style="color:#1d7ff3;">85</div></div>
+  <div class="channel-card"><div class="ch-icon">💬</div><div class="ch-name">WhatsApp Msg</div><div class="ch-num" style="color:#1d7ff3;">195</div></div>
+  <div class="channel-card"><div class="ch-icon">📱</div><div class="ch-name">Instagram Msg</div><div class="ch-num" style="color:#1d7ff3;">45</div></div>
+  <div class="channel-card"><div class="ch-icon">💬</div><div class="ch-name">Facebook Msg</div><div class="ch-num" style="color:#1d7ff3;">60</div></div>
+  <div class="channel-card"><div class="ch-icon">📞</div><div class="ch-name">WhatsApp Call</div><div class="ch-num" style="color:#1d7ff3;">55</div></div>
+  <div class="channel-card" style="border-color:rgba(249,115,22,0.25);">
+    <div class="ch-icon">📞</div><div class="ch-name">Direct Call</div><div class="ch-num" style="color:#f97316;">40</div>
+    <div style="font-size:8px;color:#f97316;margin-top:2px;">+ partner referrals</div>
+  </div>
+</div>
+
+<!-- SVG CONNECTIONS: Channels → Team -->
+<svg style="width:100%;height:60px;display:block;margin:8px 0;">
+  <defs><marker id="arrow-gold" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#d4a853" opacity="0.4"/></marker></defs>
+  <line x1="20%" y1="0" x2="35%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <line x1="35%" y1="0" x2="35%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <line x1="50%" y1="0" x2="35%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <line x1="50%" y1="0" x2="65%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <line x1="65%" y1="0" x2="65%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <line x1="80%" y1="0" x2="35%" y2="58" stroke="#d4a853" stroke-width="1.2" opacity="0.25" marker-end="url(#arrow-gold)"/>
+  <!-- Direct call only goes to Director -->
+  <line x1="90%" y1="0" x2="35%" y2="58" stroke="#d4a853" stroke-width="1.5" opacity="0.35" marker-end="url(#arrow-gold)"/>
+  <text x="35%" y="30" fill="rgba(255,255,255,0.15)" font-size="9" text-anchor="middle">All channels</text>
+  <text x="65%" y="30" fill="rgba(255,255,255,0.15)" font-size="9" text-anchor="middle">Digital channels</text>
+</svg>
+
+<!-- STAGE 3: TEAM QUALIFICATION -->
+<div class="stage-label" style="color:#d4a853;">Stage 3 — Team Qualification <span>Receiving & qualifying leads</span></div>
+<div class="card-row">
+  <div class="team-card">
+    <div class="team-header" style="background:linear-gradient(135deg,#d4a853,#b8860b);">
+      <div class="team-avatar" style="background:rgba(0,0,0,0.3);">YB</div>
+      <div><div style="font-weight:600;font-size:13px;">Director</div><div style="font-size:10px;opacity:0.8;">All channels</div></div>
+    </div>
+    <div class="team-info-block">
+      <div class="team-stat"><div class="tv" style="color:#d4a853;">735</div><div class="tl">received</div></div>
+      <div class="team-stat"><div class="tv" style="color:#22c55e;">180</div><div class="tl">qualified</div></div>
+      <div class="team-stat"><div class="tv" style="color:#f97316;">40%</div><div class="tl">rate</div></div>
+    </div>
+  </div>
+
+  <div class="team-card">
+    <div class="team-header" style="background:linear-gradient(135deg,#1d7ff3,#1565c0);">
+      <div class="team-avatar" style="background:rgba(0,0,0,0.3);">DC</div>
+      <div><div style="font-weight:600;font-size:13px;">Digital Coordinator</div><div style="font-size:10px;opacity:0.8;">All but Direct Call</div></div>
+    </div>
+    <div class="team-info-block">
+      <div class="team-stat"><div class="tv" style="color:#1d7ff3;">695</div><div class="tl">received</div></div>
+      <div class="team-stat"><div class="tv" style="color:#22c55e;">165</div><div class="tl">qualified</div></div>
+      <div class="team-stat"><div class="tv" style="color:#f97316;">38%</div><div class="tl">rate</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Dispatch arrows -->
+<svg style="width:100%;height:50px;display:block;margin:8px 0;">
+  <defs><marker id="arrow-green" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4" fill="#22c55e" opacity="0.4"/></marker></defs>
+  <text x="50%" y="12" fill="rgba(255,255,255,0.12)" font-size="9" text-anchor="middle">dispatch qualified leads</text>
+  <line x1="35%" y1="18" x2="25%" y2="48" stroke="#22c55e" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-green)"/>
+  <line x1="35%" y1="18" x2="45%" y2="48" stroke="#22c55e" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-green)"/>
+  <line x1="65%" y1="18" x2="55%" y2="48" stroke="#22c55e" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-green)"/>
+  <line x1="65%" y1="18" x2="75%" y2="48" stroke="#22c55e" stroke-width="1.2" opacity="0.3" marker-end="url(#arrow-green)"/>
+</svg>
+
+<!-- STAGE 3b: DISPATCH TARGETS -->
+<div class="stage-label" style="color:#22c55e;">Dispatch → Field Team <span>Working with qualified leads</span></div>
+<div class="card-row">
+  <div class="team-card">
+    <div class="team-header" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+      <div class="team-avatar" style="background:rgba(0,0,0,0.3);">AG</div>
+      <div><div style="font-weight:600;font-size:13px;">Agents</div><div style="font-size:10px;opacity:0.8;">Field agents</div></div>
+    </div>
+    <div class="team-info-block">
+      <div class="team-stat"><div class="tv" style="color:#22c55e;">210</div><div class="tl">assigned</div></div>
+      <div class="team-stat"><div class="tv" style="color:#d4a853;">85</div><div class="tl">signed</div></div>
+    </div>
+  </div>
+
+  <div class="team-card">
+    <div class="team-header" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+      <div class="team-avatar" style="background:rgba(0,0,0,0.3);">PH</div>
+      <div><div style="font-weight:600;font-size:13px;">Property Hunter</div><div style="font-size:10px;opacity:0.8;">Property search</div></div>
+    </div>
+    <div class="team-info-block">
+      <div class="team-stat"><div class="tv" style="color:#8b5cf6;">135</div><div class="tl">missions</div></div>
+      <div class="team-stat"><div class="tv" style="color:#d4a853;">45</div><div class="tl">matched</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Final conversion -->
+<svg style="width:100%;height:40px;display:block;margin:8px 0;">
+  <line x1="50%" y1="0" x2="50%" y2="38" stroke="#d4a853" stroke-width="2" opacity="0.3" marker-end="url(#arrow-gold)"/>
+</svg>
+
+<!-- STAGE 4: DEAL SIGNING -->
+<div class="stage-label" style="color:#d4a853;">Stage 4 — Deals Signed <span>Final conversion to clients</span></div>
+<div class="card-row">
+  <div style="background:rgba(212,168,83,0.06);border:1.5px solid rgba(212,168,83,0.25);border-radius:14px;padding:20px 32px;text-align:center;">
+    <div style="display:flex;gap:32px;align-items:center;">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Director</div>
+        <div style="font-size:28px;font-weight:800;color:#d4a853;">52</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);">deals</div>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Agents</div>
+        <div style="font-size:28px;font-weight:800;color:#d4a853;">33</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);">deals</div>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,0.1);"></div>
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">Total Clients</div>
+        <div style="font-size:28px;font-weight:800;color:#22c55e;">85</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);">signed deals</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend" style="margin-top:28px;">
+  <div class="legend-item"><div class="legend-line" style="background:#2dd4bf;"></div> Source → Website</div>
+  <div class="legend-item"><div class="legend-line" style="background:#1d7ff3;"></div> Website → Channel</div>
+  <div class="legend-item"><div class="legend-line" style="background:#d4a853;"></div> Channel → Team</div>
+  <div class="legend-item"><div class="legend-line" style="background:#f97316;border-top:1.5px dashed #f97316;height:0;"></div> Direct (bypass website)</div>
+  <div class="legend-item"><div class="legend-line" style="background:#22c55e;"></div> Dispatch → Field</div>
+</div>
+
+</body>
+</html>

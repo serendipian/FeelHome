@@ -1,0 +1,4 @@
+{"type":"server-started","port":65098,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:65098","screen_dir":"/Users/sims/Desktop/PROJETS/PROJETS IMMOBILIER/PIIXEL/Feel Home/.superpowers/brainstorm/28037-1773803238"}
+{"type":"screen-added","file":"/Users/sims/Desktop/PROJETS/PROJETS IMMOBILIER/PIIXEL/Feel Home/.superpowers/brainstorm/28037-1773803238/card-flow-v2.html"}
+{"type":"screen-added","file":"/Users/sims/Desktop/PROJETS/PROJETS IMMOBILIER/PIIXEL/Feel Home/.superpowers/brainstorm/28037-1773803238/card-flow-v3.html"}
+{"type":"server-stopped","reason":"idle timeout"}

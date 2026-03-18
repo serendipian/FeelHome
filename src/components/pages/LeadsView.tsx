@@ -8,10 +8,9 @@ import { useLeads } from '@/context/LeadsContext';
 /*  LeadsEditableCell                                                  */
 /* ------------------------------------------------------------------ */
 
-function LeadsEditableCell({ value, onSave, isDark, size = 'sm' }: {
+function LeadsEditableCell({ value, onSave, size = 'sm' }: {
   value: number;
   onSave: (v: number) => void;
-  isDark: boolean;
   size?: 'sm' | 'lg';
 }) {
   const [editing, setEditing] = useState(false);
@@ -37,8 +36,8 @@ function LeadsEditableCell({ value, onSave, isDark, size = 'sm' }: {
           width: size === 'lg' ? '60px' : '40px',
           fontSize: size === 'lg' ? '20px' : '13px',
           fontWeight: 600,
-          color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)',
-          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+          color: 'rgba(0,0,0,0.9)',
+          borderBottom: '1px solid rgba(0,0,0,0.2)',
         }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -57,9 +56,9 @@ function LeadsEditableCell({ value, onSave, isDark, size = 'sm' }: {
       style={{
         fontSize: size === 'lg' ? '20px' : '13px',
         fontWeight: 600,
-        color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)',
+        color: 'rgba(0,0,0,0.85)',
       }}
-      onMouseEnter={(e) => { (e.target as HTMLElement).style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'; }}
+      onMouseEnter={(e) => { (e.target as HTMLElement).style.background = 'rgba(0,0,0,0.05)'; }}
       onMouseLeave={(e) => { (e.target as HTMLElement).style.background = 'transparent'; }}
       onClick={() => setEditing(true)}
     >
@@ -72,55 +71,20 @@ function LeadsEditableCell({ value, onSave, isDark, size = 'sm' }: {
 /*  SourceCard                                                         */
 /* ------------------------------------------------------------------ */
 
-function SourceCard({ source, onUpdate, isDark }: {
+function SourceCard({ source, onUpdate }: {
   source: LeadSource;
   onUpdate: (value: number) => void;
-  isDark: boolean;
 }) {
-  const borderColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  const bgColor = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
-  const visualBg = isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
-  const sublabelColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
-
   const renderVisual = () => {
-    if (source.imageType === 'laptop') {
-      return (
-        <div className="h-[50px] flex items-center justify-center" style={{ background: visualBg }}>
-          <div
-            className="relative rounded-sm overflow-hidden"
-            style={{
-              width: '60px',
-              height: '38px',
-              border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
-              borderRadius: '3px 3px 0 0',
-              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-            }}
-          >
-            {source.imageUrl ? (
-              <img src={source.imageUrl} alt={source.label} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-[8px] font-medium" style={{ color: sublabelColor }}>
-                {source.label}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
     if (source.imageType === 'logo') {
       return (
-        <div className="h-[50px] flex items-center justify-center" style={{ background: visualBg }}>
+        <div className="h-[50px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.02)' }}>
           {source.imageUrl ? (
             <img src={source.imageUrl} alt={source.label} className="w-7 h-7 rounded object-cover" />
           ) : (
             <div
               className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold"
-              style={{
-                background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-                color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-              }}
+              style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
             >
               {source.label.charAt(0)}
             </div>
@@ -131,15 +95,12 @@ function SourceCard({ source, onUpdate, isDark }: {
 
     // icon variant
     return (
-      <div className="h-[50px] flex items-center justify-center" style={{ background: visualBg }}>
+      <div className="h-[50px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.02)' }}>
         <div
           className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold"
-          style={{
-            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-            color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)',
-          }}
+          style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
         >
-          {source.sublabel?.charAt(0) || source.label.charAt(0)}
+          {source.label.charAt(0)}
         </div>
       </div>
     );
@@ -150,19 +111,92 @@ function SourceCard({ source, onUpdate, isDark }: {
       className="rounded-lg overflow-hidden transition-colors"
       style={{
         width: '100px',
-        background: bgColor,
-        border: `1px solid ${borderColor}`,
+        background: 'rgba(0,0,0,0.02)',
+        border: '1px solid rgba(0,0,0,0.06)',
       }}
       data-node={source.id}
     >
       {renderVisual()}
       <div className="px-1.5 py-1.5 text-center">
-        <div className="text-[9px] font-medium truncate" style={{ color: labelColor }}>{source.label}</div>
+        <div className="text-[9px] font-medium truncate" style={{ color: 'rgba(0,0,0,0.6)' }}>{source.label}</div>
         {source.sublabel && (
-          <div className="text-[8px]" style={{ color: sublabelColor }}>{source.sublabel}</div>
+          <div className="text-[8px]" style={{ color: 'rgba(0,0,0,0.35)' }}>{source.sublabel}</div>
         )}
         <div className="mt-0.5">
-          <LeadsEditableCell value={source.leadsPerMonth} onSave={onUpdate} isDark={isDark} />
+          <LeadsEditableCell value={source.leadsPerMonth} onSave={onUpdate} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  WebsiteCard — large, prominent website card                        */
+/* ------------------------------------------------------------------ */
+
+function WebsiteCard({ source, onUpdate, inboundLeads }: {
+  source: LeadSource;
+  onUpdate: (value: number) => void;
+  inboundLeads: number;
+}) {
+  return (
+    <div
+      className="rounded-xl overflow-hidden transition-colors"
+      style={{
+        width: '180px',
+        background: 'rgba(0,0,0,0.02)',
+        border: '1px solid rgba(0,0,0,0.08)',
+      }}
+      data-node={source.id}
+    >
+      {/* Laptop mockup — large */}
+      <div className="h-[100px] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.025)' }}>
+        <div className="flex flex-col items-center">
+          <div
+            className="relative rounded overflow-hidden"
+            style={{
+              width: '120px',
+              height: '72px',
+              border: '2px solid rgba(0,0,0,0.1)',
+              borderRadius: '4px 4px 0 0',
+              background: 'rgba(0,0,0,0.03)',
+            }}
+          >
+            {source.imageUrl ? (
+              <img src={source.imageUrl} alt={source.label} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[11px] font-medium" style={{ color: 'rgba(0,0,0,0.3)' }}>
+                {source.label}
+              </div>
+            )}
+          </div>
+          {/* Laptop base */}
+          <div
+            className="rounded-b"
+            style={{
+              width: '140px',
+              height: '6px',
+              background: 'rgba(0,0,0,0.06)',
+              borderRadius: '0 0 4px 4px',
+            }}
+          />
+        </div>
+      </div>
+      <div className="px-3 py-2 text-center">
+        <div className="text-[12px] font-semibold" style={{ color: 'rgba(0,0,0,0.7)' }}>{source.label}</div>
+        {source.sublabel && (
+          <div className="text-[9px]" style={{ color: 'rgba(0,0,0,0.35)' }}>{source.sublabel}</div>
+        )}
+        <div className="mt-1.5 flex items-center justify-center gap-3">
+          <div>
+            <div className="text-[18px] font-bold" style={{ color: 'rgba(0,0,0,0.85)' }}>{inboundLeads}</div>
+            <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>visits/mo</div>
+          </div>
+          <div className="w-px h-5" style={{ background: 'rgba(0,0,0,0.06)' }} />
+          <div>
+            <LeadsEditableCell value={source.leadsPerMonth} onSave={onUpdate} />
+            <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>direct</div>
+          </div>
         </div>
       </div>
     </div>
@@ -173,36 +207,28 @@ function SourceCard({ source, onUpdate, isDark }: {
 /*  SourceCategoryGroup                                                */
 /* ------------------------------------------------------------------ */
 
-function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, isDark }: {
+function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate }: {
   label: string;
   sources: LeadSource[];
   gridClass?: string;
   dataNode: string;
   onUpdate: (id: string, value: number) => void;
-  isDark: boolean;
 }) {
-  const headerColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
-  const treeLineColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-
   return (
     <div className="flex flex-col items-center" data-node={dataNode}>
-      {/* Category header */}
       <div
         className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-        style={{ color: headerColor }}
+        style={{ color: 'rgba(0,0,0,0.4)' }}
       >
         {label}
       </div>
-      {/* Tree line */}
-      <div className="w-px h-2.5 mb-1" style={{ background: treeLineColor }} />
-      {/* Cards grid */}
+      <div className="w-px h-2.5 mb-1" style={{ background: 'rgba(0,0,0,0.08)' }} />
       <div className={gridClass || 'flex'} style={{ gap: '8px' }}>
         {sources.map(s => (
           <SourceCard
             key={s.id}
             source={s}
             onUpdate={(v) => onUpdate(s.id, v)}
-            isDark={isDark}
           />
         ))}
       </div>
@@ -214,26 +240,25 @@ function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, is
 /*  ChannelCard                                                        */
 /* ------------------------------------------------------------------ */
 
-function ChannelCard({ channel, onUpdate, isDark }: {
+function ChannelCard({ channel, onUpdate }: {
   channel: LeadChannel;
   onUpdate: (value: number) => void;
-  isDark: boolean;
 }) {
   return (
     <div
       className="rounded-lg p-2.5 text-center w-[95px] transition-colors"
       style={{
-        background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        background: 'rgba(0,0,0,0.02)',
+        border: '1px solid rgba(0,0,0,0.06)',
       }}
       data-node={`ch-${channel.id}`}
     >
       <div className="text-base mb-0.5 opacity-80">{channel.icon}</div>
-      <div className="font-medium text-[9px]" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
+      <div className="font-medium text-[9px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
         {channel.label}
       </div>
       <div className="mt-1">
-        <LeadsEditableCell value={channel.leadsPerMonth} onSave={onUpdate} isDark={isDark} />
+        <LeadsEditableCell value={channel.leadsPerMonth} onSave={onUpdate} />
       </div>
     </div>
   );
@@ -243,10 +268,9 @@ function ChannelCard({ channel, onUpdate, isDark }: {
 /*  TeamCard                                                           */
 /* ------------------------------------------------------------------ */
 
-function TeamCard({ member, onUpdate, isDark }: {
+function TeamCard({ member, onUpdate }: {
   member: PipelineTeamMember;
   onUpdate: (field: 'received' | 'qualified', value: number) => void;
-  isDark: boolean;
 }) {
   const rate = member.received > 0
     ? `${Math.round((member.qualified / member.received) * 100)}%`
@@ -255,54 +279,51 @@ function TeamCard({ member, onUpdate, isDark }: {
     <div
       className="rounded-lg overflow-hidden w-[185px] transition-colors"
       style={{
-        background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-        border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}`,
+        background: 'rgba(0,0,0,0.02)',
+        border: '1px solid rgba(0,0,0,0.06)',
       }}
       data-node={`tm-${member.id}`}
     >
       <div
         className="h-[44px] flex items-center gap-2.5 px-3"
         style={{
-          background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
-          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+          background: 'rgba(0,0,0,0.02)',
+          borderBottom: '1px solid rgba(0,0,0,0.05)',
         }}
       >
         <div
           className="w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-semibold shrink-0"
-          style={{
-            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-            color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
-          }}
+          style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.6)' }}
         >
           {member.initials}
         </div>
         <div>
-          <div className="font-semibold text-[11px]" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)' }}>
+          <div className="font-semibold text-[11px]" style={{ color: 'rgba(0,0,0,0.75)' }}>
             {member.label}
           </div>
-          <div className="text-[7px]" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)' }}>
+          <div className="text-[7px]" style={{ color: 'rgba(0,0,0,0.35)' }}>
             {member.role}
           </div>
         </div>
       </div>
       <div className="px-3 py-1.5 flex justify-between">
         <div>
-          <LeadsEditableCell value={member.received} onSave={(v) => onUpdate('received', v)} isDark={isDark} />
-          <div className="text-[7px] uppercase tracking-wider" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>
+          <LeadsEditableCell value={member.received} onSave={(v) => onUpdate('received', v)} />
+          <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
             received
           </div>
         </div>
         <div>
-          <LeadsEditableCell value={member.qualified} onSave={(v) => onUpdate('qualified', v)} isDark={isDark} />
-          <div className="text-[7px] uppercase tracking-wider" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>
+          <LeadsEditableCell value={member.qualified} onSave={(v) => onUpdate('qualified', v)} />
+          <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
             qualified
           </div>
         </div>
         <div>
-          <div className="text-[13px] font-semibold" style={{ color: isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)' }}>
+          <div className="text-[13px] font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>
             {rate}
           </div>
-          <div className="text-[7px] uppercase tracking-wider" style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>
+          <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
             rate
           </div>
         </div>
@@ -315,57 +336,51 @@ function TeamCard({ member, onUpdate, isDark }: {
 /*  DealSummary                                                        */
 /* ------------------------------------------------------------------ */
 
-function DealSummary({ signers, channels, onUpdate, isDark }: {
+function DealSummary({ signers, channels, onUpdate }: {
   signers: DealSigner[];
   channels: LeadChannel[];
   onUpdate: (id: string, value: number) => void;
-  isDark: boolean;
 }) {
   const totalDeals = signers.reduce((sum, s) => sum + s.dealsSigned, 0);
   const totalLeads = channels.reduce((sum, c) => sum + c.leadsPerMonth, 0);
   const conversion = totalLeads > 0 ? `${((totalDeals / totalLeads) * 100).toFixed(1)}%` : '\u2014';
-  const borderColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  const labelColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
-  const numColor = isDark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)';
-  const sepColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
 
   return (
     <div
       className="rounded-lg px-6 py-3.5 inline-flex gap-5 items-center"
-      style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${borderColor}` }}
+      style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}
       data-node="deals"
     >
       {signers.map((s, i) => (
         <React.Fragment key={s.id}>
           <div>
-            <div className="text-[8px] uppercase tracking-wider" style={{ color: labelColor }}>{s.label}</div>
-            <LeadsEditableCell value={s.dealsSigned} onSave={(v) => onUpdate(s.id, v)} isDark={isDark} size="lg" />
+            <div className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>{s.label}</div>
+            <LeadsEditableCell value={s.dealsSigned} onSave={(v) => onUpdate(s.id, v)} size="lg" />
           </div>
-          {i < signers.length - 1 && <div className="w-px h-6" style={{ background: sepColor }} />}
+          {i < signers.length - 1 && <div className="w-px h-6" style={{ background: 'rgba(0,0,0,0.06)' }} />}
         </React.Fragment>
       ))}
-      <div className="w-px h-6" style={{ background: sepColor }} />
+      <div className="w-px h-6" style={{ background: 'rgba(0,0,0,0.06)' }} />
       <div>
-        <div className="text-[8px] uppercase tracking-wider" style={{ color: labelColor }}>Total Clients</div>
-        <div className="text-xl font-semibold" style={{ color: numColor }}>{totalDeals}</div>
+        <div className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>Total Clients</div>
+        <div className="text-xl font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>{totalDeals}</div>
       </div>
-      <div className="w-px h-6" style={{ background: sepColor }} />
+      <div className="w-px h-6" style={{ background: 'rgba(0,0,0,0.06)' }} />
       <div>
-        <div className="text-[8px] uppercase tracking-wider" style={{ color: labelColor }}>Conversion</div>
-        <div className="text-xl font-semibold" style={{ color: numColor }}>{conversion}</div>
+        <div className="text-[8px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>Conversion</div>
+        <div className="text-xl font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>{conversion}</div>
       </div>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  PipelineLines — SVG overlay                                        */
+/*  PipelineLines — SVG overlay (behind all cards)                     */
 /* ------------------------------------------------------------------ */
 
-function PipelineLines({ canvasRef, connections, isDark }: {
+function PipelineLines({ canvasRef, connections }: {
   canvasRef: React.RefObject<HTMLDivElement | null>;
   connections: PipelineConnections;
-  isDark: boolean;
 }) {
   const [lines, setLines] = useState<{ x1: number; y1: number; x2: number; y2: number; opacity: number }[]>([]);
 
@@ -484,12 +499,15 @@ function PipelineLines({ canvasRef, connections, isDark }: {
   }, [canvasRef, computeLines]);
 
   return (
-    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+    <svg
+      className="absolute top-0 left-0 w-full h-full pointer-events-none"
+      style={{ zIndex: 0 }}
+    >
       {lines.map((l, i) => (
         <line
           key={i}
           x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-          stroke={isDark ? 'rgba(255,255,255,1)' : 'rgba(0,0,0,1)'}
+          stroke="rgba(0,0,0,1)"
           strokeWidth={1}
           opacity={l.opacity}
         />
@@ -504,7 +522,6 @@ function PipelineLines({ canvasRef, connections, isDark }: {
 
 export default function LeadsView() {
   const { data, updateSourceLeads, updateChannelLeads, updateTeamMember, updateDealSigner } = useLeads();
-  const isDark = true;
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const sourcesByCategory = useMemo(() => {
@@ -516,49 +533,86 @@ export default function LeadsView() {
     return map;
   }, [data.sources]);
 
+  // Compute total inbound leads for websites (sum of all source categories that flow into websites)
+  const websiteInboundLeads = useMemo(() => {
+    let total = 0;
+    for (const cat of data.connections.sourcesToWebsites) {
+      const sources = sourcesByCategory.get(cat);
+      if (sources) {
+        for (const s of sources) {
+          // Don't count the website sources themselves
+          if (s.category !== 'websites') {
+            total += s.leadsPerMonth;
+          }
+        }
+      }
+    }
+    return total;
+  }, [data.sources, data.connections.sourcesToWebsites, sourcesByCategory]);
+
+  const webSources = sourcesByCategory.get('websites') || [];
+
   return (
     <div className="relative" ref={canvasRef}>
-      <PipelineLines canvasRef={canvasRef} connections={data.connections} isDark={isDark} />
+      <PipelineLines canvasRef={canvasRef} connections={data.connections} />
 
       {/* Row 1: Medias, FB Groups, Social Media, Publicite */}
-      <div className="flex flex-wrap gap-5 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 1 }}>
-        <SourceCategoryGroup label="Médias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} isDark={isDark} />
-        <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} isDark={isDark} />
-        <SourceCategoryGroup label="Social Media" sources={sourcesByCategory.get('socialMedia') || []} gridClass="grid grid-cols-2" dataNode="cat-socialMedia" onUpdate={updateSourceLeads} isDark={isDark} />
-        <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} isDark={isDark} />
+      <div className="flex flex-wrap gap-5 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
+        <SourceCategoryGroup label="Médias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Social Media" sources={sourcesByCategory.get('socialMedia') || []} gridClass="grid grid-cols-2" dataNode="cat-socialMedia" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} />
       </div>
 
-      {/* Row 2: SEO, Websites, Partenaires */}
-      <div className="flex flex-wrap gap-5 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 1 }}>
-        <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} isDark={isDark} />
-        <SourceCategoryGroup label="Sites Web" sources={sourcesByCategory.get('websites') || []} dataNode="cat-websites" onUpdate={updateSourceLeads} isDark={isDark} />
-        <SourceCategoryGroup label="Partenaires" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} isDark={isDark} />
+      {/* Row 2: SEO | Websites (big) | Partenaires */}
+      <div className="flex flex-wrap gap-8 justify-center items-center mb-9" style={{ position: 'relative', zIndex: 2 }}>
+        <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} />
+        <div className="flex flex-col items-center" data-node="cat-websites">
+          <div
+            className="text-[10px] font-semibold uppercase tracking-wider mb-1"
+            style={{ color: 'rgba(0,0,0,0.4)' }}
+          >
+            Sites Web
+          </div>
+          <div className="w-px h-2.5 mb-1" style={{ background: 'rgba(0,0,0,0.08)' }} />
+          <div className="flex gap-4">
+            {webSources.map(s => (
+              <WebsiteCard
+                key={s.id}
+                source={s}
+                onUpdate={(v) => updateSourceLeads(s.id, v)}
+                inboundLeads={websiteInboundLeads}
+              />
+            ))}
+          </div>
+        </div>
+        <SourceCategoryGroup label="Partenaires" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} />
       </div>
 
       {/* Row 3: Channels */}
-      <div className="flex flex-wrap gap-2 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-wrap gap-2 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
         {data.channels.map(ch => (
-          <ChannelCard key={ch.id} channel={ch} onUpdate={(v) => updateChannelLeads(ch.id, v)} isDark={isDark} />
+          <ChannelCard key={ch.id} channel={ch} onUpdate={(v) => updateChannelLeads(ch.id, v)} />
         ))}
       </div>
 
       {/* Row 4: Director + Digital Coordinator */}
-      <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
         {data.team.filter(t => t.id === 'director' || t.id === 'digital').map(tm => (
-          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} isDark={isDark} />
+          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} />
         ))}
       </div>
 
       {/* Row 5: Agents + Property Hunter */}
-      <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
         {data.team.filter(t => t.id === 'agents' || t.id === 'hunter').map(tm => (
-          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} isDark={isDark} />
+          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} />
         ))}
       </div>
 
       {/* Row 6: Deal Summary */}
-      <div className="flex justify-center mb-4" style={{ position: 'relative', zIndex: 1 }}>
-        <DealSummary signers={data.dealSigners} channels={data.channels} onUpdate={updateDealSigner} isDark={isDark} />
+      <div className="flex justify-center mb-4" style={{ position: 'relative', zIndex: 2 }}>
+        <DealSummary signers={data.dealSigners} channels={data.channels} onUpdate={updateDealSigner} />
       </div>
     </div>
   );
