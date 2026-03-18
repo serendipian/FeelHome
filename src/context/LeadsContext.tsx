@@ -16,7 +16,7 @@ interface LeadsContextValue {
   updateSourceLeads: (id: string, value: number) => void;
   updateSourceImage: (id: string, imageUrl: string) => void;
   updateChannelLeads: (id: string, value: number) => void;
-  updateTeamMember: (id: string, field: 'received' | 'qualified', value: number) => void;
+  updateTeamMember: (id: string, field: 'received' | 'qualified' | 'rate', value: number) => void;
   updateDealSigner: (id: string, value: number) => void;
 }
 
@@ -59,7 +59,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
       const loadedTeamMap = new Map(loaded.team.map(t => [t.id, t]));
       const mergedTeam = DEFAULT_LEADS_DATA.team.map(def => {
         const saved = loadedTeamMap.get(def.id);
-        return saved ? { ...def, received: saved.received, qualified: saved.qualified } : def;
+        return saved ? { ...def, received: saved.received, qualified: saved.qualified, rate: saved.rate ?? def.rate } : def;
       });
       const defaultTeamIds = new Set(DEFAULT_LEADS_DATA.team.map(t => t.id));
       const extraTeam = loaded.team.filter(t => !defaultTeamIds.has(t.id));
@@ -77,7 +77,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
         channels: [...mergedChannels, ...extraChannels],
         team: [...mergedTeam, ...extraTeam],
         dealSigners: [...mergedSigners, ...extraSigners],
-        connections: loaded.connections ?? DEFAULT_LEADS_DATA.connections,
+        connections: { ...DEFAULT_LEADS_DATA.connections, ...loaded.connections },
       });
       setTimeout(() => { readyToSave.current = true; }, 0);
     })();
@@ -108,7 +108,7 @@ export function LeadsProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const updateTeamMember = useCallback((id: string, field: 'received' | 'qualified', value: number) => {
+  const updateTeamMember = useCallback((id: string, field: 'received' | 'qualified' | 'rate', value: number) => {
     setData(prev => ({
       ...prev,
       team: prev.team.map(t => t.id === id ? { ...t, [field]: value } : t),

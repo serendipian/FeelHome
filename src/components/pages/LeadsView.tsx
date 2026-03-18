@@ -133,10 +133,10 @@ function SourceCard({ source, onUpdate }: {
     return (
       <div className="h-[50px] flex items-center justify-center" style={{ background: '#f8f8f8' }}>
         <div
-          className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold"
-          style={{ background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
+          className="w-7 h-7 rounded flex items-center justify-center font-semibold"
+          style={source.emoji ? { fontSize: '18px' } : { fontSize: '11px', background: 'rgba(0,0,0,0.05)', color: 'rgba(0,0,0,0.4)' }}
         >
-          {source.label.charAt(0)}
+          {source.emoji ?? source.label.charAt(0)}
         </div>
       </div>
     );
@@ -226,7 +226,7 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
         <div className="mt-1.5 flex items-center justify-center">
           <div>
             <div className="text-[18px] font-bold" style={{ color: 'rgba(0,0,0,0.85)' }}>{inboundLeads}</div>
-            <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>visits/mo</div>
+            <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>Leads Contacts</div>
           </div>
         </div>
       </div>
@@ -284,7 +284,11 @@ function ChannelCard({ channel, onUpdate }: {
       }}
       data-node={`ch-${channel.id}`}
     >
-      <div className="text-base mb-0.5 opacity-80">{channel.icon}</div>
+      {channel.imageUrl ? (
+        <img src={channel.imageUrl} alt={channel.label} className="w-6 h-6 rounded object-cover mb-0.5 mx-auto" />
+      ) : (
+        <div className="text-base mb-0.5 opacity-80">{channel.icon}</div>
+      )}
       <div className="font-medium text-[9px]" style={{ color: 'rgba(0,0,0,0.4)' }}>
         {channel.label}
       </div>
@@ -299,13 +303,15 @@ function ChannelCard({ channel, onUpdate }: {
 /*  TeamCard                                                           */
 /* ------------------------------------------------------------------ */
 
-function TeamCard({ member, onUpdate }: {
+function TeamCard({ member, onUpdate, computedReceived, computedQualified, qualifiedLabel }: {
   member: PipelineTeamMember;
-  onUpdate: (field: 'received' | 'qualified', value: number) => void;
+  onUpdate: (field: 'received' | 'qualified' | 'rate', value: number) => void;
+  computedReceived?: number;
+  computedQualified?: number;
+  qualifiedLabel?: string;
 }) {
-  const rate = member.received > 0
-    ? `${Math.round((member.qualified / member.received) * 100)}%`
-    : '\u2014';
+  const received = computedReceived ?? member.received;
+  const qualified = computedQualified ?? member.qualified;
   return (
     <div
       className="rounded-lg overflow-hidden w-[185px] transition-colors"
@@ -339,20 +345,29 @@ function TeamCard({ member, onUpdate }: {
       </div>
       <div className="px-3 py-1.5 flex justify-between">
         <div>
-          <LeadsEditableCell value={member.received} onSave={(v) => onUpdate('received', v)} />
+          {computedReceived !== undefined ? (
+            <div className="text-[13px] font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>{computedReceived}</div>
+          ) : (
+            <LeadsEditableCell value={member.received} onSave={(v) => onUpdate('received', v)} />
+          )}
           <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
             received
           </div>
         </div>
         <div>
-          <LeadsEditableCell value={member.qualified} onSave={(v) => onUpdate('qualified', v)} />
+          {computedQualified !== undefined ? (
+            <div className="text-[13px] font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>{computedQualified}</div>
+          ) : (
+            <LeadsEditableCell value={member.qualified} onSave={(v) => onUpdate('qualified', v)} />
+          )}
           <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
-            qualified
+            {qualifiedLabel ?? 'qualified'}
           </div>
         </div>
         <div>
-          <div className="text-[13px] font-semibold" style={{ color: 'rgba(0,0,0,0.85)' }}>
-            {rate}
+          <div className="flex items-baseline">
+            <LeadsEditableCell value={member.rate} onSave={(v) => onUpdate('rate', Math.min(100, Math.max(0, v)))} />
+            <span className="text-[10px] font-semibold" style={{ color: 'rgba(0,0,0,0.6)' }}>%</span>
           </div>
           <div className="text-[7px] uppercase tracking-wider" style={{ color: 'rgba(0,0,0,0.3)' }}>
             rate
@@ -475,7 +490,7 @@ function PipelineLines({ canvasRef, connections }: {
     // MLS -> channels
     const mls = node('cat-mls');
     if (mls) {
-      for (const chId of connections.mlsToChannels) {
+      for (const chId of (connections.mlsToChannels ?? [])) {
         const ch = node(`ch-${chId}`);
         if (ch) addLine(getBottom(mls), getTop(ch), chId === 'mlsform' ? 0.15 : 0.1);
       }
@@ -484,7 +499,7 @@ function PipelineLines({ canvasRef, connections }: {
     // LLM -> channels
     const llm = node('cat-llm');
     if (llm) {
-      for (const chId of connections.llmToChannels) {
+      for (const chId of (connections.llmToChannels ?? [])) {
         const ch = node(`ch-${chId}`);
         if (ch) addLine(getBottom(llm), getTop(ch), 0.1);
       }
@@ -601,6 +616,35 @@ export default function LeadsView() {
 
   const webSources = sourcesByCategory.get('websites') || [];
 
+  // Compute received leads for Director and Digital from their linked channels
+  const directorReceived = useMemo(() => {
+    return data.connections.channelsToDirector.reduce((sum, chId) => {
+      const ch = data.channels.find(c => c.id === chId);
+      return sum + (ch?.leadsPerMonth ?? 0);
+    }, 0);
+  }, [data.channels, data.connections.channelsToDirector]);
+
+  const digitalReceived = useMemo(() => {
+    return data.connections.channelsToDigital.reduce((sum, chId) => {
+      const ch = data.channels.find(c => c.id === chId);
+      return sum + (ch?.leadsPerMonth ?? 0);
+    }, 0);
+  }, [data.channels, data.connections.channelsToDigital]);
+
+  const directorMember = data.team.find(t => t.id === 'director');
+  const digitalMember = data.team.find(t => t.id === 'digital');
+  const agentsMember = data.team.find(t => t.id === 'agents');
+
+  // Agents receive total qualified from director + digital (using each member's rate)
+  const agentsReceived = useMemo(() => {
+    const dirRate = (directorMember?.rate ?? 50) / 100;
+    const digRate = (digitalMember?.rate ?? 50) / 100;
+    return Math.round(directorReceived * dirRate) + Math.round(digitalReceived * digRate);
+  }, [directorReceived, digitalReceived, directorMember?.rate, digitalMember?.rate]);
+
+  // Property Hunter receives half of agents (tenants/buyers only, not owners)
+  const hunterReceived = useMemo(() => Math.round(agentsReceived / 2), [agentsReceived]);
+
   return (
     <div className="relative" ref={canvasRef}>
       <PipelineLines canvasRef={canvasRef} connections={data.connections} />
@@ -651,15 +695,22 @@ export default function LeadsView() {
       <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
         {['digital', 'director'].map(id => {
           const tm = data.team.find(t => t.id === id);
-          return tm ? <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} /> : null;
+          if (!tm) return null;
+          const computedReceived = id === 'digital' ? digitalReceived : directorReceived;
+          const computedQualified = Math.round(computedReceived * (tm.rate / 100));
+          return <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} computedReceived={computedReceived} computedQualified={computedQualified} />;
         })}
       </div>
 
       {/* Row 5: Agents + Property Hunter */}
       <div className="flex flex-wrap gap-3 justify-center items-start mb-9" style={{ position: 'relative', zIndex: 2 }}>
-        {data.team.filter(t => t.id === 'agents' || t.id === 'hunter').map(tm => (
-          <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} />
-        ))}
+        {['agents', 'hunter'].map(id => {
+          const tm = data.team.find(t => t.id === id);
+          if (!tm) return null;
+          const computedReceived = id === 'agents' ? agentsReceived : hunterReceived;
+          const computedQualified = Math.round(computedReceived * (tm.rate / 100));
+          return <TeamCard key={tm.id} member={tm} onUpdate={(f, v) => updateTeamMember(tm.id, f, v)} computedReceived={computedReceived} computedQualified={computedQualified} qualifiedLabel="converted" />;
+        })}
       </div>
 
       {/* Row 6: Deal Summary */}

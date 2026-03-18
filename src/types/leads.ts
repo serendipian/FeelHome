@@ -18,6 +18,7 @@ export interface LeadSource {
   sublabel?: string;
   imageUrl?: string;
   imageType: ImageType;
+  emoji?: string;
   leadsPerMonth: number;
 }
 
@@ -25,6 +26,7 @@ export interface LeadChannel {
   id: string;
   label: string;
   icon: string;
+  imageUrl?: string;
   leadsPerMonth: number;
 }
 
@@ -35,6 +37,7 @@ export interface PipelineTeamMember {
   role: string;
   received: number;
   qualified: number;
+  rate: number; // percentage 0-100
 }
 
 export interface DealSigner {
