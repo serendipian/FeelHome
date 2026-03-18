@@ -256,8 +256,12 @@ function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, co
   return (
     <div className="flex flex-col items-center" data-node={dataNode}>
       <div
-        className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-        style={{ color: 'rgba(0,0,0,0.4)' }}
+        className="text-[10px] font-semibold uppercase tracking-wider mb-1 px-2 py-0.5 rounded"
+        style={{
+          color: 'rgba(0,0,0,0.5)',
+          border: '1px solid rgba(0,0,0,0.15)',
+          background: 'rgba(255,255,255,0.6)',
+        }}
       >
         {label}
       </div>
@@ -672,8 +676,12 @@ export default function LeadsView() {
         <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} vertical />
         <div className="flex flex-col items-center" data-node="cat-websites">
           <div
-            className="text-[10px] font-semibold uppercase tracking-wider mb-1"
-            style={{ color: 'rgba(0,0,0,0.4)' }}
+            className="text-[10px] font-semibold uppercase tracking-wider mb-1 px-2 py-0.5 rounded"
+            style={{
+              color: 'rgba(0,0,0,0.5)',
+              border: '1px solid rgba(0,0,0,0.15)',
+              background: 'rgba(255,255,255,0.6)',
+            }}
           >
             Websites
           </div>
