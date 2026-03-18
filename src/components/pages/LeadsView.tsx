@@ -244,13 +244,14 @@ function WebsiteCard({ source, onUpdate, inboundLeads }: {
 /*  SourceCategoryGroup                                                */
 /* ------------------------------------------------------------------ */
 
-function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, compact = true }: {
+function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, compact = true, vertical = false }: {
   label: string;
   sources: LeadSource[];
   gridClass?: string;
   dataNode: string;
   onUpdate: (id: string, value: number) => void;
   compact?: boolean;
+  vertical?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center" data-node={dataNode}>
@@ -261,7 +262,7 @@ function SourceCategoryGroup({ label, sources, gridClass, dataNode, onUpdate, co
         {label}
       </div>
       <div className="w-px h-2.5 mb-1" style={{ background: 'rgba(0,0,0,0.08)' }} />
-      <div className={gridClass || 'flex'} style={{ gap: '8px' }}>
+      <div className={gridClass || (vertical ? 'flex flex-col' : 'flex')} style={{ gap: '8px' }}>
         {sources.map(s => (
           <SourceCard
             key={s.id}
@@ -662,13 +663,13 @@ export default function LeadsView() {
         <SourceCategoryGroup label="Medias" sources={sourcesByCategory.get('medias') || []} dataNode="cat-medias" onUpdate={updateSourceLeads} compact={false} />
         <SourceCategoryGroup label="Facebook Groups" sources={sourcesByCategory.get('fbGroups') || []} gridClass="grid grid-cols-3" dataNode="cat-fbGroups" onUpdate={updateSourceLeads} compact={false} />
         <SourceCategoryGroup label="Social Media" sources={sourcesByCategory.get('socialMedia') || []} gridClass="grid grid-cols-2" dataNode="cat-socialMedia" onUpdate={updateSourceLeads} />
-        <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Publicité" sources={sourcesByCategory.get('ads') || []} dataNode="cat-ads" onUpdate={updateSourceLeads} vertical />
       </div>
 
       {/* Row 2: LLM | SEO | Websites (big) | Partners | MLS */}
       <div className="flex flex-wrap gap-8 justify-center items-center mb-9" style={{ position: 'relative', zIndex: 2 }}>
-        <SourceCategoryGroup label="LLM" sources={sourcesByCategory.get('llm') || []} dataNode="cat-llm" onUpdate={updateSourceLeads} />
-        <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="LLM" sources={sourcesByCategory.get('llm') || []} dataNode="cat-llm" onUpdate={updateSourceLeads} vertical />
+        <SourceCategoryGroup label="SEO" sources={sourcesByCategory.get('seo') || []} dataNode="cat-seo" onUpdate={updateSourceLeads} vertical />
         <div className="flex flex-col items-center" data-node="cat-websites">
           <div
             className="text-[10px] font-semibold uppercase tracking-wider mb-1"
@@ -688,8 +689,8 @@ export default function LeadsView() {
             ))}
           </div>
         </div>
-        <SourceCategoryGroup label="Partners" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} />
-        <SourceCategoryGroup label="MLS" sources={sourcesByCategory.get('mls') || []} dataNode="cat-mls" onUpdate={updateSourceLeads} />
+        <SourceCategoryGroup label="Partners" sources={sourcesByCategory.get('partners') || []} dataNode="cat-partners" onUpdate={updateSourceLeads} vertical />
+        <SourceCategoryGroup label="MLS" sources={sourcesByCategory.get('mls') || []} dataNode="cat-mls" onUpdate={updateSourceLeads} vertical />
       </div>
 
       {/* Row 3: Channels */}
